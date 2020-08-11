@@ -755,56 +755,54 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 		return types.CustomCPError{}
 	}
 
+	/*	if previousPoolCount < newPoolCount {
 
-
-/*	if previousPoolCount < newPoolCount {
-
-		var pools []*NodePool
-		for i := previousPoolCount; i < newPoolCount; i++ {
-			pools = append(pools, cluster.NodePools[i])
-		}
-
-		err := AddNodepool(&cluster, ctx, eks, pools, previousPoolCount, token)
-		if err != (types.CustomCPError{}) {
-			utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-
-			cluster.Status = models.ClusterUpdateFailed
-			confError := UpdateEKSCluster(cluster, ctx)
-			if confError != nil {
-				ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			var pools []*NodePool
+			for i := previousPoolCount; i < newPoolCount; i++ {
+				pools = append(pools, cluster.NodePools[i])
 			}
-			//err := ApiError(err, "Error occured while apply cluster changes", 500)
-			err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, err)
-			if err_ != nil {
-				ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+			err := AddNodepool(&cluster, ctx, eks, pools, previousPoolCount, token)
+			if err != (types.CustomCPError{}) {
+				utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
+				cluster.Status = models.ClusterUpdateFailed
+				confError := UpdateEKSCluster(cluster, ctx)
+				if confError != nil {
+					ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				}
+				//err := ApiError(err, "Error occured while apply cluster changes", 500)
+				err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, err)
+				if err_ != nil {
+					ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				}
+				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+				return err
 			}
-			publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
-			return err
-		}
 
-	} else if previousPoolCount > newPoolCount {
+		} else if previousPoolCount > newPoolCount {
 
-		previousCluster, err := GetPreviousEKSCluster(ctx)
-		if err != nil {
-			err_ := types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
-			return updationFailedError(cluster, ctx, err_)
-		}
-		for _, oldpool := range previousCluster.NodePools {
-			delete := true
-			for _, pool := range cluster.NodePools {
-				if pool.NodePoolName == oldpool.NodePoolName {
-					delete = false
-					break
+			previousCluster, err := GetPreviousEKSCluster(ctx)
+			if err != nil {
+				err_ := types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
+				return updationFailedError(cluster, ctx, err_)
+			}
+			for _, oldpool := range previousCluster.NodePools {
+				delete := true
+				for _, pool := range cluster.NodePools {
+					if pool.NodePoolName == oldpool.NodePoolName {
+						delete = false
+						break
+					}
+				}
+				if delete == true {
+					err_ := DeleteNodepool(cluster, ctx, eks, oldpool.NodePoolName)
+					if err_ != (types.CustomCPError{}) {
+						return err_
+					}
 				}
 			}
-			if delete == true {
-				err_ := DeleteNodepool(cluster, ctx, eks, oldpool.NodePoolName)
-				if err_ != (types.CustomCPError{}) {
-					return err_
-				}
-			}
 		}
-	}
 	*/
 
 	previousCluster, err := GetPreviousEKSCluster(ctx)
@@ -817,21 +815,21 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 	addincluster := false
 	var addpools []*NodePool
 	var addedIndex []int
-	for index, pool := range cluster.NodePools{
-		existInPrevious :=false
-		for _ ,prePool :=range previousCluster.NodePools {
+	for index, pool := range cluster.NodePools {
+		existInPrevious := false
+		for _, prePool := range previousCluster.NodePools {
 			if pool.NodePoolName == prePool.NodePoolName {
 				existInPrevious = true
 
 			}
 		}
-		if existInPrevious == false{
-			addpools = append(addpools,pool)
-			addedIndex = append(addedIndex,index)
-			addincluster =true
+		if existInPrevious == false {
+			addpools = append(addpools, pool)
+			addedIndex = append(addedIndex, index)
+			addincluster = true
 		}
 	}
-	if addincluster ==true {
+	if addincluster == true {
 		err2 := AddNodepool(&cluster, ctx, eks, addpools, token)
 		if err2 != (types.CustomCPError{}) {
 			utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
@@ -850,14 +848,14 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			return err2
 		}
 	}
-	for _ ,prePool :=range previousCluster.NodePools {
-		existInNew :=false
-		for _, pool := range cluster.NodePools{
+	for _, prePool := range previousCluster.NodePools {
+		existInNew := false
+		for _, pool := range cluster.NodePools {
 			if pool.NodePoolName == prePool.NodePoolName {
 				existInNew = true
 			}
 		}
-		if existInNew == false{
+		if existInNew == false {
 			DeleteNodepool(cluster, ctx, eks, prePool.NodePoolName)
 		}
 
@@ -875,8 +873,8 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			if poolIndex > (previousPoolCount - 1) {
 				break
 			}
-			for _, index :=range addedIndex{
-				if index == poolIndex{
+			for _, index := range addedIndex {
+				if index == poolIndex {
 					continue
 				}
 			}
@@ -1245,7 +1243,7 @@ func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*No
 	oldCluster.NodePools = cluster.NodePools
 	for in, mainPool := range pools {
 		cluster.NodePools[in].PoolStatus = true
-		oldCluster.NodePools =append(oldCluster.NodePools, mainPool)
+		oldCluster.NodePools = append(oldCluster.NodePools, mainPool)
 		for _, pool := range pools {
 			if pool.NodePoolName == mainPool.NodePoolName {
 				cluster.NodePools[in].RoleName = pool.RoleName
@@ -1306,7 +1304,7 @@ func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName 
 					return updationFailedError(cluster, ctx, types.CustomCPError{
 						StatusCode:  int(models.CloudStatusCode),
 						Error:       "Error in deleting nodepool in running cluster",
-						Description: err1.Error(),
+						Description: err.Error(),
 					})
 				}
 			}
