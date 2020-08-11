@@ -505,7 +505,8 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 
 	if confErr != (types.CustomCPError{}) {
 		ctx.SendLogs("gcpClusterModel :"+confErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		PrintError(errors.New(confErr.Description), cluster.Name, cluster.ProjectId, companyId)
+		utils.SendLog(companyId, confErr.Error+": "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(companyId, confErr.Description, "error", cluster.ProjectId)
 
 		cluster.Status = models.ClusterCreationFailed
 		confError = UpdateCluster(cluster, false, ctx)
@@ -554,11 +555,11 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	} else {
 		ctx.SendLogs("GCPClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.Status = models.ClusterCreationFailed
-		PrintError(errors.New("Notification not recieved from the agent"), cluster.Name, cluster.ProjectId,  companyId)
+		PrintError(errors.New("Notification not recieved from the agent"), cluster.Name, cluster.ProjectId, companyId)
 		err := UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			confErr := types.CustomCPError{StatusCode: 500, Error: "Error occured in updating cluster status in database", Description: "Error occured in updating cluster status in database"}
-			PrintError(err, cluster.Name, cluster.ProjectId,  companyId)
+			PrintError(err, cluster.Name, cluster.ProjectId, companyId)
 			err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DO, ctx, confErr)
 			if err != nil {
 				ctx.SendLogs("GcpDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -590,8 +591,7 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 		return cluster, err1
 	}
 
-
-	err1 = gcp.fetchClusterStatus(&cluster,token, ctx)
+	err1 = gcp.fetchClusterStatus(&cluster, token, ctx)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GcpClusterModel : Status - Failed to get latest status "+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err1
@@ -645,7 +645,7 @@ func GetAllServiceAccounts(credentials GcpCredentials, ctx utils.Context) (servi
 	return serviceAccounts, err
 }
 
-func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials,token, companyId string, ctx utils.Context) types.CustomCPError {
+func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, token, companyId string, ctx utils.Context) types.CustomCPError {
 
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
