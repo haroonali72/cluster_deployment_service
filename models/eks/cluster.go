@@ -1299,6 +1299,18 @@ func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName 
 	for _, pool := range oldCluster.NodePools {
 		if pool.NodePoolName == poolName {
 			if pool.NodeRole != nil && *pool.NodeRole != "" {
+				err = eksOps.deleteIAMRoleFromInstanceProfile(*pool.RoleName)
+				if err != nil {
+					ctx.SendLogs(
+						"EKS delete IAM role for cluster'"+cluster.Name+"', node group '"+pool.NodePoolName+"' failed: "+err.Error(),
+						models.LOGGING_LEVEL_ERROR,
+						models.Backend_Logging,
+					)
+					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+pool.NodePoolName, "error", cluster.ProjectId)
+					cpErr := ApiError(err, "NodePool Deletion Failed", 512)
+					return cpErr
+				}
 				err := eksOps.deleteIAMRole(*pool.RoleName)
 				if err != nil {
 					return updationFailedError(cluster, ctx, types.CustomCPError{
