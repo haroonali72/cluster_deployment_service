@@ -911,7 +911,7 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (KubeCluste
 		return KubeClusterStatus{}, err1
 	}
 
-	status, errr := doksOps.fetchStatus(ctx, cluster.ID)
+	status, errr := doksOps.fetchStatus(ctx, cluster)
 	if errr != (types.CustomCPError{}) {
 		return KubeClusterStatus{}, errr
 	}

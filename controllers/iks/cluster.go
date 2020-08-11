@@ -799,13 +799,7 @@ func (c *IKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	if cluster.Status == (models.ClusterTerminationFailed) {
-		ctx.SendLogs("IKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in termination failed state"}
-		c.ServeJSON()
-		return
-	}
+
 	ctx.SendLogs("IKSClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = iks.DeleteCluster(id, userInfo.CompanyId, *ctx)
