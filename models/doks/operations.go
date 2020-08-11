@@ -186,14 +186,13 @@ func (cloud *DOKS) addNodepool(nodepool KubernetesNodePool, ctx utils.Context, c
 	}
 
 	_, res, err := cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,pool.ID)
-
 	for res.StatusCode != 200 {
 		time.Sleep(30 * time.Second)
 		_,res, err = cloud.Client.Kubernetes.GetNodePool(context.Background(),clusterId,pool.ID)
 	}
 
 
-	time.Sleep(15 * time.Second)
+	time.Sleep(60 * time.Second)
 
 	return pool.ID,types.CustomCPError{}
 
@@ -334,7 +333,7 @@ func (cloud *DOKS) UpgradeKubernetesVersion( cluster *KubernetesCluster, ctx uti
 
 }
 
-func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeClusterStatus, types.CustomCPError) {
+func (cloud *DOKS) fetchStatus(ctx utils.Context, cluster KubernetesCluster) (KubeClusterStatus, types.CustomCPError) {
 	var response KubeClusterStatus
 	count := 0
 	if cloud.Client == nil {
@@ -344,11 +343,12 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeCluster
 		}
 	}
 
-	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clusterId)
+	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), cluster.ID)
 	if err != nil {
 		ctx.SendLogs("DOKS get cluster status  failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return KubeClusterStatus{}, ApiError(err, "Error in fetching kubernetes cluster status", vault.DOCredentials{}, ctx)
 	}
+
 	response.Name = status.Name
 	response.ID = status.ID
 	response.RegionSlug = status.RegionSlug
@@ -356,41 +356,45 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeCluster
 	response.ClusterIp = status.IPv4
 	response.Endpoint = status.Endpoint
 	response.State = string(status.Status.State)
-	for _, pool := range status.NodePools {
-		count++
-		var workerPool KubeWorkerPoolStatus
-		workerPool.Name = pool.Name
-		workerPool.ID = pool.ID
-		workerPool.Size = pool.Size
-		workerPool.Count = pool.Count
-		if pool.AutoScale ==true {
-			workerPool.AutoScaling.AutoScale = pool.AutoScale
-			workerPool.AutoScaling.MinCount = pool.MinNodes
-			workerPool.AutoScaling.MaxCount = pool.MaxNodes
-		}
+	for _,p := range cluster.NodePools {
 
-		for _, nodes := range pool.Nodes {
+		for _, pool := range status.NodePools {
+			if p.ID == pool.ID {
+				count++
+				var workerPool KubeWorkerPoolStatus
+				workerPool.Name = pool.Name
+				workerPool.ID = pool.ID
+				workerPool.Size = pool.Size
+				workerPool.Count = pool.Count
+				if pool.AutoScale == true {
+					workerPool.AutoScaling.AutoScale = pool.AutoScale
+					workerPool.AutoScaling.MinCount = pool.MinNodes
+					workerPool.AutoScaling.MaxCount = pool.MaxNodes
+				}
 
-			var poolNodes PoolNodes
-			poolNodes.Name = nodes.Name
-			poolNodes.DropletID = nodes.DropletID
-			dropletId, _ := strconv.ParseInt(nodes.DropletID, 10, 64)
-			droplet, _, err := cloud.Client.Droplets.Get(context.Background(), int(dropletId))
-			if err != nil {
-				ctx.SendLogs("Error in getting droplet status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				cpErr := ApiError(err, "Error in getting droplet status", vault.DOCredentials{}, ctx)
-				return KubeClusterStatus{}, cpErr
+				for _, nodes := range pool.Nodes {
+
+					var poolNodes PoolNodes
+					poolNodes.Name = nodes.Name
+					poolNodes.DropletID = nodes.DropletID
+					dropletId, _ := strconv.ParseInt(nodes.DropletID, 10, 64)
+					droplet, _, err := cloud.Client.Droplets.Get(context.Background(), int(dropletId))
+					if err != nil {
+						ctx.SendLogs("Error in getting droplet status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						cpErr := ApiError(err, "Error in getting droplet status", vault.DOCredentials{}, ctx)
+						return KubeClusterStatus{}, cpErr
+					}
+					poolNodes.Name = nodes.Name
+					poolNodes.PrivateIp, _ = droplet.PrivateIPv4()
+					poolNodes.PublicIp, _ = droplet.PublicIPv4()
+					poolNodes.State = nodes.Status.State
+
+					workerPool.Nodes = append(workerPool.Nodes, poolNodes)
+				}
+				response.WorkerPools = append(response.WorkerPools, workerPool)
 			}
-			poolNodes.Name = nodes.Name
-			poolNodes.PrivateIp, _ = droplet.PrivateIPv4()
-			poolNodes.PublicIp, _ = droplet.PublicIPv4()
-			poolNodes.State = nodes.Status.State
-
-			workerPool.Nodes = append(workerPool.Nodes, poolNodes)
 		}
-		response.WorkerPools = append(response.WorkerPools, workerPool)
 	}
-
 	response.NodePoolCount = count
 	return response, types.CustomCPError{}
 }
