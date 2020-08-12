@@ -496,7 +496,7 @@ func (c *GKEClusterController) Patch() {
 		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
 		c.ServeJSON()
 	}else if cluster.CloudplexStatus == (models.ClusterUpdateFailed) {
-		err := gke.AddPreviousGKEClusterChanges(cluster, *ctx)
+		err := gke.UpdateGKECluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "does not exist") {
 				c.Ctx.Output.SetStatus(404)
