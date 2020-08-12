@@ -383,7 +383,7 @@ func (c *EKSClusterController) Patch() {
 	}
 	ctx.SendLogs("EKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("EKSClusterController: JSON Payload: ", cluster)
-	if cluster.Status == (models.ClusterCreated) || cluster.Status == (models.ClusterTerminationFailed) || cluster.Status == (models.ClusterUpdateFailed) {
+	if cluster.Status == (models.ClusterCreated) || cluster.Status == (models.ClusterTerminationFailed)  {
 		err := eks.UpdatePreviousEKSCluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
