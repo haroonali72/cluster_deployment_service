@@ -371,8 +371,11 @@ func UpdatePreviousDOKSCluster(cluster KubernetesCluster, ctx utils.Context) err
 
 	return nil
 }
+
 func AddPreviousDOKSCluster(cluster KubernetesCluster, ctx utils.Context, patch bool) error {
+
 	var oldCluster KubernetesCluster
+
 	_, err := GetPreviousDOKSCluster(ctx)
 	if err == nil {
 		err := DeletePreviousDOKSCluster(ctx)
@@ -432,6 +435,98 @@ func AddPreviousDOKSCluster(cluster KubernetesCluster, ctx utils.Context, patch 
 
 	return nil
 }
+
+func AddPreviousDOKSClusterChanges(cluster KubernetesCluster, ctx utils.Context) error {
+
+	oldCluster, err := GetPreviousDOKSCluster(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"DOKSAddClusterModel:  Add previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+			)
+			return err
+		}
+
+	currentCluster, err := GetKubernetesCluster(ctx)
+	if err != nil {
+		return  err
+	}
+
+	difCluster,  err2 := CompareClusters(ctx)
+	if err2 != nil {
+		if strings.Contains(err2.Error(), "Nothing to update") {
+			err := AddPreviousDOKSCluster(cluster, ctx , true)
+			return err
+		}
+	}
+
+	for _, dif := range difCluster {
+		if dif.Path[0] == "AutoUpgrade" {
+			currentCluster.AutoUpgrade=oldCluster.AutoUpgrade
+		} else if dif.Path[0] == "Tags" {
+			currentCluster.Tags =oldCluster.Tags
+		}else if dif.Path[0] == "KubeVersion" {
+				currentCluster.KubeVersion =oldCluster.KubeVersion
+		} else if dif.Path[0] == "NodePools" {
+			poolIndex, _ := strconv.Atoi(dif.Path[1])
+			if poolIndex >=len(oldCluster.NodePools) || dif.Type=="delete"{
+				continue
+			}else if poolIndex == len(currentCluster.NodePools){
+				if dif.From != nil && currentCluster.NodePools[poolIndex].Name == oldCluster.NodePools[poolIndex].Name{
+					currentCluster.NodePools[poolIndex] = oldCluster.NodePools[poolIndex]
+				}
+			}
+				currentCluster.NodePools[poolIndex] = oldCluster.NodePools[poolIndex]
+		}
+	}
+	session, err := db.GetMongoSession(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"DOKSAddClusterModel:  Add previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	defer session.Close()
+
+	if cluster.CreationDate.IsZero() {
+		cluster.CreationDate = time.Now()
+		cluster.ModificationDate = time.Now()
+		cluster.Cloud = models.DOKS
+		cluster.CompanyId = ctx.Data.Company
+	}
+
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoDOKSPreviousClusterCollection, currentCluster)
+	if err != nil {
+		ctx.SendLogs(
+			"DOKSAddClusterModel:  Add previous cluster -  "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	err = UpdateKubernetesCluster(cluster, ctx)
+	if err != nil {
+		text := "DOKSClusterModel:  Update previous cluster - '" + cluster.Name + err.Error()
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		err =AddPreviousDOKSCluster(oldCluster,ctx,false)
+		if err != nil {
+			text := "DOKSDeleteClusterModel:  Delete  previous cluster - '" + cluster.Name + err.Error()
+			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New(text)
+		}
+		return err
+	}
+
+	return nil
+}
+
 func DeletePreviousDOKSCluster(ctx utils.Context) error {
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
@@ -687,7 +782,7 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 		return err1
 	}
 
-	difCluster, _, _, err2 := CompareClusters(ctx)
+	difCluster,  err2 := CompareClusters(ctx)
 	if err2 != nil {
 		if strings.Contains(err2.Error(), "Nothing to update") {
 			cluster.CloudplexStatus = models.ClusterCreated
@@ -1251,15 +1346,15 @@ func validateDOKSRegion(region string) (bool, error) {
 	return false, errors.New(errData)
 }
 
-func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
+func CompareClusters(ctx utils.Context) (diff.Changelog, error) {
 	cluster, err := GetKubernetesCluster(ctx)
 	if err != nil {
-		return diff.Changelog{}, 0, 0, err
+		return diff.Changelog{}, err
 	}
 
 	oldCluster, err := GetPreviousDOKSCluster(ctx)
 	if err != nil && strings.Contains(err.Error(), "not found") {
-		return diff.Changelog{}, 0, 0, errors.New("Nothing to update")
+		return diff.Changelog{},  errors.New("Nothing to update")
 	}
 
 	previousPoolCount := len(oldCluster.NodePools)
@@ -1267,12 +1362,13 @@ func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
 
 	difCluster, err := diff.Diff(oldCluster, cluster)
 	if len(difCluster) < 2 && previousPoolCount == newPoolCount {
-		return diff.Changelog{}, 0, 0, errors.New("Nothing to update")
+		return diff.Changelog{}, errors.New("Nothing to update")
 	} else if err != nil {
-		return diff.Changelog{}, 0, 0, errors.New("Error in comparing differences:" + err.Error())
+		return diff.Changelog{},  errors.New("Error in comparing differences:" + err.Error())
 	}
-	return difCluster, previousPoolCount, newPoolCount, nil
+	return difCluster,  nil
 }
+
 func UpdateCluster(cluster KubernetesCluster, ctx utils.Context, doksOps DOKS,credentials vault.DOCredentials) types.CustomCPError {
 	err := doksOps.UpdateCluster(&cluster, ctx,credentials )
 	if err != (types.CustomCPError{}) {

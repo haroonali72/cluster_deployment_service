@@ -1085,7 +1085,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 
 	gkeOps, err1 := GetGKE(credentials)
 	if err1 != (types.CustomCPError{}) {
-		ctx.SendLogs("GKEClusterModel : Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GKEClusterModel : Terminate - "+err1.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err1)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

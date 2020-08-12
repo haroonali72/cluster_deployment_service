@@ -563,7 +563,7 @@ func (c *DOKSClusterController) Patch() {
 	ctx.SendLogs("DOKSClusterController: Updating cluster "+cluster.Name+" of the project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
-	if cluster.CloudplexStatus == (models.ClusterCreated) || cluster.CloudplexStatus == (models.ClusterTerminationFailed) || cluster.CloudplexStatus == (models.ClusterUpdateFailed) {
+	if cluster.CloudplexStatus == (models.ClusterCreated) || cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
 		err := doks.UpdatePreviousDOKSCluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "does not exist") {
@@ -577,6 +577,26 @@ func (c *DOKSClusterController) Patch() {
 			c.ServeJSON()
 			return
 		}
+		ctx.SendLogs("DOKSClusterController: Cluster "+cluster.Name+" of the project "+cluster.ProjectId+" updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		ctx.SendLogs("DOKS cluster "+cluster.Name+" of the project "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
+		c.ServeJSON()
+	}else if cluster.CloudplexStatus == (models.ClusterUpdateFailed) {
+		err := doks. AddPreviousDOKSClusterChanges(cluster, *ctx)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "does not exist") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+
 		ctx.SendLogs("DOKSClusterController: Cluster "+cluster.Name+" of the project "+cluster.ProjectId+" updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		ctx.SendLogs("DOKS cluster "+cluster.Name+" of the project "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
