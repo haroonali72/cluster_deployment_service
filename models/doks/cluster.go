@@ -498,6 +498,7 @@ func AddPreviousDOKSClusterChanges(cluster KubernetesCluster, ctx utils.Context)
 		cluster.Cloud = models.DOKS
 		cluster.CompanyId = ctx.Data.Company
 	}
+	_ =DeletePreviousDOKSCluster(ctx)
 
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoDOKSPreviousClusterCollection, currentCluster)

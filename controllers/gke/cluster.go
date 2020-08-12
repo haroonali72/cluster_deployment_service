@@ -470,7 +470,7 @@ func (c *GKEClusterController) Patch() {
 
 	ctx.SendLogs("GKEClusterController: Updating cluster "+cluster.Name+" of project id "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	if cluster.CloudplexStatus == (models.ClusterCreated) || cluster.CloudplexStatus == (models.ClusterTerminationFailed) || cluster.CloudplexStatus == (models.ClusterUpdateFailed) {
+	if cluster.CloudplexStatus == (models.ClusterCreated) || cluster.CloudplexStatus == (models.ClusterTerminationFailed)  {
 		err := gke.UpdatePreviousGKECluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
@@ -494,6 +494,26 @@ func (c *GKEClusterController) Patch() {
 		ctx.SendLogs("GKE running cluster "+cluster.Name+" in project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
+		c.ServeJSON()
+	}else if cluster.CloudplexStatus == (models.ClusterUpdateFailed) {
+		err := gke.AddPreviousGKEClusterChanges(cluster, *ctx)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "does not exist") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+
+		ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" of the project "+cluster.ProjectId+" updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		ctx.SendLogs("GKE cluster "+cluster.Name+" of the project "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 		c.ServeJSON()
 	}
 
@@ -630,7 +650,7 @@ func (c *GKEClusterController) Delete() {
 		c.ServeJSON()
 		return
 	} else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) && !forceDelete {
-		ctx.SendLogs("DOKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GKEClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
 		c.ServeJSON()
@@ -1182,7 +1202,7 @@ func (c *GKEClusterController) ApplyAgent() {
 	}
 
 	if cluster.CloudplexStatus != "Cluster Created" {
-		text := "DOKSClusterController: Cannot apply agent until cluster is in created state. Cluster is in " + string(cluster.CloudplexStatus) + " state."
+		text := "GKEClusterController: Cannot apply agent until cluster is in created state. Cluster is in " + string(cluster.CloudplexStatus) + " state."
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": text}

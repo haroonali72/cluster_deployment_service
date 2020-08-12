@@ -533,6 +533,110 @@ func AddPreviousGKECluster(cluster GKECluster, ctx utils.Context, patch bool) er
 
 	return nil
 }
+func AddPreviousGKEClusterChanges(cluster GKECluster, ctx utils.Context) error {
+
+	oldCluster, err := GetPreviousGKECluster(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"GKEAddClusterModel:  Add previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	currentCluster, err := GetGKECluster(ctx)
+	if err != nil {
+		return  err
+	}
+
+	difCluster,  err2 := CompareClusters(ctx)
+	if err2 != nil {
+		if strings.Contains(err2.Error(), "Nothing to update") {
+			err := AddPreviousGKECluster(cluster, ctx , true)
+			return err
+		}
+	}
+
+	for _, dif := range difCluster {
+		if dif.Path[0] == "MasterAuthorizedNetworksConfig" {
+			currentCluster.MasterAuthorizedNetworksConfig=oldCluster.MasterAuthorizedNetworksConfig
+		} else if dif.Path[0] == "NetworkPolicy" {
+			currentCluster.NetworkPolicy =oldCluster.NetworkPolicy
+		}else if dif.Path[0] == "AddonsConfig" {
+			currentCluster.AddonsConfig =oldCluster.AddonsConfig
+		} else if dif.Path[0] == "InitialClusterVersion" {
+			currentCluster.InitialClusterVersion =oldCluster.InitialClusterVersion
+		}  else if dif.Path[0] ==  "LoggingService" {
+			currentCluster.LoggingService =oldCluster.LoggingService
+		} else if dif.Path[0] =="MonitoringService" {
+			currentCluster.MonitoringService =oldCluster.MonitoringService
+		} else if dif.Path[0] == "LegacyAbac" {
+			currentCluster.LegacyAbac =oldCluster.LegacyAbac
+		} else if dif.Path[0] =="MaintenancePolicy" {
+			currentCluster.MaintenancePolicy =oldCluster.MaintenancePolicy
+		}else if dif.Path[0] =="ResourceUsageExportConfig" {
+			currentCluster.ResourceUsageExportConfig =oldCluster.ResourceUsageExportConfig
+		}else if dif.Path[0] == "NodePools" {
+			poolIndex, _ := strconv.Atoi(dif.Path[1])
+			if poolIndex >=len(oldCluster.NodePools) || dif.Type=="delete"{
+				continue
+			}else if poolIndex == len(currentCluster.NodePools){
+				if dif.From != nil && currentCluster.NodePools[poolIndex].Name == oldCluster.NodePools[poolIndex].Name{
+					currentCluster.NodePools[poolIndex] = oldCluster.NodePools[poolIndex]
+				}
+			}
+			currentCluster.NodePools[poolIndex] = oldCluster.NodePools[poolIndex]
+		}
+	}
+
+	session, err := db.GetMongoSession(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"GKEAddClusterModel:  Add previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	defer session.Close()
+
+	if cluster.CreationDate.IsZero() {
+		cluster.CreationDate = time.Now()
+		cluster.ModificationDate = time.Now()
+		cluster.Cloud = models.GKE
+		cluster.CompanyId = ctx.Data.Company
+	}
+	_ =DeletePreviousGKECluster(ctx)
+
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoGKEPreviousClusterCollection, currentCluster)
+	if err != nil {
+		ctx.SendLogs(
+			"GKEAddClusterModel:  Add previous cluster -  "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	err = UpdateGKECluster(cluster, ctx)
+	if err != nil {
+		text := "GKEClusterModel:  Update previous cluster - '" + cluster.Name + err.Error()
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		err =AddPreviousGKECluster(oldCluster,ctx,false)
+		if err != nil {
+			text := "GKEAddClusterModel:  Delete  previous cluster - '" + cluster.Name + err.Error()
+			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New(text)
+		}
+		return err
+	}
+
+	return nil
+}
 func GetPreviousGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -790,7 +894,7 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 		return err
 	}
 
-	difCluster, _, _, err1 := CompareClusters(ctx)
+	difCluster, err1 := CompareClusters(ctx)
 	if err1 != nil {
 		if strings.Contains(err1.Error(), "Nothing to update") {
 			cluster.CloudplexStatus = models.ClusterCreated
@@ -1359,15 +1463,15 @@ func UpdateVersion(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.Cust
 	return types.CustomCPError{}
 }
 
-func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
+func CompareClusters(ctx utils.Context) (diff.Changelog, error) {
 	cluster, err := GetGKECluster(ctx)
 	if err != nil {
-		return diff.Changelog{}, 0, 0, err
+		return diff.Changelog{}, err
 	}
 
 	oldCluster, err := GetPreviousGKECluster(ctx)
 	if err != nil && strings.Contains(err.Error(), "not found") {
-		return diff.Changelog{}, 0, 0, errors.New("Nothing to update")
+		return diff.Changelog{}, errors.New("Nothing to update")
 	}
 
 	previousPoolCount := len(oldCluster.NodePools)
@@ -1375,11 +1479,11 @@ func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
 
 	difCluster, err := diff.Diff(oldCluster, cluster)
 	if len(difCluster) < 2 && previousPoolCount == newPoolCount {
-		return diff.Changelog{}, 0, 0, errors.New("Nothing to update")
+		return diff.Changelog{}, errors.New("Nothing to update")
 	} else if err != nil {
-		return diff.Changelog{}, 0, 0, errors.New("Error in comparing differences:" + err.Error())
+		return diff.Changelog{},  errors.New("Error in comparing differences:" + err.Error())
 	}
-	return difCluster, previousPoolCount, newPoolCount, nil
+	return difCluster, nil
 }
 
 func UpdateMasterAuthorizedNetworksConfig(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.CustomCPError {

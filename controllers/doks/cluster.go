@@ -583,7 +583,7 @@ func (c *DOKSClusterController) Patch() {
 		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 		c.ServeJSON()
 	}else if cluster.CloudplexStatus == (models.ClusterUpdateFailed) {
-		err := doks. AddPreviousDOKSClusterChanges(cluster, *ctx)
+		err := doks.AddPreviousDOKSClusterChanges(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "does not exist") {
 				c.Ctx.Output.SetStatus(404)
