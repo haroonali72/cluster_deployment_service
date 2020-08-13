@@ -618,8 +618,33 @@ func (c *IKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	if cluster.Status == (models.ClusterCreated) || cluster.Status == (models.ClusterTerminationFailed) || cluster.Status == (models.ClusterUpdateFailed) {
+	if cluster.Status == (models.ClusterCreated) || cluster.Status == (models.ClusterTerminationFailed) {
 		err := iks.UpdatePreviousIKSCluster(cluster, *ctx)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			if strings.Contains(err.Error(), "does not exist") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+
+		ctx.SendLogs("IKS running cluster "+cluster.Name+" in project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
+		c.ServeJSON()
+	}else if  cluster.Status == (models.ClusterUpdateFailed) {
+		err := iks.UpdateCluster(cluster,trye, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
 				c.Ctx.Output.SetStatus(404)
