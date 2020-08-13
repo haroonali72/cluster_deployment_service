@@ -33,6 +33,7 @@ type AKSCluster struct {
 	Cloud                  models.Cloud                         `json:"cloud" bson:"cloud"`
 	CreationDate           time.Time                            `json:"-" bson:"creation_date"`
 	ModificationDate       time.Time                            `json:"-" bson:"modification_date"`
+	UpdateStatus           string                               `json:"-" bson:"update_status"`
 	CompanyId              string                               `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
 	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created|eq=Cluster Update Failed" description:"Status of cluster [required]"`
 	ProvisioningState      string                               `json:"-" bson:"provisioning_state,omitempty"`
@@ -247,7 +248,8 @@ func GetPreviousAKSCluster(projectId, companyId string, ctx utils.Context) (clus
 
 func UpdatePreviousAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 
-	if cluster.Status != models.ClusterUpdateFailed {
+	result, _ := GetAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+	if result.UpdateStatus != string(models.New) {
 		err := AddPreviousAKSCluster(cluster, ctx, false)
 		if err != nil {
 			text := "AKSClusterModel:  Update  previous cluster -'" + cluster.Name + err.Error()
@@ -256,6 +258,7 @@ func UpdatePreviousAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 		}
 	}
 
+	cluster.UpdateStatus = string(models.New)
 	err := UpdateAKSCluster(cluster, ctx)
 	if err != nil {
 		text := "AKSClusterModel:  Update previous cluster - '" + cluster.Name + err.Error()
@@ -1074,7 +1077,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		for poolIndex, nodePool := range cluster.AgentPoolProfiles {
 			isPoolUpdated[poolIndex] = false
 			for _, diff := range difCluster {
-				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" {
+				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" {
 					continue
 				}
 				if diff.Type == "create" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[2] == "Name" && *diff.To.(*string) == *nodePool.Name {
@@ -1116,7 +1119,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		}
 		for _, nodePool := range previousCluster.AgentPoolProfiles {
 			for _, diff := range difCluster {
-				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" {
+				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" {
 					continue
 				}
 				if diff.Type == "delete" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[2] == "Name" && *diff.From.(*string) == *nodePool.Name {
@@ -1139,7 +1142,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		for poolIndex, nodePool := range cluster.AgentPoolProfiles {
 			isPoolUpdated[poolIndex] = false
 			for _, diff := range difCluster {
-				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" {
+				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" {
 					continue
 				}
 				if (diff.Type == "update" || diff.Type == "delete" || diff.Type == "create") && diff.Path[0] == "AgentPoolProfiles" && diff.Path[1] == strconv.Itoa(poolIndex) && !isPoolUpdated[poolIndex] {
@@ -1162,7 +1165,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		for poolIndex, nodePool := range cluster.AgentPoolProfiles {
 			isPoolUpdated[poolIndex] = false
 			for _, diff := range difCluster {
-				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" {
+				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" {
 					continue
 				}
 
@@ -1211,7 +1214,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 
 	isClusterUpdated = false
 	for _, diff := range difCluster {
-		if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" {
+		if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" {
 			continue
 		} else if (diff.Type == "update" || diff.Type == "create" || diff.Type == "delete") && diff.Path[0] != "AgentPoolProfiles" && !isClusterUpdated {
 			err := aksOps.CreateCluster(cluster, token, ctx)
@@ -1240,6 +1243,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 	//}
 
 	cluster.Status = models.ClusterCreated
+	cluster.UpdateStatus = string(models.ClusterUpdated)
 	confError_ := UpdateAKSCluster(cluster, ctx)
 	if confError_ != nil {
 		ctx.SendLogs("AKSRunningClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
