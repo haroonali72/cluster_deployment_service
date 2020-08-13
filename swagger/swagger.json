@@ -10886,51 +10886,51 @@
             "title": "*string",
             "type": "object"
         },
-        "10096.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "103242.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "10854.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "11801.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "14391.0xc001e31ce0.false": {
+        "14141.0xc001aab680.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc001df5d70.false": {
+        "14149.0xc00113c300.false": {
             "title": "false",
             "type": "object"
         },
-        "618.0xc00131bc50.false": {
+        "14239.0xc0014ae810.false": {
             "title": "false",
             "type": "object"
         },
-        "713.0xc001cab9b0.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "7432.string": {
+        "1559.string": {
             "title": "string",
             "type": "object"
         },
-        "82298.string": {
+        "19777.string": {
             "title": "string",
             "type": "object"
         },
-        "89385.0xc001dbaff0.false": {
+        "22441.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "23199.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "26990.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "434.0xc001bc5fb0.false": {
             "title": "false",
             "type": "object"
         },
-        "964.0xc0016a7200.false": {
+        "518.0xc001a718c0.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "6553.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "6737.0xc001be77d0.false": {
             "title": "false",
             "type": "object"
         },
@@ -11074,7 +11074,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/82298.string"
+                    "$ref": "#/definitions/1559.string"
                 },
                 "type": {
                     "type": "string"
@@ -11313,7 +11313,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc00131bc50.false"
+                    "$ref": "#/definitions/14149.0xc00113c300.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11940,7 +11940,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc0016a7200.false"
+                    "$ref": "#/definitions/14239.0xc0014ae810.false"
                 },
                 "name": {
                     "type": "string"
@@ -12778,7 +12778,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/103242.string"
+                    "$ref": "#/definitions/6553.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -14621,7 +14621,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/89385.0xc001dbaff0.false"
+                    "$ref": "#/definitions/518.0xc001a718c0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14852,7 +14852,8 @@
                 "ClusterTerminated = \"Cluster Terminated\"",
                 "Deploying = \"Creating\"",
                 "Terminating = \"Terminating\"",
-                "ClusterUpdateFailed = \"Cluster Update Failed\""
+                "ClusterUpdateFailed = \"Cluster Update Failed\"",
+                "ClusterUpdated = \"Cluster Updated\""
             ],
             "example": "New"
         },
@@ -14994,7 +14995,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14391.0xc001e31ce0.false"
+                    "$ref": "#/definitions/434.0xc001bc5fb0.false"
                 },
                 "name": {
                     "type": "string"

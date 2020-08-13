@@ -403,6 +403,7 @@ func (c *AKSClusterController) Patch() {
 
 		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
 		c.ServeJSON()
+		return
 	}
 	err = aks.UpdateAKSCluster(cluster, *ctx)
 	if err != nil {
