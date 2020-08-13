@@ -644,7 +644,7 @@ func (c *IKSClusterController) Patch() {
 		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
 		c.ServeJSON()
 	}else if  cluster.Status == (models.ClusterUpdateFailed) {
-		err := iks.UpdateCluster(cluster,trye, *ctx)
+		err := iks.UpdateCluster(cluster,true, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
 				c.Ctx.Output.SetStatus(404)
