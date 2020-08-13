@@ -90,7 +90,73 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, token string, ctx utils.Con
 
 	return cluster, types.CustomCPError{}
 }
+func (cloud *GCP) cleanup (cluster Cluster_Def , ctx utils.Context,token string)  types.CustomCPError {
 
+	if cloud.Client == nil {
+		err := cloud.init()
+		if err != (types.CustomCPError{}) {
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+			return  err
+		}
+	}
+
+	var gcpNetwork types.GCPNetwork
+	url := getNetworkHost("gcp", cluster.ProjectId)
+
+	network, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  ApiErrors(err, "Error in cluster creation")
+	}
+
+	err = json.Unmarshal(network.([]byte), &gcpNetwork)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  ApiErrors(err, "Error in cleanup")
+	}
+
+
+	for _,pool := range cluster.NodePools {
+
+		zone := getSubnetZone(pool.PoolSubnet, gcpNetwork.Definition[0].Subnets)
+
+		if pool.PoolRole == "master" {
+			reqCtx := context.Background()
+			result, err := cloud.Client.Instances.Delete(cloud.ProjectId, zone, pool.Name).Context(reqCtx).Do()
+			if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
+					ctx.SendLogs("Error in cleanup " + err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+					return ApiErrors(err,"Error in cleanup ")
+			} else if err == nil {
+				err1 := cloud.waitForZonalCompletion(result, zone, ctx)
+				if err1 != (types.CustomCPError{}) {
+					ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					return ApiErrors(err,"Error in cleanup ")
+				}
+			}
+
+			err1 := cloud.releaseExternalIp(pool.Name, ctx)
+			if err1 != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(err1.Description), "not found") {
+					ctx.SendLogs("Error in cleanup", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					return ApiErrors(err,"Error in cleanup ")
+				}
+			} else {
+			reqCtx := context.Background()
+			result, err := cloud.Client.InstanceGroupManagers.Delete(cloud.ProjectId, zone, pool.Name).Context(reqCtx).Do()
+			if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return ApiErrors(err,"Error in cleanup ")
+			} else if err ==nil {
+				err1 := cloud.waitForZonalCompletion(result, zone, ctx)
+				if err1 != (types.CustomCPError{}) {
+					ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					return ApiErrors(err,"Error in cleanup ")
+				}
+			}
+
+		}
+	}
+	return types.CustomCPError{}
+}
 func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.GCPNetwork, token string, ctx utils.Context) types.CustomCPError {
 	if cloud.Client == nil {
 		err := cloud.init()
