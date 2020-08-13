@@ -408,6 +408,32 @@ func (c *EKSClusterController) Patch() {
 
 		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
 		c.ServeJSON()
+	}else if  cluster.Status == (models.ClusterUpdateFailed) {
+		err := eks.UpdateEKSCluster(cluster, *ctx)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		if strings.Contains(err.Error(), "does not exist") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+
+		}
+
+		ctx.SendLogs("EKS running cluster "+cluster.Name+" in project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
+		c.ServeJSON()
 	}
 
 	cluster.CompanyId = userInfo.CompanyId
