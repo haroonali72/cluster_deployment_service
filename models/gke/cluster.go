@@ -790,7 +790,7 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 		return err
 	}
 
-	difCluster, _, _, err1 := CompareClusters(ctx)
+	difCluster, err1 := CompareClusters(ctx)
 	if err1 != nil {
 		if strings.Contains(err1.Error(), "Nothing to update") {
 			cluster.CloudplexStatus = models.ClusterCreated
@@ -1085,7 +1085,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 
 	gkeOps, err1 := GetGKE(credentials)
 	if err1 != (types.CustomCPError{}) {
-		ctx.SendLogs("GKEClusterModel : Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GKEClusterModel : Terminate - "+err1.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err1)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -1359,15 +1359,15 @@ func UpdateVersion(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.Cust
 	return types.CustomCPError{}
 }
 
-func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
+func CompareClusters(ctx utils.Context) (diff.Changelog, error) {
 	cluster, err := GetGKECluster(ctx)
 	if err != nil {
-		return diff.Changelog{}, 0, 0, err
+		return diff.Changelog{}, err
 	}
 
 	oldCluster, err := GetPreviousGKECluster(ctx)
 	if err != nil && strings.Contains(err.Error(), "not found") {
-		return diff.Changelog{}, 0, 0, errors.New("Nothing to update")
+		return diff.Changelog{}, errors.New("Nothing to update")
 	}
 
 	previousPoolCount := len(oldCluster.NodePools)
@@ -1375,11 +1375,11 @@ func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
 
 	difCluster, err := diff.Diff(oldCluster, cluster)
 	if len(difCluster) < 2 && previousPoolCount == newPoolCount {
-		return diff.Changelog{}, 0, 0, errors.New("Nothing to update")
+		return diff.Changelog{}, errors.New("Nothing to update")
 	} else if err != nil {
-		return diff.Changelog{}, 0, 0, errors.New("Error in comparing differences:" + err.Error())
+		return diff.Changelog{},  errors.New("Error in comparing differences:" + err.Error())
 	}
-	return difCluster, previousPoolCount, newPoolCount, nil
+	return difCluster, nil
 }
 
 func UpdateMasterAuthorizedNetworksConfig(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.CustomCPError {
