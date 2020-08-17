@@ -1110,8 +1110,6 @@ func (c *DOKSClusterController) TerminateCluster() {
 	}
 
 	ctx.Data.Company = userInfo.CompanyId
-	beego.Info(userInfo.CompanyId + "======" + projectId)
-	beego.Info(ctx.Data.Company + "======" + ctx.Data.ProjectId)
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
