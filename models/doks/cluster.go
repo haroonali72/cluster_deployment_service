@@ -327,12 +327,12 @@ func UpdateKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 	cluster.CompanyId = oldCluster.CompanyId
-	if oldCluster.ID != "" {
+	if oldCluster.ID != "" && oldCluster.CloudplexStatus != models.Terminating{
 		cluster.ID = oldCluster.ID
 	}
     for index,pool := range cluster.NodePools{
-		if  len(cluster.NodePools) >= len(oldCluster.NodePools) && index < len(oldCluster.NodePools){
-			if oldCluster.NodePools[index] != nil &&  oldCluster.NodePools[index].ID != ""{
+		if  len(cluster.NodePools) >= len(oldCluster.NodePools) && index < len(oldCluster.NodePools) && oldCluster.CloudplexStatus != models.Terminating{
+			if oldCluster.NodePools[index] != nil &&  oldCluster.NodePools[index].ID != "" {
 				pool.ID = oldCluster.NodePools[index].ID
 			}
 		}
