@@ -75,13 +75,27 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, token string, ctx utils.Con
 
 		if pool.PoolRole == "master" {
 			err := cloud.deployMaster(cluster.ProjectId, pool, gcpNetwork, token, ctx)
-			if err != (types.CustomCPError{}) {
+			if err != (types.CustomCPError{}) && strings.Contains(err.Description, "was not found, notFound") {
+				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return cluster, types.CustomCPError{
+					StatusCode:  502,
+					Error:       "Instance creation failed due to limit reached out",
+					Description: err.Description,
+				}
+			} else if err != (types.CustomCPError{}) {
 				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return cluster, err
 			}
 		} else {
 			err := cloud.deployWorkers(cluster.ProjectId, pool, gcpNetwork, token, ctx)
-			if err != (types.CustomCPError{}) {
+			if err != (types.CustomCPError{}) && strings.Contains(err.Description, "was not found, notFound") {
+				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return cluster, types.CustomCPError{
+					StatusCode:  502,
+					Error:       "Instance creation failed due to limit reached out",
+					Description: err.Description,
+				}
+			} else if err != (types.CustomCPError{}) {
 				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return cluster, err
 			}
@@ -90,13 +104,13 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, token string, ctx utils.Con
 
 	return cluster, types.CustomCPError{}
 }
-func (cloud *GCP) cleanup (cluster Cluster_Def , ctx utils.Context,token string)  types.CustomCPError {
+func (cloud *GCP) cleanup(cluster Cluster_Def, ctx utils.Context, token string) types.CustomCPError {
 
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
 			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-			return  err
+			return err
 		}
 	}
 
@@ -106,17 +120,16 @@ func (cloud *GCP) cleanup (cluster Cluster_Def , ctx utils.Context,token string)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  ApiErrors(err, "Error in cluster creation")
+		return ApiErrors(err, "Error in cluster creation")
 	}
 
 	err = json.Unmarshal(network.([]byte), &gcpNetwork)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  ApiErrors(err, "Error in cleanup")
+		return ApiErrors(err, "Error in cleanup")
 	}
 
-
-	for _,pool := range cluster.NodePools {
+	for _, pool := range cluster.NodePools {
 
 		zone := getSubnetZone(pool.PoolSubnet, gcpNetwork.Definition[0].Subnets)
 
@@ -124,32 +137,32 @@ func (cloud *GCP) cleanup (cluster Cluster_Def , ctx utils.Context,token string)
 			reqCtx := context.Background()
 			result, err := cloud.Client.Instances.Delete(cloud.ProjectId, zone, pool.Name).Context(reqCtx).Do()
 			if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
-					ctx.SendLogs("Error in cleanup " + err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-					return ApiErrors(err,"Error in cleanup ")
+				ctx.SendLogs("Error in cleanup "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+				return ApiErrors(err, "Error in cleanup ")
 			} else if err == nil {
 				err1 := cloud.waitForZonalCompletion(result, zone, ctx)
 				if err1 != (types.CustomCPError{}) {
 					ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					return ApiErrors(err,"Error in cleanup ")
+					return ApiErrors(err, "Error in cleanup ")
 				}
 			}
 
 			err1 := cloud.releaseExternalIp(pool.Name, ctx)
 			if err1 != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(err1.Description), "not found") {
-					ctx.SendLogs("Error in cleanup", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					return ApiErrors(err,"Error in cleanup ")
-				}
-			} else {
+				ctx.SendLogs("Error in cleanup", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return ApiErrors(err, "Error in cleanup ")
+			}
+		} else {
 			reqCtx := context.Background()
 			result, err := cloud.Client.InstanceGroupManagers.Delete(cloud.ProjectId, zone, pool.Name).Context(reqCtx).Do()
 			if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return ApiErrors(err,"Error in cleanup ")
-			} else if err ==nil {
+				return ApiErrors(err, "Error in cleanup ")
+			} else if err == nil {
 				err1 := cloud.waitForZonalCompletion(result, zone, ctx)
 				if err1 != (types.CustomCPError{}) {
 					ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					return ApiErrors(err,"Error in cleanup ")
+					return ApiErrors(err, "Error in cleanup ")
 				}
 			}
 

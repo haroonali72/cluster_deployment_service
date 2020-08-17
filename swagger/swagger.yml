@@ -365,42 +365,6 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aks/update/{projectId}:
-    put:
-      tags:
-      - cluster/aks
-      description: Update a running kubernetes cluster
-      operationId: AKSClusterController.Update
-      parameters:
-      - in: header
-        name: X-Profile-Id
-        description: Vault credentials profile id
-        required: true
-        type: string
-      - in: header
-        name: X-Auth-Token
-        description: Token
-        required: true
-        type: string
-      - in: path
-        name: projectId
-        description: Id of the project
-        required: true
-        type: string
-      responses:
-        "201":
-          description: '{"msg": "Running cluster updated successfully"}'
-        "202":
-          description: '{"msg": "Running cluster updation initiated"}'
-        "401":
-          description: '{"error": "Unauthorized"}'
-        "404":
-          description: '{"error": "Not found"}'
-        "409":
-          description: '{"error": "Cluster is in New/Creating/Creation Failed/Terminating/Terminated
-            state"}'
-        "500":
-          description: '{"error": "Runtime Error"}'
   /cluster/aws/:
     put:
       tags:
@@ -1197,29 +1161,6 @@ paths:
           description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/azure/getzones/{region}:
-    get:
-      tags:
-      - cluster/azure
-      description: return zones against a region
-      operationId: AzureClusterController.Get Availability Zone
-      parameters:
-      - in: path
-        name: region
-        description: Azure region
-        required: true
-        type: string
-      responses:
-        "200":
-          description: '[]models.AzureZone'
-        "400":
-          description: '{"error": "Bad Request"}'
-        "401":
-          description: '{"error": "Unauthorized"}'
-        "404":
-          description: '{"error": "Not Found"}'
-        "500":
-          description: '{"error": "Bad Request"}'
   /cluster/azure/machine/info:
     get:
       tags:
@@ -2215,42 +2156,6 @@ paths:
           description: '{"error": "Not Found"}'
         "409":
           description: '{"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating
-            state"}'
-        "500":
-          description: '{"error": "Runtime Error"}'
-  /cluster/doks/update/{projectId}:
-    put:
-      tags:
-      - cluster/doks
-      description: Update a running kubernetes cluster
-      operationId: DOKSClusterController.Update
-      parameters:
-      - in: header
-        name: X-Profile-Id
-        description: Vault credentials profile id
-        required: true
-        type: string
-      - in: header
-        name: X-Auth-Token
-        description: Token
-        required: true
-        type: string
-      - in: path
-        name: projectId
-        description: Id of the project
-        required: true
-        type: string
-      responses:
-        "201":
-          description: '{"msg": "Running cluster updated successfully"}'
-        "202":
-          description: '{"msg": "Running cluster update initiated"}'
-        "401":
-          description: '{"error": "Unauthorized"}'
-        "404":
-          description: '{"error": "Not found"}'
-        "409":
-          description: '{"error": "Cluster is in New/Creating/Creation Failed/Terminating/Terminated
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
@@ -3863,42 +3768,6 @@ paths:
           description: '{"error": "Not Found"}'
         "409":
           description: '{"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating
-            state"}'
-        "500":
-          description: '{"error": "Runtime Error"}'
-  /cluster/iks/update/{projectId}:
-    put:
-      tags:
-      - cluster/iks
-      description: Update a running kubernetes cluster
-      operationId: IKSClusterController.Update
-      parameters:
-      - in: header
-        name: X-Profile-Id
-        description: Vault credentials profile id
-        required: true
-        type: string
-      - in: header
-        name: X-Auth-Token
-        description: Token
-        required: true
-        type: string
-      - in: path
-        name: projectId
-        description: Id of the project
-        required: true
-        type: string
-      responses:
-        "201":
-          description: '{"msg": "Running cluster updated successfully"}'
-        "202":
-          description: '{"msg": "Running cluster updation initiated"}'
-        "401":
-          description: '{"error": "Unauthorized"}'
-        "404":
-          description: '{"error": "Not found"}'
-        "409":
-          description: '{"error": "Cluster is in New/Creating/Creation Failed/Terminating/Terminated
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
@@ -7294,10 +7163,10 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  434.0xc001bc5fb0.false:
+  434.0xc001a65410.false:
     title: "false"
     type: object
-  518.0xc001a718c0.false:
+  518.0xc001961e90.false:
     title: "false"
     type: object
   1559.string:
@@ -7306,16 +7175,16 @@ definitions:
   6553.string:
     title: string
     type: object
-  6737.0xc001be77d0.false:
+  6737.0xc001a82c30.false:
     title: "false"
     type: object
-  14141.0xc001aab680.false:
+  14087.0xc001997bc0.false:
     title: "false"
     type: object
-  14149.0xc00113c300.false:
+  14149.0xc0010863c0.false:
     title: "false"
     type: object
-  14239.0xc0014ae810.false:
+  14239.0xc0013e4960.false:
     title: "false"
     type: object
   19777.string:
@@ -7327,7 +7196,7 @@ definitions:
   23199.string:
     title: string
     type: object
-  26990.string:
+  26859.string:
     title: string
     type: object
   X-Profile-Id:
@@ -7343,8 +7212,6 @@ definitions:
         description: Client ID for service principal ['required' if service principal
           enabled]
         type: string
-      cloud:
-        $ref: '#/definitions/models.Cloud'
       company_id:
         description: ID of compnay [optional]
         type: string
@@ -7609,7 +7476,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/14149.0xc00113c300.false'
+        $ref: '#/definitions/14149.0xc0010863c0.false'
       name:
         description: Name of the project [required]
         type: string
@@ -8051,7 +7918,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/14239.0xc0014ae810.false'
+        $ref: '#/definitions/14239.0xc0013e4960.false'
       name:
         type: string
       network_name:
@@ -8329,8 +8196,6 @@ definitions:
       company_id:
         description: ID of compnay [optional]
         type: string
-      id:
-        type: string
       is_advance:
         type: boolean
       is_expert:
@@ -8400,8 +8265,6 @@ definitions:
       auto_scale:
         description: Autoscaling configuration, possible value 'true' or 'false' [required]
         type: boolean
-      id:
-        type: string
       labels:
         description: Node pool labels, it would be key value pair [optional]
         additionalProperties:
@@ -8429,8 +8292,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/doks.KubernetesNode'
-      pool_status:
-        type: boolean
       tags:
         description: Node pool tags [optional]
         type: array
@@ -9747,8 +9608,6 @@ definitions:
     properties:
       cloud:
         $ref: '#/definitions/models.Cloud'
-      cluster_id:
-        type: string
       company_id:
         description: ID of compnay [optional]
         type: string
@@ -9883,11 +9742,6 @@ definitions:
         description: Pool node count [required]
         type: integer
         format: int64
-      pool_Id:
-        description: Cluster pool id [optional]
-        type: string
-      pool_status:
-        type: boolean
       subnet_id:
         description: ID of subnet in which pool will be created [required]
         type: string
@@ -9918,7 +9772,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc001a718c0.false'
+        $ref: '#/definitions/518.0xc001961e90.false'
       kube_version:
         type: string
       name:
@@ -10092,7 +9946,6 @@ definitions:
     - Deploying = "Creating"
     - Terminating = "Terminating"
     - ClusterUpdateFailed = "Cluster Update Failed"
-    - ClusterUpdated = "Cluster Updated"
     example: New
   op.Cluster_Def:
     title: Cluster_Def
@@ -10193,7 +10046,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc001bc5fb0.false'
+        $ref: '#/definitions/434.0xc001a65410.false'
       name:
         type: string
       node_pools:

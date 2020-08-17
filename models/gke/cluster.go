@@ -204,7 +204,7 @@ type NodePool struct {
 	Status            string               `json:"status,omitempty" bson:"status,omitempty"`
 	StatusMessage     string               `json:"status_message,omitempty" bson:"status_message,omitempty"`
 	Version           string               `json:"version,omitempty" bson:"version,omitempty"`
-	PoolStatus        bool    				`json:"pool_status,omitempty" bson:"pool_status,omitempty"`
+	PoolStatus        bool                 `json:"pool_status,omitempty" bson:"pool_status,omitempty"`
 }
 
 type NodePoolAutoscaling struct {
@@ -811,74 +811,73 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 	}
 	previousPoolCount := len(previousCluster.NodePools)
 
-/*	if previousPoolCount < newPoolCount {
-		var pools []*NodePool
-		for i := previousPoolCount; i < newPoolCount; i++ {
-			pools = append(pools, cluster.NodePools[i])
-		}
+	/*	if previousPoolCount < newPoolCount {
+			var pools []*NodePool
+			for i := previousPoolCount; i < newPoolCount; i++ {
+				pools = append(pools, cluster.NodePools[i])
+			}
 
-		err := AddNodepool(cluster, ctx, gkeOps, pools, previousPoolCount)
-		if err != (types.CustomCPError{}) {
-			return err
-		}
-	} else if previousPoolCount > newPoolCount {
+			err := AddNodepool(cluster, ctx, gkeOps, pools, previousPoolCount)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if previousPoolCount > newPoolCount {
 
-		previousCluster, err := GetPreviousGKECluster(ctx)
-		if err != nil {
-			return types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
-		}
+			previousCluster, err := GetPreviousGKECluster(ctx)
+			if err != nil {
+				return types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
+			}
 
-		for _, oldpool := range previousCluster.NodePools {
-			delete := true
-			for _, pool := range cluster.NodePools {
+			for _, oldpool := range previousCluster.NodePools {
+				delete := true
+				for _, pool := range cluster.NodePools {
 
-				if pool.Name == oldpool.Name {
-					delete = false
+					if pool.Name == oldpool.Name {
+						delete = false
+					}
+				}
+				if delete == true {
+					DeleteNodepool(cluster, ctx, gkeOps, oldpool.Name)
 				}
 			}
-			if delete == true {
-				DeleteNodepool(cluster, ctx, gkeOps, oldpool.Name)
-			}
 		}
-	}
-*/
+	*/
 
 	var addpools []*NodePool
 	var addedIndex []int
 	addincluster := false
-	for index, pool := range cluster.NodePools{
-		existInPrevious :=false
-		for _ ,prePool :=range previousCluster.NodePools {
+	for index, pool := range cluster.NodePools {
+		existInPrevious := false
+		for _, prePool := range previousCluster.NodePools {
 			if pool.Name == prePool.Name {
 				existInPrevious = true
 
 			}
 		}
-		if existInPrevious == false{
-			addpools = append(addpools,pool)
-			addedIndex = append(addedIndex,index)
-			addincluster =true
+		if existInPrevious == false {
+			addpools = append(addpools, pool)
+			addedIndex = append(addedIndex, index)
+			addincluster = true
 		}
 	}
-	if addincluster ==true {
+	if addincluster == true {
 		err = AddNodepool(cluster, ctx, gkeOps, addpools)
 		if err != (types.CustomCPError{}) {
 			return err
 		}
 	}
-	for _ ,prePool :=range previousCluster.NodePools {
-		existInNew :=false
-		for _, pool := range cluster.NodePools{
+	for _, prePool := range previousCluster.NodePools {
+		existInNew := false
+		for _, pool := range cluster.NodePools {
 			if pool.Name == prePool.Name {
 				existInNew = true
 			}
 		}
-		if existInNew == false{
+		if existInNew == false {
 			DeleteNodepool(cluster, ctx, gkeOps, prePool.Name)
 		}
 
 	}
-
 
 	for _, dif := range difCluster {
 
@@ -887,8 +886,8 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 			if poolIndex > (previousPoolCount - 1) {
 				continue
 			}
-			for _, index :=range addedIndex{
-				if index == poolIndex{
+			for _, index := range addedIndex {
+				if index == poolIndex {
 					continue
 				}
 			}
@@ -1377,7 +1376,7 @@ func CompareClusters(ctx utils.Context) (diff.Changelog, error) {
 	if len(difCluster) < 2 && previousPoolCount == newPoolCount {
 		return diff.Changelog{}, errors.New("Nothing to update")
 	} else if err != nil {
-		return diff.Changelog{},  errors.New("Error in comparing differences:" + err.Error())
+		return diff.Changelog{}, errors.New("Error in comparing differences:" + err.Error())
 	}
 	return difCluster, nil
 }
@@ -1728,10 +1727,9 @@ func AddNodepool(cluster GKECluster, ctx utils.Context, gkeOps GKE, pools []*Nod
 		})
 	}
 
-
-	for _,pool := range pools{
+	for _, pool := range pools {
 		pool.PoolStatus = true
-		oldCluster.NodePools =append(oldCluster.NodePools,pool)
+		oldCluster.NodePools = append(oldCluster.NodePools, pool)
 	}
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)

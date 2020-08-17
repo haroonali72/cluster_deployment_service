@@ -383,7 +383,7 @@ func (c *EKSClusterController) Patch() {
 	}
 	ctx.SendLogs("EKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("EKSClusterController: JSON Payload: ", cluster)
-	if cluster.Status == (models.ClusterCreated) || cluster.Status == (models.ClusterTerminationFailed)  {
+	if cluster.Status == (models.ClusterCreated) || cluster.Status == (models.ClusterTerminationFailed) {
 		err := eks.UpdatePreviousEKSCluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
@@ -408,25 +408,25 @@ func (c *EKSClusterController) Patch() {
 
 		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
 		c.ServeJSON()
-	}else if  cluster.Status == (models.ClusterUpdateFailed) {
+	} else if cluster.Status == (models.ClusterUpdateFailed) {
 		err := eks.UpdateEKSCluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
-			c.Ctx.Output.SetStatus(404)
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			if strings.Contains(err.Error(), "does not exist") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			c.Ctx.Output.SetStatus(500)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
-		}
-		if strings.Contains(err.Error(), "does not exist") {
-			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error": err.Error()}
-			c.ServeJSON()
-			return
-		}
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
 
 		}
 
