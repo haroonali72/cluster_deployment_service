@@ -514,6 +514,10 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 			ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		}
+		err1 := gcp.cleanup(cluster,ctx,token)
+		if err1 != (types.CustomCPError{}) {
+			return err
+		}
 		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, confErr)
 		if err_ != nil {
 			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
