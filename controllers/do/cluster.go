@@ -303,26 +303,34 @@ func (c *DOClusterController) Patch() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
-	if cluster.Status == (models.Deploying) {
+	savedCluster ,err := do.GetCluster(cluster.ProjectId,userInfo.CompanyId,*ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if savedCluster.Status == (models.Deploying) {
 		ctx.SendLogs("DoClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	} else if cluster.Status == (models.Terminating) {
+	} else if savedCluster.Status == (models.Terminating) {
 		ctx.SendLogs("DoClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	} else if cluster.Status == (models.ClusterTerminationFailed) {
+	} else if savedCluster.Status == (models.ClusterTerminationFailed) {
 		ctx.SendLogs("DoClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
 		c.ServeJSON()
 		return
 	}
-	if cluster.Status == (models.ClusterCreated) {
+	if savedCluster.Status == (models.ClusterCreated) {
 		c.Data["json"] = map[string]string{"msg": "No changes are applicable"}
 		c.ServeJSON()
 	}

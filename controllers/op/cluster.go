@@ -243,25 +243,44 @@ func (c *OPClusterController) Patch() {
 		return
 	}
 
-	if cluster.Status == (models.Deploying) {
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+
+
+	savedCluster ,err := op.GetCluster(cluster.ProjectId,userInfo.CompanyId,*ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if savedCluster.Status == (models.Deploying) {
 		ctx.SendLogs("OPClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	} else if cluster.Status == (models.Terminating) {
+	} else if savedCluster.Status == (models.Terminating) {
 		ctx.SendLogs("OPClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	} else if cluster.Status == (models.ClusterCreated) {
+	} else if savedCluster.Status == (models.ClusterCreated) {
 		ctx.SendLogs("OPClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": " Cluster is already in a created state"}
 		c.ServeJSON()
 		return
-	} else if cluster.Status == (models.ClusterTerminationFailed) {
+	} else if savedCluster.Status == (models.ClusterTerminationFailed) {
 		ctx.SendLogs("OPClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
@@ -279,16 +298,6 @@ func (c *OPClusterController) Patch() {
 	}
 
 	teams := c.Ctx.Input.Header("teams")
-
-	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", cluster.ProjectId, "Update", token, *ctx)
