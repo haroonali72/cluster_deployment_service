@@ -106,6 +106,8 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, token string, ctx utils.Con
 }
 func (cloud *GCP) cleanup(cluster Cluster_Def, ctx utils.Context, token string) types.CustomCPError {
 
+	ctx.SendLogs("Cleaning cluster resources", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
@@ -136,7 +138,7 @@ func (cloud *GCP) cleanup(cluster Cluster_Def, ctx utils.Context, token string) 
 		if pool.PoolRole == "master" {
 			reqCtx := context.Background()
 			result, err := cloud.Client.Instances.Delete(cloud.ProjectId, zone, pool.Name).Context(reqCtx).Do()
-			if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
+			if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "Invalid value"){
 				ctx.SendLogs("Error in cleanup "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 				return ApiErrors(err, "Error in cleanup ")
 			} else if err == nil {
@@ -148,14 +150,14 @@ func (cloud *GCP) cleanup(cluster Cluster_Def, ctx utils.Context, token string) 
 			}
 
 			err1 := cloud.releaseExternalIp(pool.Name, ctx)
-			if err1 != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(err1.Description), "not found") {
+			if err1 != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(err1.Description), "not found") && !strings.Contains(strings.ToLower(err.Error()), "Invalid value"){
 				ctx.SendLogs("Error in cleanup", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return ApiErrors(err, "Error in cleanup ")
 			}
 		} else {
 			reqCtx := context.Background()
 			result, err := cloud.Client.InstanceGroupManagers.Delete(cloud.ProjectId, zone, pool.Name).Context(reqCtx).Do()
-			if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
+			if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "Invalid value"){
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return ApiErrors(err, "Error in cleanup ")
 			} else if err == nil {
