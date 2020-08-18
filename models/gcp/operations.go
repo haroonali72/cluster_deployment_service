@@ -157,7 +157,7 @@ func (cloud *GCP) cleanup(cluster Cluster_Def, ctx utils.Context, token string) 
 		} else {
 			reqCtx := context.Background()
 			result, err := cloud.Client.InstanceGroupManagers.Delete(cloud.ProjectId, zone, pool.Name).Context(reqCtx).Do()
-			if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "Invalid value"){
+			if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "invalid value"){
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return ApiErrors(err, "Error in cleanup ")
 			} else if err == nil {
@@ -170,8 +170,11 @@ func (cloud *GCP) cleanup(cluster Cluster_Def, ctx utils.Context, token string) 
 
 		}
 	}
+	ctx.SendLogs("Cluster resources cleaned", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	return types.CustomCPError{}
 }
+
 func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.GCPNetwork, token string, ctx utils.Context) types.CustomCPError {
 	if cloud.Client == nil {
 		err := cloud.init()
