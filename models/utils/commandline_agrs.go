@@ -52,6 +52,7 @@ var (
 	kill_bill_api_key                 = ""
 	jump_host_ssh_key                 = ""
 	jump_host_ip                      = ""
+	rabbitmq_url                      = ""
 )
 
 func InitFlags() error {
@@ -323,6 +324,12 @@ func InitFlags() error {
 			Destination: &mongo_iks_cluster_collection,
 			EnvVar:      "mongo_iks_cluster_collection",
 		},
+		cli.StringFlag{
+			Name:        "rabbitmq_url",
+			Usage:       "rabbitmq_url",
+			Destination: &rabbitmq_url,
+			EnvVar:      "rabbitmq_url",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return nil
@@ -376,6 +383,6 @@ func InitFlags() error {
 	beego.AppConfig.Set("woodpecker_url", woodpecker_url)
 	beego.AppConfig.Set("jump_host_ssh_key", jump_host_ssh_key)
 	beego.AppConfig.Set("jump_host_ip", jump_host_ip)
-
+	beego.AppConfig.Set("rabbitmq_url", rabbitmq_url)
 	return nil
 }

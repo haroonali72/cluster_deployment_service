@@ -73,6 +73,13 @@ const (
 	ResourceGroup PathVariable = "resourceGroup"
 )
 
+type QueueType string
+
+const (
+	WorkQueue QueueType = "bb.cluster.work"
+	DoneQueue QueueType = "bb.cluster.done"
+)
+
 type RequestType string
 
 const (
