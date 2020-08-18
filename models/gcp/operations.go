@@ -170,8 +170,11 @@ func (cloud *GCP) cleanup(cluster Cluster_Def, ctx utils.Context, token string) 
 
 		}
 	}
+	ctx.SendLogs("Cluster resources cleaned", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	return types.CustomCPError{}
 }
+
 func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.GCPNetwork, token string, ctx utils.Context) types.CustomCPError {
 	if cloud.Client == nil {
 		err := cloud.init()
