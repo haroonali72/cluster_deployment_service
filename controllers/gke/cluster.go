@@ -404,13 +404,21 @@ func (c *GKEClusterController) Patch() {
 		return
 	}
 
-	if cluster.CloudplexStatus == (models.Deploying) {
+	savedCluster ,err := gke.GetGKECluster(*ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if savedCluster.CloudplexStatus == (models.Deploying) {
 		ctx.SendLogs("GKEClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	} else if cluster.CloudplexStatus == (models.Terminating) {
+	} else if savedCluster.CloudplexStatus == (models.Terminating) {
 		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
@@ -470,7 +478,7 @@ func (c *GKEClusterController) Patch() {
 
 	ctx.SendLogs("GKEClusterController: Updating cluster "+cluster.Name+" of project id "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	if cluster.CloudplexStatus == (models.ClusterCreated) || cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
+	if savedCluster.CloudplexStatus == (models.ClusterCreated) || savedCluster.CloudplexStatus == (models.ClusterTerminationFailed) {
 		err := gke.UpdatePreviousGKECluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
@@ -495,7 +503,7 @@ func (c *GKEClusterController) Patch() {
 
 		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
 		c.ServeJSON()
-	} else if cluster.CloudplexStatus == (models.ClusterUpdateFailed) {
+	} else if savedCluster.CloudplexStatus == (models.ClusterUpdateFailed) {
 		err := gke.UpdateGKECluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "does not exist") {

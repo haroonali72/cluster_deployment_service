@@ -319,13 +319,20 @@ func (c *AKSClusterController) Patch() {
 		return
 	}
 
-	if cluster.Status == (models.Deploying) {
+	savedCluster ,err := aks.GetAKSCluster(cluster.ProjectId,userInfo.CompanyId,*ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if savedCluster.Status == (models.Deploying) {
 		ctx.SendLogs("AKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	} else if cluster.Status == (models.Terminating) {
+	} else if savedCluster.Status == (models.Terminating) {
 		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
@@ -378,7 +385,7 @@ func (c *AKSClusterController) Patch() {
 	beego.Info("AKSClusterController: JSON Payload: ", cluster)
 
 	cluster.CompanyId = userInfo.CompanyId
-	if cluster.Status == (models.ClusterCreated) || cluster.Status == (models.ClusterTerminationFailed) || cluster.Status == (models.ClusterUpdateFailed) {
+	if savedCluster.Status == (models.ClusterCreated) || savedCluster.Status == (models.ClusterTerminationFailed) || savedCluster.Status == (models.ClusterUpdateFailed) {
 		err := aks.UpdatePreviousAKSCluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {

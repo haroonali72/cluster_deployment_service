@@ -319,13 +319,31 @@ func (c *EKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	if cluster.Status == (models.Deploying) {
+
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	savedCluster ,err := eks.GetEKSCluster(cluster.ProjectId,userInfo.CompanyId,*ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if savedCluster.Status == (models.Deploying) {
 		ctx.SendLogs("EKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	} else if cluster.Status == (models.Terminating) {
+	} else if savedCluster.Status == (models.Terminating) {
 		ctx.SendLogs("EKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
@@ -350,14 +368,7 @@ func (c *EKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("EKSClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -383,7 +394,7 @@ func (c *EKSClusterController) Patch() {
 	}
 	ctx.SendLogs("EKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("EKSClusterController: JSON Payload: ", cluster)
-	if cluster.Status == (models.ClusterCreated) || cluster.Status == (models.ClusterTerminationFailed) {
+	if savedCluster.Status == (models.ClusterCreated) || savedCluster.Status == (models.ClusterTerminationFailed) {
 		err := eks.UpdatePreviousEKSCluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
@@ -408,7 +419,7 @@ func (c *EKSClusterController) Patch() {
 
 		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
 		c.ServeJSON()
-	} else if cluster.Status == (models.ClusterUpdateFailed) {
+	} else if savedCluster.Status == (models.ClusterUpdateFailed) {
 		err := eks.UpdateEKSCluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
