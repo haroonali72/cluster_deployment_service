@@ -530,11 +530,18 @@ func (c *DOKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
+	savedCluster ,err := doks.GetKubernetesCluster(*ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
-	if cluster.CloudplexStatus == (models.Deploying) || cluster.CloudplexStatus == (models.Terminating) {
-		ctx.SendLogs("DOKSClusterController : Cluster is in "+string(cluster.CloudplexStatus)+" state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if savedCluster.CloudplexStatus == (models.Deploying) || savedCluster.CloudplexStatus == (models.Terminating) {
+		ctx.SendLogs("DOKSClusterController : Cluster is in "+string(savedCluster.CloudplexStatus)+" state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Can't Update.Cluster is in " + string(cluster.CloudplexStatus) + " state"}
+		c.Data["json"] = map[string]string{"error": "Can't Update.Cluster is in " + string(savedCluster.CloudplexStatus) + " state"}
 		c.ServeJSON()
 		return
 	}
@@ -563,7 +570,7 @@ func (c *DOKSClusterController) Patch() {
 	ctx.SendLogs("DOKSClusterController: Updating cluster "+cluster.Name+" of the project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
-	if cluster.CloudplexStatus == (models.ClusterCreated) || cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
+	if savedCluster.CloudplexStatus == (models.ClusterCreated) || savedCluster.CloudplexStatus == (models.ClusterTerminationFailed) {
 		err := doks.UpdatePreviousDOKSCluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "does not exist") {
@@ -582,7 +589,7 @@ func (c *DOKSClusterController) Patch() {
 
 		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 		c.ServeJSON()
-	} else if cluster.CloudplexStatus == (models.ClusterUpdateFailed) {
+	} else if savedCluster.CloudplexStatus == (models.ClusterUpdateFailed) {
 		err := doks.UpdateKubernetesCluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "does not exist") {
