@@ -536,14 +536,10 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 		}
 	}
 
-	utils.SendLog(companyId, "Terminating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
-
 	for _, pool := range cluster.NodePools {
 
 		utils.SendLog(companyId, "Terminating node pool: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 		if pool.PoolRole == "master" {
-
-			utils.SendLog(companyId, "Terminating node pool: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 			if pool != nil && pool.Nodes != nil && pool.Nodes[0].Name != nil {
 				err := cloud.TerminateMasterNode(*pool.Nodes[0].Name, cluster.ProjectId, cluster.ResourceGroup, ctx, companyId)
 				if err != (types.CustomCPError{}) {
