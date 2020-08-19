@@ -1,22 +1,20 @@
 package queue
 
 import (
-	"antelope/controllers/aws"
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/context"
 	"github.com/streadway/amqp"
 	"log"
-	"net/http"
+
 	"strings"
 )
 
 type WorkSchema struct {
 	InfraId string        `json:"infra_id"`
-	token   string        `json:"token"`
+	Token   string        `json:"token"`
 	Action  models.Action `json:"action"`
 }
 
@@ -102,7 +100,7 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 	if strings.Contains(url, "{InfraId}") {
 		url = strings.Replace(url, "{InfraId}", task.InfraId, -1)
 	}
-	data, err := api_handler.GetAPIStatus(task.token, url, ctx)
+	data, err := api_handler.GetAPIStatus(task.Token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
@@ -113,32 +111,30 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 	}
 
 	if infra.infrastructureData.Cloud == models.AWS {
-		controller := &aws.AWSClusterController{}
-		controller.Ctx = new(context.Context)
+		/*		controller := &aws.AWSClusterController{}
+				controller.Ctx = new(context.Context)
 
-		controller.Ctx.Input = new(context.BeegoInput)
-		controller.Ctx.Input.SetParam(":InfraId", task.InfraId)
-		controller.Ctx.Input.Context = new(context.Context)
-		controller.Ctx.Input.Context.Request = new(http.Request)
-		controller.Ctx.Input.Context.Request.Header = make(map[string][]string)
-		controller.Ctx.Input.Context.Request.Header.Set("X-Auth-Token", task.token)
-		controller.Ctx.Input.Context.Request.Header.Set("X-Profile-Id", infra.infrastructureData.ProfileId)
+				controller.Ctx.Input = new(context.BeegoInput)
+				controller.Ctx.Input.SetParam(":InfraId", task.InfraId)
+				controller.Ctx.Input.Context = new(context.Context)
+				controller.Ctx.Input.Context.Request = new(http.Request)
+				controller.Ctx.Input.Context.Request.Header = make(map[string][]string)
+				controller.Ctx.Input.Context.Request.Header.Set("X-Auth-Token", task.Token)
+				controller.Ctx.Input.Context.Request.Header.Set("X-Profile-Id", infra.infrastructureData.ProfileId)
 
-		controller.Ctx.Output = new(context.BeegoOutput)
-		controller.Ctx.Output.Context = new(context.Context)
-		controller.Ctx.Output.Context.ResponseWriter = new(context.Response)
-		controller.Ctx.Output.Context.Request = new(http.Request)
+				controller.Ctx.Output = new(context.BeegoOutput)
+				controller.Ctx.Output.Context = new(context.Context)
+				controller.Ctx.Output.Context.ResponseWriter = new(context.Response)
+				controller.Ctx.Output.Context.Request = new(http.Request)
 
-		controller.Data = make(map[interface{}]interface{})
+				controller.Data = make(map[interface{}]interface{})*/
 
 		if task.Action == models.Create {
-
-			go controller.StartCluster()
+			go AWSClusterStartHelper(task, infra)
 
 		} else if task.Action == models.Terminate {
 
-			controller.TerminateCluster()
-
+			go AWSClusterTerminateHelper(task, infra)
 		}
 
 	}

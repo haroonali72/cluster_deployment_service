@@ -1,22 +1,13 @@
 package main
 
 import (
-	"antelope/controllers/aws"
 	"antelope/models/aks"
 	"antelope/models/db"
 	"antelope/models/queue"
 	"antelope/models/utils"
-
 	_ "antelope/routers"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/plugins/cors"
-
-	//"golang.org/x/oauth2"
-
-	//"bufio"
-	"github.com/astaxie/beego/context"
-	//"golang.org/x/oauth2"
-	"net/http"
 	"os"
 )
 
@@ -24,30 +15,7 @@ func SecretAuth(username, password string) bool {
 	// TODO configure basic authentication properly
 	return username == "username" && password == "password"
 }
-func test() {
-	controller := &aws.AWSClusterController{}
-	controller.Ctx = new(context.Context)
 
-	controller.Ctx.Input = new(context.BeegoInput)
-	controller.Ctx.Input.SetParam(":InfraId", "infraId")
-	controller.Ctx.Input.Context = new(context.Context)
-	controller.Ctx.Input.Context.Request = new(http.Request)
-	controller.Ctx.Input.Context.Request.Header = make(map[string][]string)
-	controller.Ctx.Input.Context.Request.Header.Set("X-Auth-Token", "dsf")
-
-	controller.Ctx.Output = new(context.BeegoOutput)
-	controller.Ctx.Output.Context = new(context.Context)
-	controller.Ctx.Output.Context.ResponseWriter = new(context.Response)
-	controller.Ctx.Output.Context.Request = new(http.Request)
-
-	controller.Data = make(map[interface{}]interface{})
-
-	controller.StartCluster()
-}
-
-/*func main(){
-	test()
-}*/
 func main() {
 	//setEnv()
 	utils.InitFlags()

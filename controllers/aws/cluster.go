@@ -9,7 +9,6 @@ import (
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
-	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/go-playground/validator/v10"
 	"strings"
@@ -541,8 +540,6 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	fmt.Println("infra id = " + InfraId)
-
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -550,7 +547,7 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	fmt.Println("infra id = " + token)
+
 	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())

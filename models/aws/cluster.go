@@ -5,7 +5,6 @@ import (
 	"antelope/models/api_handler"
 	"antelope/models/db"
 	"antelope/models/key_utils"
-	"antelope/models/queue"
 	"antelope/models/rbac_authentication"
 	"antelope/models/types"
 	"antelope/models/utils"
@@ -348,7 +347,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 			ctx.SendLogs("AWSClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
-		queue.Publisher(queue.ResponseSchema{
+		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
 			Message: err.Description,
 			InfraId: cluster.InfraId,
@@ -382,7 +381,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 			PrintError(confError, cluster.Name, cluster.InfraId, ctx, companyId)
 		}
 
-		queue.Publisher(queue.ResponseSchema{
+		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
 			Message: err.Description,
 			InfraId: cluster.InfraId,
@@ -412,7 +411,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 		if err_ != nil {
 			ctx.SendLogs("AWSClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		queue.Publisher(queue.ResponseSchema{
+		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
 			Message: confError.Error(),
 			InfraId: cluster.InfraId,
@@ -428,7 +427,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	notify := publisher.RecieveNotification(ctx.Data.InfraId, ctx, pubSub)
 	if notify {
 		ctx.SendLogs("AWSClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		queue.Publisher(queue.ResponseSchema{
+		utils.Publisher(utils.ResponseSchema{
 			Status:  true,
 			Message: "Cluster Created",
 			InfraId: cluster.InfraId,
@@ -449,7 +448,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 			}
 			return types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in updating cluster status in database"}
 		}
-		queue.Publisher(queue.ResponseSchema{
+		utils.Publisher(utils.ResponseSchema{
 			Status:  true,
 			Message: "Notification not recieved from agent",
 			InfraId: cluster.InfraId,
@@ -540,7 +539,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	if cluster.Status == "" || cluster.Status == models.New {
 		text := "Cannot terminate a new cluster"
 		ctx.SendLogs("AwsClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		queue.Publisher(queue.ResponseSchema{
+		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
 			Message: text,
 			InfraId: cluster.InfraId,
@@ -572,7 +571,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		if err_ != nil {
 			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		queue.Publisher(queue.ResponseSchema{
+		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
 			Message: err1.Error + "\n" + err1.Description,
 			InfraId: cluster.InfraId,
@@ -596,7 +595,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 			return ApiError(err, "Error in terminating cluster")
 		}
 
-		queue.Publisher(queue.ResponseSchema{
+		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
 			Message: "Cluster termination failed",
 			InfraId: cluster.InfraId,
@@ -644,7 +643,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
-		queue.Publisher(queue.ResponseSchema{
+		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
 			Message: confErr.Error + "\n" + confErr.Description,
 			InfraId: cluster.InfraId,
@@ -656,7 +655,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.InfraId)
 
-	queue.Publisher(queue.ResponseSchema{
+	utils.Publisher(utils.ResponseSchema{
 		Status:  true,
 		Message: "Cluster termination successfully",
 		InfraId: cluster.InfraId,

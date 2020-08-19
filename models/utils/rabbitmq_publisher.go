@@ -1,8 +1,7 @@
-package queue
+package utils
 
 import (
 	"antelope/models"
-	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"github.com/streadway/amqp"
@@ -17,7 +16,7 @@ type ResponseSchema struct {
 	Action  models.Action `json:"action"`
 }
 
-func Publisher(response ResponseSchema, ctx utils.Context) {
+func Publisher(response ResponseSchema, ctx Context) {
 
 	bytes, err := json.Marshal(response)
 	if err != nil {
