@@ -218,7 +218,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 	}
 
 	var awsNetwork types.AWSNetwork
-	url := getNetworkHost("aws", cluster.ProjectId)
+	url := getNetworkHost("aws", cluster.InfraId)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -234,24 +234,24 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 
 	for _, pool := range cluster.NodePools {
 		var createdPool CreatedPool
-		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId, ctx, companyId, token)
+		keyMaterial, err := cloud.getKey(*pool, cluster.InfraId, ctx, companyId, token)
 		if err != (types.CustomCPError{}) {
 			return nil, err
 		}
 
 		beego.Info("AWSOperations creating nodes")
 
-		result, err, subnetId := cloud.CreateInstance(pool, awsNetwork, ctx, token, cluster.ProjectId)
+		result, err, subnetId := cloud.CreateInstance(pool, awsNetwork, ctx, token, cluster.InfraId)
 		if err != (types.CustomCPError{}) {
-			utils.SendLog(companyId, "Error in instances creation: "+err.Description, "info", cluster.ProjectId)
+			utils.SendLog(companyId, "Error in instances creation: "+err.Description, "info", cluster.InfraId)
 			return nil, err
 		}
 
 		if result != nil && result.Instances != nil && len(result.Instances) > 0 {
 			for index, instance := range result.Instances {
-				err := cloud.updateInstanceTags(instance.InstanceId, pool.Name+"-"+strconv.Itoa(index), cluster.ProjectId, ctx)
+				err := cloud.updateInstanceTags(instance.InstanceId, pool.Name+"-"+strconv.Itoa(index), cluster.InfraId, ctx)
 				if err != (types.CustomCPError{}) {
-					utils.SendLog(companyId, "Error in instances creation: "+err.Description, "info", cluster.ProjectId)
+					utils.SendLog(companyId, "Error in instances creation: "+err.Description, "info", cluster.InfraId)
 					return nil, err
 				}
 			}
@@ -259,15 +259,15 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 			beego.Info(keyMaterial)
 			//if pool.IsExternal {
 			//	pool.KeyInfo.KeyMaterial = keyMaterial
-			//	err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.ProjectId, ctx, companyId)
+			//	err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.InfraId, ctx, companyId)
 			//	if err != nil {
-			//		utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
+			//		utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.InfraId)
 			//		return nil, err
 			//	}
 			//}
 			if pool.EnableScaling {
 				maxSize := pool.Scaling.MaxScalingGroupSize - pool.NodeCount
-				err, m := cloud.Scaler.AutoScaler(pool.Name, *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, maxSize, ctx, cluster.ProjectId)
+				err, m := cloud.Scaler.AutoScaler(pool.Name, *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, maxSize, ctx, cluster.InfraId)
 
 				if m[pool.Name+"_scale_autoScaler"] != "" {
 					cloud.Resources[pool.Name+"_scale_autoScaler"] = pool.Name + "-scale"
@@ -299,7 +299,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 			for _, instance := range result.Instances {
 				ids = append(ids, aws.String(*instance.InstanceId))
 			}
-			latest_instances, err = cloud.GetInstances(ids, cluster.ProjectId, true, ctx, companyId)
+			latest_instances, err = cloud.GetInstances(ids, cluster.InfraId, true, ctx, companyId)
 			if err != (types.CustomCPError{}) {
 				return nil, err
 			}
@@ -314,13 +314,13 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 
 }
 
-func (cloud *AWS) updateInstanceTags(instance_id *string, nodepool_name string, projectId string, ctx utils.Context) types.CustomCPError {
+func (cloud *AWS) updateInstanceTags(instance_id *string, nodepool_name string, InfraId string, ctx utils.Context) types.CustomCPError {
 	var resource []*string
 	resource = append(resource, instance_id)
 
 	var tags []*ec2.Tag
 	tag := ec2.Tag{Key: aws.String("Name"), Value: aws.String(nodepool_name)}
-	tag_ := ec2.Tag{Key: aws.String("KubernetesCluster"), Value: aws.String(projectId)}
+	tag_ := ec2.Tag{Key: aws.String("KubernetesCluster"), Value: aws.String(InfraId)}
 	tags = append(tags, &tag)
 	tags = append(tags, &tag_)
 
@@ -398,7 +398,7 @@ func (cloud *AWS) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 		*/
 		if pool.EnableScaling {
 			beego.Info("getting scaler nodes")
-			err, instances := cloud.Scaler.GetAutoScaler(cluster.ProjectId, pool.Name, ctx)
+			err, instances := cloud.Scaler.GetAutoScaler(cluster.InfraId, pool.Name, ctx)
 			if err != nil {
 				return &Cluster_Def{}, cloud.DecodeErrorMessage(err, "Error in enabling scaling")
 			}
@@ -414,7 +414,7 @@ func (cloud *AWS) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 			var nodeId []*string
 			beego.Info(node.CloudId)
 			nodeId = append(nodeId, &node.CloudId)
-			out, err := cloud.GetInstances(nodeId, cluster.ProjectId, false, ctx, companyId)
+			out, err := cloud.GetInstances(nodeId, cluster.InfraId, false, ctx, companyId)
 			if err != (types.CustomCPError{}) {
 				return &Cluster_Def{}, err
 			}
@@ -493,7 +493,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
 			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, err)
+			err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.AWS, ctx, err)
 			if err_ != nil {
 				ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
@@ -510,7 +510,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 	confError := roles.Init()
 	if confError != nil {
 		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, ApiError(confError, "Error in cluster termination"))
+		err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.AWS, ctx, ApiError(confError, "Error in cluster termination"))
 		if err_ != nil {
 			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -523,7 +523,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 			if err != nil {
 				if !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, ApiError(err, "Error in cluster termination"))
+					err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.AWS, ctx, ApiError(err, "Error in cluster termination"))
 					if err_ != nil {
 						ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 					}
@@ -539,7 +539,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 			if err != nil {
 				if !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, ApiError(err, "Error in cluster termination"))
+					err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.AWS, ctx, ApiError(err, "Error in cluster termination"))
 					if err_ != nil {
 						ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 					}
@@ -553,11 +553,11 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 
 		}
 
-		err := cloud.TerminatePool(pool, cluster.ProjectId, ctx, companyId)
+		err := cloud.TerminatePool(pool, cluster.InfraId, ctx, companyId)
 		if err != (types.CustomCPError{}) {
 			if !strings.Contains(strings.ToLower(err.Error), "not found") && !strings.Contains(strings.ToLower(err.Error), "cannot be found") && !strings.Contains(strings.ToLower(err.Error), "does not exist") {
 				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, err)
+				err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.AWS, ctx, err)
 				if err_ != nil {
 					ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
@@ -572,7 +572,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 		err1 := cloud.Roles.DeleteIAMRole(pool.Name, ctx)
 		if err1 != nil {
 			if !strings.Contains(strings.ToLower(err1.Error()), "not found") && !strings.Contains(strings.ToLower(err1.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err1.Error()), "does not exist") {
-				err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, ApiError(err1, "Error in cluster termination"))
+				err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.AWS, ctx, ApiError(err1, "Error in cluster termination"))
 				if err_ != nil {
 					ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
@@ -728,8 +728,8 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx utils.Context) types.CustomCP
 			}
 		}
 	}
-	/*	if cloud.Resources[cluster.ProjectId+"_launchConfig"] != nil {
-			id := cloud.Resources[cluster.ProjectId+"_launchConfig"]
+	/*	if cloud.Resources[cluster.InfraId+"_launchConfig"] != nil {
+			id := cloud.Resources[cluster.InfraId+"_launchConfig"]
 			name := ""
 			b, e := json.Marshal(id)
 			if e != nil {
@@ -739,14 +739,14 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx utils.Context) types.CustomCP
 			if e != nil {
 				return e
 			}
-			err := cloud.Scaler.DeleteConfiguration(cluster.ProjectId)
+			err := cloud.Scaler.DeleteConfiguration(cluster.InfraId)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return err
 			}
 		}
-		if cloud.Resources[cluster.ProjectId+"_autoScaler"] != nil {
-			id := cloud.Resources[cluster.ProjectId+"_autoScaler"]
+		if cloud.Resources[cluster.InfraId+"_autoScaler"] != nil {
+			id := cloud.Resources[cluster.InfraId+"_autoScaler"]
 			name := ""
 			b, e := json.Marshal(id)
 			if e != nil {
@@ -756,14 +756,14 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx utils.Context) types.CustomCP
 			if e != nil {
 				return e
 			}
-			err := cloud.Scaler.DeleteAutoScaler(cluster.ProjectId)
+			err := cloud.Scaler.DeleteAutoScaler(cluster.InfraId)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return err
 			}
 		}
-		if cloud.Resources[cluster.ProjectId+"_role"] != nil {
-			role := cloud.Resources[cluster.ProjectId+"_role"]
+		if cloud.Resources[cluster.InfraId+"_role"] != nil {
+			role := cloud.Resources[cluster.InfraId+"_role"]
 			name := ""
 			b, e := json.Marshal(role)
 			if e != nil {
@@ -778,8 +778,8 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx utils.Context) types.CustomCP
 				return err
 			}
 		}
-		if cloud.Resources[cluster.ProjectId+"_policy"] != nil {
-			policy := cloud.Resources[cluster.ProjectId+"_policy"]
+		if cloud.Resources[cluster.InfraId+"_policy"] != nil {
+			policy := cloud.Resources[cluster.InfraId+"_policy"]
 			name := ""
 			b, e := json.Marshal(policy)
 			if e != nil {
@@ -795,8 +795,8 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx utils.Context) types.CustomCP
 			}
 		}
 
-		if cloud.Resources[cluster.ProjectId+"_iamProfile"] != "" {
-			policy := cloud.Resources[cluster.ProjectId+"_iamProfile"]
+		if cloud.Resources[cluster.InfraId+"_iamProfile"] != "" {
+			policy := cloud.Resources[cluster.InfraId+"_iamProfile"]
 			name := ""
 			b, e := json.Marshal(policy)
 			if e != nil {
@@ -814,7 +814,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx utils.Context) types.CustomCP
 
 	return types.CustomCPError{}
 }
-func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx utils.Context, token, projectId string) (*ec2.Reservation, types.CustomCPError, string) {
+func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx utils.Context, token, InfraId string) (*ec2.Reservation, types.CustomCPError, string) {
 
 	subnetId := cloud.GetSubnets(pool, network)
 	sgIds := cloud.GetSecurityGroups(pool, network)
@@ -848,7 +848,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 	if pool.IsExternal {
 		fileName = append(fileName, "mount.sh")
 	}
-	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+InfraId, fileName, pool.PoolRole, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, cloud.DecodeErrorMessage(err, "Error in cluster creation"), ""
@@ -962,7 +962,7 @@ func (cloud *AWS) GetSubnets(pool *NodePool, network types.AWSNetwork) string {
 	return ""
 }
 
-func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool, ctx utils.Context, companyId string) (latest_instances []*ec2.Instance, err types.CustomCPError) {
+func (cloud *AWS) GetInstances(ids []*string, InfraId string, creation bool, ctx utils.Context, companyId string) (latest_instances []*ec2.Instance, err types.CustomCPError) {
 
 	instance_input := ec2.DescribeInstancesInput{InstanceIds: ids}
 	updated_instances, err1 := cloud.Client.DescribeInstances(&instance_input)
@@ -976,14 +976,14 @@ func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool, c
 	}
 	for _, instance := range updated_instances.Reservations[0].Instances {
 		if creation {
-			utils.SendLog(companyId, "Instance created successfully: "+*instance.InstanceId, "info", projectId)
+			utils.SendLog(companyId, "Instance created successfully: "+*instance.InstanceId, "info", InfraId)
 		}
 		latest_instances = append(latest_instances, instance)
 	}
 	return latest_instances, types.CustomCPError{}
 
 }
-func (cloud *AWS) GetInstancesByDNS(privateDns []*string, projectId string, ctx utils.Context) (latest_instances []*ec2.Instance, err types.CustomCPError) {
+func (cloud *AWS) GetInstancesByDNS(privateDns []*string, InfraId string, ctx utils.Context) (latest_instances []*ec2.Instance, err types.CustomCPError) {
 
 	//dns :=[]*string {privateDns}
 	filters := []*ec2.Filter{&ec2.Filter{Name: aws.String("private-dns-name"), Values: privateDns}}
@@ -1025,7 +1025,7 @@ func (cloud *AWS) TerminateIns(instance_ids []*string) types.CustomCPError {
 	}
 	return types.CustomCPError{}
 }
-func (cloud *AWS) TerminatePool(pool *NodePool, projectId string, ctx utils.Context, companyId string) types.CustomCPError {
+func (cloud *AWS) TerminatePool(pool *NodePool, InfraId string, ctx utils.Context, companyId string) types.CustomCPError {
 
 	beego.Info("AWSOperations terminating nodes")
 	instance_ids := cloud.getIds(pool)
@@ -1034,11 +1034,11 @@ func (cloud *AWS) TerminatePool(pool *NodePool, projectId string, ctx utils.Cont
 	if err != (types.CustomCPError{}) {
 		return err
 	}
-	utils.SendLog(companyId, "Cluster pool terminated successfully: "+pool.Name, models.LOGGING_LEVEL_INFO, projectId)
+	utils.SendLog(companyId, "Cluster pool terminated successfully: "+pool.Name, models.LOGGING_LEVEL_INFO, InfraId)
 	return types.CustomCPError{}
 }
 
-/*func (cloud *AWS) GetNetworkStatus(projectId string,ctx logging.Context) (Network, error) {
+/*func (cloud *AWS) GetNetworkStatus(InfraId string,ctx logging.Context) (Network, error) {
 
 	url := getNetworkHost()
 
@@ -1046,7 +1046,7 @@ func (cloud *AWS) TerminatePool(pool *NodePool, projectId string, ctx utils.Cont
 
 	client := utils.InitReq()
 
-	url = url + "/" + projectId
+	url = url + "/" + InfraId
 
 	req, err := utils.CreateGetRequest(url)
 	if err != nil {
@@ -1081,7 +1081,7 @@ func (cloud *AWS) TerminatePool(pool *NodePool, projectId string, ctx utils.Cont
 func getKubeEngineHost() string {
 	return beego.AppConfig.String("network_url")
 }
-func getNetworkHost(cloudType, projectId string) string {
+func getNetworkHost(cloudType, InfraId string) string {
 
 	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
 
@@ -1089,8 +1089,8 @@ func getNetworkHost(cloudType, projectId string) string {
 		host = strings.Replace(host, "{cloud}", cloudType, -1)
 	}
 
-	if strings.Contains(host, "{projectId}") {
-		host = strings.Replace(host, "{projectId}", projectId, -1)
+	if strings.Contains(host, "{InfraId}") {
+		host = strings.Replace(host, "{InfraId}", InfraId, -1)
 	}
 
 	return host
@@ -1119,7 +1119,7 @@ func (cloud *AWS) describeAmi(ami *string, ctx utils.Context) ([]*ec2.BlockDevic
 	return ebsVolumes, types.CustomCPError{}
 }
 
-/*func (cloud *AWS) createVolume(ids []*ec2.Instance, volume Volume, projectId string) error {
+/*func (cloud *AWS) createVolume(ids []*ec2.Instance, volume Volume, InfraId string) error {
 
 	for _, id := range ids {
 		/*start := time.Now()
@@ -1128,7 +1128,7 @@ func (cloud *AWS) describeAmi(ami *string, ctx utils.Context) ([]*ec2.BlockDevic
 
 		for retry && int64(time.Since(start).Seconds()) < int64(timeToWait) {
 
-			err, state := cloud.checkInstanceState(*id.InstanceId, projectId)
+			err, state := cloud.checkInstanceState(*id.InstanceId, InfraId)
 
 		}
 		input := ec2.CreateVolumeInput{
@@ -1159,9 +1159,9 @@ func (cloud *AWS) describeAmi(ami *string, ctx utils.Context) ([]*ec2.BlockDevic
 	return nil
 
 }*/
-func (cloud *AWS) checkInstanceState(id string, projectId string, ctx utils.Context, companyId string) (types.CustomCPError, string) {
+func (cloud *AWS) checkInstanceState(id string, InfraId string, ctx utils.Context, companyId string) (types.CustomCPError, string) {
 	ids := []*string{&id}
-	latest_instances, err := cloud.GetInstances(ids, projectId, false, ctx, companyId)
+	latest_instances, err := cloud.GetInstances(ids, InfraId, false, ctx, companyId)
 	if err != (types.CustomCPError{}) {
 		return err, ""
 	} else {
@@ -1173,21 +1173,21 @@ func (cloud *AWS) checkInstanceState(id string, projectId string, ctx utils.Cont
 		}
 	}
 }
-func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, companyId string, token string) (keyMaterial string, err1 types.CustomCPError) {
+func (cloud *AWS) getKey(pool NodePool, InfraId string, ctx utils.Context, companyId string, token string) (keyMaterial string, err1 types.CustomCPError) {
 
 	//if pool.KeyInfo.KeyType == models.NEWKey {
 	keyInfo, err := vault.GetSSHKey(string(models.AWS), pool.KeyInfo.KeyName, token, ctx, cloud.Region)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
-		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
+		utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, InfraId)
+		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, InfraId)
 		return "", ApiError(err, "Error in fetching key")
 	}
 	key, err := key_utils.AWSKeyCoverstion(keyInfo, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
-		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
+		utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, InfraId)
+		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, InfraId)
 		return "", ApiError(err, "Error in fetching key")
 	}
 	keyMaterial = key.KeyMaterial
@@ -1196,8 +1196,8 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 	//	_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
 	//	if err != nil {
 	//		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//		utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
-	//		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
+	//		utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, InfraId)
+	//		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, InfraId)
 	//		return "", err
 	//	}
 	//	keyMaterial = pool.KeyInfo.KeyMaterial
@@ -1207,16 +1207,16 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 	//
 	//	if err != nil {
 	//		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//		utils.SendLog(companyId, "Error in importing key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
-	//		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
+	//		utils.SendLog(companyId, "Error in importing key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, InfraId)
+	//		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, InfraId)
 	//		return "", err
 	//	}
 	//
 	//	_, err = vault.PostSSHKey(pool.KeyInfo, pool.KeyInfo.KeyName,pool.KeyInfo.Cloud,ctx, token, "")
 	//	if err != nil {
 	//		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//		utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
-	//		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
+	//		utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, InfraId)
+	//		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, InfraId)
 	//		return "", err
 	//	}
 	//	keyMaterial = pool.KeyInfo.KeyMaterial
@@ -1240,7 +1240,7 @@ func (cloud *AWS) ImportSSHKeyPair(key_name string, publicKey string) (string, t
 	return *resp.KeyName, types.CustomCPError{}
 }
 
-func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key key_utils.AWSKey, projectId string, ctx utils.Context, companyId string) types.CustomCPError {
+func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key key_utils.AWSKey, InfraId string, ctx utils.Context, companyId string) types.CustomCPError {
 
 	for _, id := range ids {
 		err := fileWrite(key.KeyMaterial, key.KeyName)
@@ -1258,7 +1258,7 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key key_utils.AWSKey
 			beego.Error("waiting for public ip")
 			time.Sleep(time.Second * 50)
 			beego.Error("waited for public ip")
-			err, publicIp = cloud.checkInstanceState(*id.InstanceId, projectId, ctx, companyId)
+			err, publicIp = cloud.checkInstanceState(*id.InstanceId, InfraId, ctx, companyId)
 			if err != (types.CustomCPError{}) {
 				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return err
@@ -1316,7 +1316,7 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context, token st
 	for _, pool := range cluster.NodePools {
 		if pool.EnableScaling {
 			var awsNetwork types.AWSNetwork
-			url := getNetworkHost("aws", cluster.ProjectId)
+			url := getNetworkHost("aws", cluster.InfraId)
 			network, err := api_handler.GetAPIStatus(token, url, ctx)
 			err = json.Unmarshal(network.([]byte), &awsNetwork)
 			if err != nil {
@@ -1325,9 +1325,9 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context, token st
 			}
 			subnetId := cloud.GetSubnets(pool, awsNetwork)
 			maxSize := pool.Scaling.MaxScalingGroupSize - pool.NodeCount
-			err, m := cloud.Scaler.AutoScaler(pool.Name, pool.Nodes[0].CloudId, pool.Ami.AmiId, subnetId, maxSize, ctx, cluster.ProjectId)
+			err, m := cloud.Scaler.AutoScaler(pool.Name, pool.Nodes[0].CloudId, pool.Ami.AmiId, subnetId, maxSize, ctx, cluster.InfraId)
 			if err != nil {
-				if m[cluster.ProjectId+"_scale_launchConfig"] != "" {
+				if m[cluster.InfraId+"_scale_launchConfig"] != "" {
 
 					err := cloud.Scaler.DeleteConfiguration(pool.Name)
 					if err != nil {
@@ -1335,7 +1335,7 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context, token st
 						return cloud.DecodeErrorMessage(err, "Error in enabling scaling")
 					}
 				}
-				if m[cluster.ProjectId+"_scale_autoScaler"] != "" {
+				if m[cluster.InfraId+"_scale_autoScaler"] != "" {
 
 					err := cloud.Scaler.DeleteAutoScaler(pool.Name)
 					if err != nil {
@@ -1343,14 +1343,14 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context, token st
 						return cloud.DecodeErrorMessage(err, "Error in enabling scaling")
 					}
 				}
-				if m[cluster.ProjectId+"_scale_role"] != "" {
+				if m[cluster.InfraId+"_scale_role"] != "" {
 
 					err := cloud.Roles.DeleteRole(pool.Name+"-scale", ctx)
 					if err != nil {
 						return cloud.DecodeErrorMessage(err, "Error in enabling scaling")
 					}
 				}
-				if m[cluster.ProjectId+"_scale_policy"] != "" {
+				if m[cluster.InfraId+"_scale_policy"] != "" {
 
 					err := cloud.Roles.DeletePolicy(pool.Name+"-scale", ctx)
 					if err != nil {
@@ -1358,7 +1358,7 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context, token st
 					}
 				}
 
-				if m[cluster.ProjectId+"_scale_iamProfile"] != "" {
+				if m[cluster.InfraId+"_scale_iamProfile"] != "" {
 
 					err := cloud.Roles.DeleteIAMProfile(pool.Name+"-scale", ctx)
 					if err != nil {

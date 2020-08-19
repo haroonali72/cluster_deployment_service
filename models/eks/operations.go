@@ -30,7 +30,7 @@ type EKS struct {
 	SecretKey string
 	Region    string
 	Resources map[string]interface{}
-	ProjectId string
+	InfraId   string
 }
 
 func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.Context) types.CustomCPError {
@@ -45,7 +45,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		cpErr := ApiError(errors.New("ProjectId or Cluster Name is missing"), "Cluster Info is missing", 500)
+		cpErr := ApiError(errors.New("InfraId or Cluster Name is missing"), "Cluster Info is missing", 500)
 		return cpErr
 	}
 
@@ -58,7 +58,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n"+err.Error(), "error", eksCluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n"+err.Error(), "error", eksCluster.InfraId)
 		cpErr := ApiError(err, "unable to fetch network against this application", 500)
 		return cpErr
 	}
@@ -82,7 +82,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 				models.Backend_Logging,
 			)
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
+			utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.InfraId)
 			cpErr := ApiError(err, "KMSKey Creation Failed", 512)
 			return cpErr
 		}
@@ -103,7 +103,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	/**/
 
 	//create cluster IAM role
-	eksCluster.RoleArn, _, err = cloud.createClusterIAMRole(eksCluster.ProjectId)
+	eksCluster.RoleArn, _, err = cloud.createClusterIAMRole(eksCluster.InfraId)
 	if err != nil {
 		ctx.SendLogs(
 			"EKS cluster creation request for '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -111,7 +111,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.InfraId)
 		cpErr := ApiError(err, "IAM Role Creation Failed", 512)
 		return cpErr
 	}
@@ -156,7 +156,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 				models.Backend_Logging,
 			)
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
+			utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.InfraId)
 			cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
 			return cpErr
 		} else {
@@ -190,7 +190,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.InfraId)
 		cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
 		return cpErr
 	}
@@ -208,7 +208,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.InfraId)
 		cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
 		return cpErr
 	}
@@ -247,7 +247,7 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, subnets []
 				models.Backend_Logging,
 			)
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.InfraId)
 			cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
 			return cpErr
 		}
@@ -270,7 +270,7 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, subnets []
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err_.Error(), "error", ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", ctx.Data.InfraId)
 		cpErr := ApiError(err_, "EKS Cluster Creation Failed", 512)
 		return cpErr
 	}
@@ -300,7 +300,7 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, subnets []
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.InfraId)
 		cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
 		return cpErr
 	} else if err != nil && strings.Contains(err.Error(), "exists") {
@@ -310,7 +310,7 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, subnets []
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.InfraId)
 		cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
 		return cpErr
 	}
@@ -341,7 +341,7 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, subnets []
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.InfraId)
 		cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
 		return cpErr
 	}
@@ -374,7 +374,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 				models.Backend_Logging,
 			)
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+			utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.InfraId)
 			cpErr := ApiError(err, "NodePool Deletion Failed", 512)
 			return cpErr
 		}
@@ -388,7 +388,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 					models.Backend_Logging,
 				)
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.InfraId)
 				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
 				return cpErr
 			}
@@ -400,7 +400,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 					models.Backend_Logging,
 				)
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.InfraId)
 				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
 				return cpErr
 			}
@@ -414,7 +414,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 					models.Backend_Logging,
 				)
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.InfraId)
 				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
 				return cpErr
 			}
@@ -435,12 +435,12 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.InfraId)
 		cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 		return cpErr
 	}
 	/**/
-	err = cloud.deleteIAMRoleFromInstanceProfile("eks-cluster-" + eksCluster.ProjectId)
+	err = cloud.deleteIAMRoleFromInstanceProfile("eks-cluster-" + eksCluster.InfraId)
 	if err != nil {
 		ctx.SendLogs(
 			"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -448,13 +448,13 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.InfraId)
 		cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 		return cpErr
 	}
 
 	//delete extra resources
-	err = cloud.deleteClusterIAMRole("eks-cluster-" + eksCluster.ProjectId)
+	err = cloud.deleteClusterIAMRole("eks-cluster-" + eksCluster.InfraId)
 	if err != nil {
 		ctx.SendLogs(
 			"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -462,7 +462,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.InfraId)
 		cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 		return cpErr
 	}
@@ -474,7 +474,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.InfraId)
 		cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 		return cpErr
 	}
@@ -488,7 +488,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 					models.Backend_Logging,
 				)
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.InfraId)
 				cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 				return cpErr
 			}
@@ -522,7 +522,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 					models.Backend_Logging,
 				)
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.InfraId)
 				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
 				return cpErr
 			}
@@ -537,7 +537,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 					models.Backend_Logging,
 				)
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.InfraId)
 				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
 				return cpErr
 			}
@@ -551,7 +551,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 					models.Backend_Logging,
 				)
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.InfraId)
 				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
 				return cpErr
 			}
@@ -574,7 +574,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 				models.Backend_Logging,
 			)
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+			utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.InfraId)
 			cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 			return cpErr
 		}
@@ -586,7 +586,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 	//delete extra resources
 	if eksCluster.RoleArn != nil {
 
-		err := cloud.deleteClusterIAMRole("eks-cluster-" + eksCluster.ProjectId)
+		err := cloud.deleteClusterIAMRole("eks-cluster-" + eksCluster.InfraId)
 		if err != nil {
 			ctx.SendLogs(
 				"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -594,7 +594,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 				models.Backend_Logging,
 			)
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+			utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.InfraId)
 			cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 			return cpErr
 		}
@@ -612,7 +612,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 					models.Backend_Logging,
 				)
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.InfraId)
 				cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 				return cpErr
 			}
@@ -623,7 +623,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 	return types.CustomCPError{}
 }
 func (cloud *EKS) getAWSNetwork(token string, ctx utils.Context) ([]*string, []*string, error) {
-	url := getNetworkHost(string(models.AWS), cloud.ProjectId)
+	url := getNetworkHost(string(models.AWS), cloud.InfraId)
 	awsNetwork := types.AWSNetwork{}
 
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
@@ -660,8 +660,8 @@ func (cloud *EKS) getAWSNetwork(token string, ctx utils.Context) ([]*string, []*
 
 	return subnets, sgs, nil
 }
-func (cloud *EKS) createClusterIAMRole(projectId string) (*string, *string, error) {
-	roleName := "eks-cluster-" + projectId
+func (cloud *EKS) createClusterIAMRole(InfraId string) (*string, *string, error) {
+	roleName := "eks-cluster-" + InfraId
 
 	trustedEntity := []byte(`{
 	  "Version": "2012-10-17",
@@ -906,7 +906,7 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", cluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", cluster.InfraId)
 		cpErr := ApiError(err, "unable to fetch cluster status", 512)
 
 		return EKSClusterStatus{}, cpErr
@@ -939,7 +939,7 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 					models.Backend_Logging,
 				)
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", cluster.ProjectId)
+				utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", cluster.InfraId)
 				cpErr := ApiError(err, "unable to fetch cluster status", 512)
 
 				return EKSClusterStatus{}, cpErr
@@ -1048,30 +1048,30 @@ func (cloud *EKS) init() error {
 	return nil
 }
 func Validate(eksCluster EKSCluster) error {
-	if eksCluster.ProjectId == "" {
+	if eksCluster.InfraId == "" {
 		return errors.New("project id is required")
 	} else if eksCluster.Name == "" {
 		return errors.New("cluster name is required")
 	}
 	return nil
 }
-func getNetworkHost(cloudType, projectId string) string {
+func getNetworkHost(cloudType, InfraId string) string {
 	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
 
 	if strings.Contains(host, "{cloud}") {
 		host = strings.Replace(host, "{cloud}", cloudType, -1)
 	}
-	if strings.Contains(host, "{projectId}") {
-		host = strings.Replace(host, "{projectId}", projectId, -1)
+	if strings.Contains(host, "{InfraId}") {
+		host = strings.Replace(host, "{InfraId}", InfraId, -1)
 	}
 	return host
 }
-func GetEKS(projectId string, credentials vault.AwsCredentials) EKS {
+func GetEKS(InfraId string, credentials vault.AwsCredentials) EKS {
 	return EKS{
 		AccessKey: credentials.AccessKey,
 		SecretKey: credentials.SecretKey,
 		Region:    credentials.Region,
-		ProjectId: projectId,
+		InfraId:   InfraId,
 	}
 }
 func (cloud *EKS) UpdateLogging(name string, logging Logging, ctx utils.Context) types.CustomCPError {
@@ -1280,7 +1280,7 @@ func (cloud *EKS) GetClusterStatus(name string, ctx utils.Context) (EKSClusterSt
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", ctx.Data.InfraId)
 		cpErr := ApiError(err, "unable to fetch cluster status", 512)
 
 		return EKSClusterStatus{}, cpErr

@@ -56,7 +56,7 @@ func (cloud *AWSAutoScaler) Init() error {
 
 	return nil
 }
-func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeId string, imageId string, ctx utils.Context) (error, map[string]string) {
+func (cloud *AWSAutoScaler) ConfigLauncher(infraId string, nodeId string, imageId string, ctx utils.Context) (error, map[string]string) {
 	fmt.Println(nodeId)
 	m := make(map[string]string)
 
@@ -64,7 +64,7 @@ func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeId string, imag
 
 	config_input.ImageId = &imageId
 	config_input.InstanceId = &nodeId
-	config_input.LaunchConfigurationName = &projectId
+	config_input.LaunchConfigurationName = &infraId
 
 	roles := IAMRoles.AWSIAMRoles{
 		AccessKey: cloud.AccessKey,
@@ -76,25 +76,25 @@ func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeId string, imag
 		return confError, m
 	}
 	/*
-		_, err := roles.CreateRole(projectId+"-scale")
+		_, err := roles.CreateRole(infraId+"-scale")
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
 			return err, m
 		}
-		m[projectId+"_scale_role"] = projectId+"-scale"
-		_, err = roles.CreatePolicy(projectId+"-scale", autoscale_policy, ctx)
+		m[infraId+"_scale_role"] = infraId+"-scale"
+		_, err = roles.CreatePolicy(infraId+"-scale", autoscale_policy, ctx)
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
 			return err, m
 		}
-		m[projectId+"_scale_policy"] = projectId+"-scale"*/
-	/*id, err := roles.CreateIAMProfile(projectId+"-scale", ctx)
+		m[infraId+"_scale_policy"] = infraId+"-scale"*/
+	/*id, err := roles.CreateIAMProfile(infraId+"-scale", ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return err, m
 	}
-	m[projectId+"_scale_iamProfile"] = projectId+"-scale"
-	ok := roles.CheckInstanceProfile(projectId+"-scale")
+	m[infraId+"_scale_iamProfile"] = infraId+"-scale"
+	ok := roles.CheckInstanceProfile(infraId+"-scale")
 	if !ok {
 		//config_input.IamInstanceProfile = &id
 	} else {
@@ -106,12 +106,12 @@ func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeId string, imag
 		ctx.SendLogs(config_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return config_err, m
 	}
-	m[projectId+"_scale_launchConfig"] = projectId
+	m[infraId+"_scale_launchConfig"] = infraId
 	return nil, m
 }
-func (cloud *AWSAutoScaler) DeleteConfiguration(projectId string) error {
+func (cloud *AWSAutoScaler) DeleteConfiguration(infraId string) error {
 	config_input := autoscaling.DeleteLaunchConfigurationInput{
-		LaunchConfigurationName: aws.String(projectId),
+		LaunchConfigurationName: aws.String(infraId),
 	}
 	_, config_err := cloud.AutoScaling.DeleteLaunchConfiguration(&config_input)
 
@@ -120,7 +120,7 @@ func (cloud *AWSAutoScaler) DeleteConfiguration(projectId string) error {
 	}
 	return nil
 }
-func (cloud *AWSAutoScaler) AutoScaler(name string, nodeIp string, imageId string, subnetId string, maxSize int64, ctx utils.Context, projectId string) (error, map[string]string) {
+func (cloud *AWSAutoScaler) AutoScaler(name string, nodeIp string, imageId string, subnetId string, maxSize int64, ctx utils.Context, infraId string) (error, map[string]string) {
 	beego.Info("before sleep")
 	time.Sleep(time.Second * 180)
 	beego.Info("after sleep")
@@ -146,7 +146,7 @@ func (cloud *AWSAutoScaler) AutoScaler(name string, nodeIp string, imageId strin
 	//	Value: aws.String("true"),
 	//}
 	//tags = append(tags, &tag)
-	tag_ := autoscaling.Tag{Key: aws.String("KubernetesCluster"), Value: aws.String(projectId)}
+	tag_ := autoscaling.Tag{Key: aws.String("KubernetesCluster"), Value: aws.String(infraId)}
 	tags = append(tags, &tag_)
 	tag := autoscaling.Tag{
 		Key:   aws.String("Name"),
@@ -165,9 +165,9 @@ func (cloud *AWSAutoScaler) AutoScaler(name string, nodeIp string, imageId strin
 	return nil, m
 
 }
-func (cloud *AWSAutoScaler) DeleteAutoScaler(projectId string) error {
+func (cloud *AWSAutoScaler) DeleteAutoScaler(infraId string) error {
 	config_input := autoscaling.DeleteAutoScalingGroupInput{
-		AutoScalingGroupName: aws.String(projectId),
+		AutoScalingGroupName: aws.String(infraId),
 		ForceDelete:          aws.Bool(true),
 	}
 	_, config_err := cloud.AutoScaling.DeleteAutoScalingGroup(&config_input)
@@ -177,7 +177,7 @@ func (cloud *AWSAutoScaler) DeleteAutoScaler(projectId string) error {
 	}
 	return nil
 }
-func (cloud *AWSAutoScaler) GetAutoScaler(projectId string, name string, ctx utils.Context) (error, []*autoscaling.Instance) {
+func (cloud *AWSAutoScaler) GetAutoScaler(infraId string, name string, ctx utils.Context) (error, []*autoscaling.Instance) {
 	str := []*string{&name}
 
 	config_input := autoscaling.DescribeAutoScalingGroupsInput{}

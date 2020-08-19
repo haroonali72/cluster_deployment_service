@@ -61,7 +61,7 @@ type HeaderVariable string
 const (
 	Token     HeaderVariable = "X-Auth-Token"
 	ProfileId HeaderVariable = "X-Profile-Id"
-	ProjectId HeaderVariable = "Project Id"
+	InfraId   HeaderVariable = "Infrastructure Id"
 )
 
 type PathVariable string
@@ -76,8 +76,9 @@ const (
 type QueueType string
 
 const (
-	WorkQueue QueueType = "bb.cluster.work"
-	DoneQueue QueueType = "bb.cluster.done"
+	WorkQueue  QueueType = "bb.cluster.work"
+	AgentQueue QueueType = "bb.agent.work"
+	DoneQueue  QueueType = "bb.cluster.done"
 )
 
 type RequestType string
@@ -495,6 +496,13 @@ const (
 //	// AKSVMTypeStandardNV6 ...
 //	AKSVMTypeStandardNV6 AKSVMType = "Standard_NV6"
 //)
+type Action string
+
+const (
+	Create    Action = "create"
+	Update    Action = "update"
+	Terminate Action = "terminate"
+)
 
 type CredentialsType string
 
@@ -503,8 +511,8 @@ const (
 	SSHKey   CredentialsType = "key"
 )
 const (
-	ProjectGetEndpoint = "/raccoon/projects/{projectId}"
-	WeaselGetEndpoint  = "/weasel/network/{cloud}/{projectId}"
+	InfraGetEndpoint  = "/raccoon/innfrastructure/{infraId}"
+	WeaselGetEndpoint = "/weasel/network/{cloud}/{projectId}"
 )
 const (
 	WoodpeckerEnpoint = "/agent/api/v1/clientconfig"

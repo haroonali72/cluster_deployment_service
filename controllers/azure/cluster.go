@@ -22,14 +22,14 @@ type AzureClusterController struct {
 }
 
 // @Title Get
-// @Description Get cluster against the projectId
-// @Param	projectId	path	string	true	"Id of the project"
+// @Description Get cluster against the infraId
+// @Param	infraId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} azure.Cluster_Def
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /:projectId/ [get]
+// @router /:infraId/ [get]
 func (c *AzureClusterController) Get() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("AzureClusterController: Get cluster ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -42,10 +42,10 @@ func (c *AzureClusterController) Get() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
+		c.Data["json"] = map[string]string{"error": string(models.InfraId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -58,11 +58,11 @@ func (c *AzureClusterController) Get() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", infraId, "View", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -78,9 +78,9 @@ func (c *AzureClusterController) Get() {
 
 	//==================================================================================//
 
-	ctx.SendLogs("AzureClusterController: Getting cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: Getting cluster with project id "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err := azure.GetCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -88,8 +88,8 @@ func (c *AzureClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -198,11 +198,11 @@ func (c *AzureClusterController) Post() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.InfraId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), cluster.ProjectId, "Create", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), cluster.InfraId, "Create", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -222,7 +222,7 @@ func (c *AzureClusterController) Post() {
 
 	cluster.CreationDate = time.Now()
 
-	network, err := azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
+	network, err := azure.GetNetwork(cluster.InfraId, *ctx, cluster.ResourceGroup, token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -251,8 +251,8 @@ func (c *AzureClusterController) Post() {
 		return
 	}
 
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(201)
 	c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyAdded)}
@@ -330,11 +330,11 @@ func (c *AzureClusterController) Patch() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.InfraId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), cluster.ProjectId, "Update", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), cluster.InfraId, "Update", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -350,7 +350,7 @@ func (c *AzureClusterController) Patch() {
 
 	//=============================================================================//
 
-	network, err := azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
+	network, err := azure.GetNetwork(cluster.InfraId, *ctx, cluster.ResourceGroup, token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -400,8 +400,8 @@ func (c *AzureClusterController) Patch() {
 		return
 	}
 
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyUpdated)}
 	c.ServeJSON()
@@ -410,22 +410,22 @@ func (c *AzureClusterController) Patch() {
 // @Title Delete
 // @Description delete a cluster
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	projectId	path	string	true	"Project id of the cluster"
+// @Param	infraId	path	string	true	"Project id of the cluster"
 // @Param	forceDelete path    boolean	true     ""
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /:projectId/:forceDelete  [delete]
+// @router /:infraId/:forceDelete  [delete]
 func (c *AzureClusterController) Delete() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("AzureClusterController: Delete cluster", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-	id := c.GetString(":projectId")
+	id := c.GetString(":infraId")
 	if id == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
+		c.Data["json"] = map[string]string{"error": string(models.InfraId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -517,8 +517,8 @@ func (c *AzureClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project  "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project  "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project  "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project  "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(204)
 	c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyDeleted)}
@@ -527,7 +527,7 @@ func (c *AzureClusterController) Delete() {
 
 // @Title Create
 // @Description Deploy a  cluster
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Success 201 {"msg": "Cluster created successfully"}
@@ -537,7 +537,7 @@ func (c *AzureClusterController) Delete() {
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 512 {object} types.CustomCPError
-// @router /start/:projectId [post]
+// @router /start/:infraId [post]
 func (c *AzureClusterController) StartCluster() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("AzureClusterController: Create cluster ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -558,10 +558,10 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
+		c.Data["json"] = map[string]string{"error": string(models.InfraId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -574,11 +574,11 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "Start", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), infraId, "Start", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -594,7 +594,7 @@ func (c *AzureClusterController) StartCluster() {
 
 	//===========================================================================//
 
-	region, err := azure.GetRegion(token, projectId, *ctx)
+	region, err := azure.GetRegion(token, infraId, *ctx)
 	if region == "" {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
 		c.Data["json"] = map[string]string{"error": "region is empty"}
@@ -604,9 +604,9 @@ func (c *AzureClusterController) StartCluster() {
 
 	var cluster azure.Cluster_Def
 
-	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err = azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err = azure.GetCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -641,8 +641,8 @@ func (c *AzureClusterController) StartCluster() {
 
 	statusCode, azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
-		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(userInfo.CompanyId, err.Error(), "error", infraId)
+		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.InfraId)
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -662,8 +662,8 @@ func (c *AzureClusterController) StartCluster() {
 
 	go azure.DeployCluster(cluster, azureProfile, *ctx, userInfo.CompanyId, token)
 
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": string(models.CreationInitialised)}
@@ -673,7 +673,7 @@ func (c *AzureClusterController) StartCluster() {
 // @Title Status
 // @Description Get live status of the cluster
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Success 200 {object} azure.Cluster_Def
 // @Failure 401 {"error": "Unauthorized"}
@@ -681,15 +681,15 @@ func (c *AzureClusterController) StartCluster() {
 // @Failure 409 {"error": "Cluster is in creating/terminating state"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 512 {object} types.CustomCPError
-// @router /status/:projectId/ [get]
+// @router /status/:infraId/ [get]
 func (c *AzureClusterController) GetStatus() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("AzureClusterController: Fetch Status of cluster ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
+		c.Data["json"] = map[string]string{"error": string(models.InfraId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -710,10 +710,10 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), infraId, "View", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -736,7 +736,7 @@ func (c *AzureClusterController) GetStatus() {
 	}
 	//===========================================================================//
 
-	region, err := azure.GetRegion(token, projectId, *ctx)
+	region, err := azure.GetRegion(token, infraId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -752,9 +752,9 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController: Fetching cluster status of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: Fetching cluster status of project "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err1 := azure.FetchStatus(azureProfile, token, projectId, userInfo.CompanyId, *ctx)
+	cluster, err1 := azure.FetchStatus(azureProfile, token, infraId, userInfo.CompanyId, *ctx)
 	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(err1.StatusCode)
 		c.Data["json"] = err1
@@ -762,8 +762,8 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController:Cluster status of project "+projectId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("AzureClusterController:Cluster status of project "+projectId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController:Cluster status of project "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController:Cluster status of project "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	c.Data["json"] = cluster
 	c.ServeJSON()
@@ -771,7 +771,7 @@ func (c *AzureClusterController) GetStatus() {
 
 // @Title Terminate
 // @Description terminates a running cluster
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 202 {"msg": "Cluster termination initialized"}
@@ -780,17 +780,17 @@ func (c *AzureClusterController) GetStatus() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 512 {object} types.CustomCPError
-// @router /terminate/:projectId/ [post]
+// @router /terminate/:infraId/ [post]
 func (c *AzureClusterController) TerminateCluster() {
 	ctx := new(utils.Context)
 	var cluster azure.Cluster_Def
 
 	ctx.SendLogs("AzureClusterController: Terminate Cluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
+		c.Data["json"] = map[string]string{"error": string(models.InfraId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -819,11 +819,11 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "Terminate", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), infraId, "Terminate", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -841,7 +841,7 @@ func (c *AzureClusterController) TerminateCluster() {
 
 	ctx.SendLogs("AzureClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	region, err := azure.GetRegion(token, projectId, *ctx)
+	region, err := azure.GetRegion(token, infraId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -857,9 +857,9 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err = azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err = azure.GetCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -908,7 +908,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	ctx.SendLogs("AzureClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId)
 
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": string(models.TerminationInitialised)}
@@ -964,23 +964,23 @@ func (c *AzureClusterController) GetSSHKeys() {
 
 // @Title CreateSSHKey
 // @Description Generates new SSH key
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Param	keyname	 	path	string	true	"SSHKey"
 // @Param	X-Auth-Token		header	string	true 	"Token"
 // @Param	teams		header	string	teams 	""
 // @Success 200 		{object} key_utils.AZUREKey
 // @Failure 404 		{"error": "Not Found"}
 // @Failure 500 		{"error": "Runtime Error"}
-// @router /sshkey/:keyname/:projectId [post]
+// @router /sshkey/:keyname/:infraId [post]
 func (c *AzureClusterController) PostSSHKey() {
 
 	ctx := new(utils.Context)
 	ctx.SendLogs("AzureClusterController: Create SSH Key ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
+		c.Data["json"] = map[string]string{"error": string(models.InfraId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1013,7 +1013,7 @@ func (c *AzureClusterController) PostSSHKey() {
 	//==========================RBAC Authentication==============================//
 	//=============================================================================//
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 
 	ctx.SendLogs("AZURENetworkController: Creating SSH Key ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -1285,7 +1285,7 @@ func (c *AzureClusterController) GetZones() {
 
 	ctx.SendLogs("AWSClusterController: fetch availability zones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	az, err1 := azure.GetZones( region )
+	az, err1 := azure.GetZones(region)
 	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(err1.StatusCode)
 		c.Data["json"] = err1
@@ -1392,11 +1392,11 @@ func (c *AzureClusterController) ValidateProfile() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {"msg": "Agent Applied successfully"}
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /applyagent/:projectId [post]
+// @router /applyagent/:infraId [post]
 func (c *AzureClusterController) ApplyAgent() {
 
 	ctx := new(utils.Context)
@@ -1411,11 +1411,11 @@ func (c *AzureClusterController) ApplyAgent() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
-		ctx.SendLogs("AzureClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
+		ctx.SendLogs("AzureClusterController: InfraId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
+		c.Data["json"] = map[string]string{"error": string(models.InfraId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1452,10 +1452,10 @@ func (c *AzureClusterController) ApplyAgent() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AzureClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "Start", token, utils.Context{})
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), infraId, "Start", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1471,14 +1471,14 @@ func (c *AzureClusterController) ApplyAgent() {
 
 	statusCode, azureProfile, err := azure.GetProfile(profileId, "", token, *ctx)
 	if err != nil {
-		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
+		utils.SendLog(userInfo.CompanyId, err.Error(), "error", infraId)
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	ctx.SendLogs("AKSClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: applying agent on cluster . "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go azure.ApplyAgent(azureProfile, token, *ctx, clusterName, resourceGroup)
 

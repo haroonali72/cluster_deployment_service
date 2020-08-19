@@ -209,7 +209,7 @@ func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.C
 	}
 
 	request := cloud.generateClusterCreateRequest(aksCluster)
-	cloud.ProjectId = aksCluster.ProjectId
+	cloud.ProjectId = aksCluster.InfraId
 
 	//Network will be added in every case BASIC, ADVANCE, EXPERT
 	networkInformation := cloud.getAzureNetwork(token, ctx)
@@ -400,7 +400,7 @@ func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster)
 	}
 
 	return AKSCluster{
-		ProjectId:         cloud.ProjectId,
+		InfraId:           cloud.ProjectId,
 		Cloud:             models.AKS,
 		ProvisioningState: *v.ProvisioningState,
 		KubernetesVersion: *v.KubernetesVersion,
@@ -461,7 +461,7 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			AKSNodePools[i].MaxPods = nodepool.MaxPods
 
 			nodelabels := make(map[string]*string)
-			nodelabels["AKS-Custer-Node-Pool"] = to.StringPtr(c.ProjectId)
+			nodelabels["AKS-Custer-Node-Pool"] = to.StringPtr(c.InfraId)
 			AKSNodePools[i].NodeLabels = nodelabels
 		}
 	}
@@ -702,7 +702,7 @@ func generateClusterTags(c AKSCluster) map[string]*string {
 			AKSclusterTags[tag.Key] = &tag.Value
 		}
 	} else {
-		AKSclusterTags["AKS-Cluster"] = &c.ProjectId
+		AKSclusterTags["AKS-Cluster"] = &c.InfraId
 	}
 
 	return AKSclusterTags
@@ -935,7 +935,7 @@ func (cloud *AKS) WriteAzureSkus() {
 }
 
 func validate(aksCluster AKSCluster) error {
-	if aksCluster.ProjectId == "" {
+	if aksCluster.InfraId == "" {
 		return errors.New("project id is required")
 	} else if aksCluster.Name == "" {
 		return errors.New("cluster name is required")

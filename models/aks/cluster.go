@@ -29,7 +29,7 @@ import (
 //swagger:model akscluster
 type AKSCluster struct {
 	ID                     bson.ObjectId                        `json:"-" bson:"_id,omitempty"`
-	ProjectId              string                               `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	InfraId                string                               `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
 	Cloud                  models.Cloud                         `json:"cloud" bson:"cloud"`
 	CreationDate           time.Time                            `json:"-" bson:"creation_date"`
 	ModificationDate       time.Time                            `json:"-" bson:"modification_date"`
@@ -66,9 +66,9 @@ type Tag struct {
 	Value string `json:"value" bson:"value"`
 }
 
-func GetNetwork(token, projectId string, ctx utils.Context) error {
+func GetNetwork(token, infraId string, ctx utils.Context) error {
 
-	url := getNetworkHost("azure", projectId)
+	url := getNetworkHost("azure", infraId)
 
 	_, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
@@ -153,16 +153,16 @@ type AzureRegion struct {
 }
 
 type Cluster struct {
-	Name      string      `json:"name,omitempty" bson:"name,omitempty" description:"Cluster name"`
-	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
-	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster"`
+	Name    string      `json:"name,omitempty" bson:"name,omitempty" description:"Cluster name"`
+	InfraId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status  models.Type `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster"`
 }
 
 func AddPreviousAKSCluster(cluster AKSCluster, ctx utils.Context, patch bool) error {
 	var oldCluster AKSCluster
-	_, err := GetPreviousAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+	_, err := GetPreviousAKSCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if err == nil {
-		err := DeletePreviousAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+		err := DeletePreviousAKSCluster(cluster.InfraId, cluster.CompanyId, ctx)
 		if err != nil {
 			ctx.SendLogs(
 				"AKSAddClusterModel:  Add previous cluster - "+err.Error(),
@@ -174,7 +174,7 @@ func AddPreviousAKSCluster(cluster AKSCluster, ctx utils.Context, patch bool) er
 	}
 
 	if patch == false {
-		oldCluster, err = GetAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+		oldCluster, err = GetAKSCluster(cluster.InfraId, cluster.CompanyId, ctx)
 		if err != nil {
 			ctx.SendLogs(
 				"AKSAddClusterModel:  Add previous cluster - "+err.Error(),
@@ -219,7 +219,7 @@ func AddPreviousAKSCluster(cluster AKSCluster, ctx utils.Context, patch bool) er
 	return nil
 }
 
-func GetPreviousAKSCluster(projectId, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
+func GetPreviousAKSCluster(infraId, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs(
@@ -233,7 +233,7 @@ func GetPreviousAKSCluster(projectId, companyId string, ctx utils.Context) (clus
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAKSPreviousClusterCollection)
-	err = c.Find(bson.M{"project_id": projectId, "company_id": companyId}).One(&cluster)
+	err = c.Find(bson.M{"project_id": infraId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
 			"AKSGetClusterModel:  Get previous cluster- Got error while fetching from database: "+err.Error(),
@@ -248,7 +248,7 @@ func GetPreviousAKSCluster(projectId, companyId string, ctx utils.Context) (clus
 
 func UpdatePreviousAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 
-	result, _ := GetAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+	result, _ := GetAKSCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if result.UpdateStatus != string(models.New) {
 		err := AddPreviousAKSCluster(cluster, ctx, false)
 		if err != nil {
@@ -264,7 +264,7 @@ func UpdatePreviousAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 		text := "AKSClusterModel:  Update previous cluster - '" + cluster.Name + err.Error()
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-		err = DeletePreviousAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+		err = DeletePreviousAKSCluster(cluster.InfraId, cluster.CompanyId, ctx)
 		if err != nil {
 			text := "AKSDeleteClusterModel:  Delete  previous cluster - '" + cluster.Name + err.Error()
 			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -276,7 +276,7 @@ func UpdatePreviousAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 	return nil
 }
 
-func DeletePreviousAKSCluster(projectId, companyId string, ctx utils.Context) error {
+func DeletePreviousAKSCluster(infraId, companyId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs(
@@ -290,7 +290,7 @@ func DeletePreviousAKSCluster(projectId, companyId string, ctx utils.Context) er
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAKSPreviousClusterCollection)
-	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
+	err = c.Remove(bson.M{"project_id": infraId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(
 			"AKSDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
@@ -303,7 +303,7 @@ func DeletePreviousAKSCluster(projectId, companyId string, ctx utils.Context) er
 	return nil
 }
 
-func GetAKSCluster(projectId string, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
+func GetAKSCluster(infraId string, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs(
@@ -317,7 +317,7 @@ func GetAKSCluster(projectId string, companyId string, ctx utils.Context) (clust
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAKSClusterCollection)
-	err = c.Find(bson.M{"project_id": projectId, "company_id": companyId}).One(&cluster)
+	err = c.Find(bson.M{"project_id": infraId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
 			"AKSGetClusterModel:  Get - Got error while fetching from database: "+err.Error(),
@@ -360,7 +360,7 @@ func GetAllAKSCluster(data rbacAuthentication.List, ctx utils.Context) (aksClust
 		return aksClusters, err
 	}
 	for _, cluster := range clusters {
-		temp := Cluster{Name: cluster.Name, ProjectId: cluster.ProjectId, Status: cluster.Status}
+		temp := Cluster{Name: cluster.Name, InfraId: cluster.InfraId, Status: cluster.Status}
 		aksClusters = append(aksClusters, temp)
 	}
 
@@ -368,9 +368,9 @@ func GetAllAKSCluster(data rbacAuthentication.List, ctx utils.Context) (aksClust
 }
 
 func AddAKSCluster(cluster AKSCluster, ctx utils.Context) error {
-	_, err := GetAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+	_, err := GetAKSCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if err == nil {
-		text := fmt.Sprintf("AKSAddClusterModel:  Add - Cluster for project '%s' already exists in the database.", cluster.ProjectId)
+		text := fmt.Sprintf("AKSAddClusterModel:  Add - Cluster for project '%s' already exists in the database.", cluster.InfraId)
 		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text + err.Error())
 	}
@@ -410,14 +410,14 @@ func AddAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 }
 
 func UpdateAKSCluster(cluster AKSCluster, ctx utils.Context) error {
-	oldCluster, err := GetAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+	oldCluster, err := GetAKSCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if err != nil {
 		text := "AKSUpdateClusterModel:  Update - Cluster '" + cluster.Name + "' does not exist in the database: " + err.Error()
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
 
-	err = DeleteAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+	err = DeleteAKSCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs(
 			"AKSUpdateClusterModel:  Update - Got error deleting cluster "+err.Error(),
@@ -443,7 +443,7 @@ func UpdateAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 	return nil
 }
 
-func DeleteAKSCluster(projectId, companyId string, ctx utils.Context) error {
+func DeleteAKSCluster(infraId, companyId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs(
@@ -457,7 +457,7 @@ func DeleteAKSCluster(projectId, companyId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAKSClusterCollection)
-	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
+	err = c.Remove(bson.M{"project_id": infraId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(
 			"AKSDeleteClusterModel:  Delete - Got error while deleting from the database: "+err.Error(),
@@ -484,78 +484,78 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 		cluster.Status = models.ClusterCreationFailed
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
-			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
+			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.InfraId)
 
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, CpErr)
+		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, CpErr)
 		if err != nil {
 
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.InfraId, "Status Available", ctx)
 
 		return CpErr
 	}
 
-	_, _ = utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+	_, _ = utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.InfraId)
 	cluster.Status = (models.Deploying)
 	err_ := UpdateAKSCluster(cluster, ctx)
 	if err_ != nil {
-		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)
 
 		CpErr = ApiError(err_, "Error occurred while updating cluster in database", 500)
 
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, CpErr)
+		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, CpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.InfraId, "Status Available", ctx)
 		return CpErr
 	}
 	err := aksOps.CreateCluster(cluster, token, ctx)
 	if err != nil {
 		cpErr := ApiError(err, "", 502)
 
-		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
-		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.InfraId)
+		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.InfraId)
 
 		cluster.Status = models.ClusterCreationFailed
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
-			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
+			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.InfraId)
 
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, cpErr)
+		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.InfraId, "Status Available", ctx)
 		return cpErr
 	}
 	AgentErr := azure.ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGoup)
 	if AgentErr != nil {
 		cpErr := ApiError(AgentErr, "agent deployment failed", 500)
-		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
-		_, _ = utils.SendLog(companyId, "Agent deployment failed : "+cpErr.Error+cpErr.Description, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.InfraId)
+		_, _ = utils.SendLog(companyId, "Agent deployment failed : "+cpErr.Error+cpErr.Description, "error", cluster.InfraId)
 
 		cluster.Status = models.ClusterCreationFailed
-		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
-		_ = TerminateCluster(credentials, cluster.ProjectId, companyId, ctx)
+		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.InfraId)
+		_ = TerminateCluster(credentials, cluster.InfraId, companyId, ctx)
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
-			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
+			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.InfraId)
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, cpErr)
+		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.InfraId, "Status Available", ctx)
 		return cpErr
 	}
 	cluster.Status = models.ClusterCreated
@@ -563,24 +563,24 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	UpdationErr := UpdateAKSCluster(cluster, ctx)
 	if UpdationErr != nil {
 		CpErr = ApiError(err_, "Error occurred while updating cluster in database", 500)
-		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.InfraId)
 		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, CpErr)
+		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, CpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		return CpErr
 	}
 
-	_, _ = utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+	_, _ = utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.InfraId)
+	publisher.Notify(cluster.InfraId, "Status Available", ctx)
 	return types.CustomCPError{}
 }
 
-func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId string, ctx utils.Context) (KubeClusterStatus, types.CustomCPError) {
-	cluster, err := GetAKSCluster(projectId, companyId, ctx)
+func FetchStatus(credentials vault.AzureCredentials, token, infraId, companyId string, ctx utils.Context) (KubeClusterStatus, types.CustomCPError) {
+	cluster, err := GetAKSCluster(infraId, companyId, ctx)
 	if err != nil {
 		return KubeClusterStatus{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
 			Description: err.Error(),
@@ -597,7 +597,7 @@ func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId
 		return KubeClusterStatus{}, cpErr
 	}
 	if cluster.Status != models.ClusterCreated {
-		customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
+		customErr, err := db.GetError(cluster.InfraId, ctx.Data.Company, models.GKE, ctx)
 		if err != nil {
 			return KubeClusterStatus{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
 				Description: "Error occurred while getting cluster status in database",
@@ -623,14 +623,14 @@ func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId
 	return clusterstatus, types.CustomCPError{}
 }
 
-func TerminateCluster(credentials vault.AzureProfile, projectId, companyId string, ctx utils.Context) types.CustomCPError {
+func TerminateCluster(credentials vault.AzureProfile, infraId, companyId string, ctx utils.Context) types.CustomCPError {
 	publisher := utils.Notifier{}
 	_ = publisher.Init_notifier()
 
-	cluster, err := GetAKSCluster(projectId, companyId, ctx)
+	cluster, err := GetAKSCluster(infraId, companyId, ctx)
 	if err != nil {
 		cpErr := ApiError(err, "Error wile getting cluster from database", 500)
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, cpErr)
+		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -643,27 +643,27 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 		cpErr := ApiError(errors.New(text), text, 400)
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, cpErr)
+		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.InfraId, "Status Available", ctx)
 		return cpErr
 	}
 
 	aksOps, _ := GetAKS(credentials.Profile)
-	_, _ = utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
+	_, _ = utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.InfraId)
 
 	cluster.Status = (models.Terminating)
 	err_ := UpdateAKSCluster(cluster, ctx)
 	if err_ != nil {
 		cpErr := ApiError(err_, "Error while updating cluster in database", 500)
-		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, cpErr)
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)
+		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.InfraId, "Status Available", ctx)
 		return cpErr
 	}
 
@@ -671,18 +671,18 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 	if CpErr != (types.CustomCPError{}) {
 		ctx.SendLogs("AKSClusterModel : Terminate -"+CpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-		utils.SendLog(companyId, CpErr.Description, "error", cluster.ProjectId)
+		utils.SendLog(companyId, CpErr.Description, "error", cluster.InfraId)
 
 		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateAKSCluster(cluster, ctx)
 		if err != nil {
 			ctx.SendLogs("AKSClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, CpErr)
+		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, CpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.InfraId, "Status Available", ctx)
 
 		return CpErr
 	}
@@ -690,8 +690,8 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 	CpErr = aksOps.TerminateCluster(cluster, ctx)
 	if CpErr != (types.CustomCPError{}) {
 
-		_, _ = utils.SendLog(companyId, "Cluster termination failed: "+CpErr.Error, "error", cluster.ProjectId)
-		_, _ = utils.SendLog(companyId, CpErr.Description, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, "Cluster termination failed: "+CpErr.Error, "error", cluster.InfraId)
+		_, _ = utils.SendLog(companyId, CpErr.Description, "error", cluster.InfraId)
 
 		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateAKSCluster(cluster, ctx)
@@ -699,11 +699,11 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 			ctx.SendLogs("AKSClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, CpErr)
+		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, CpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.InfraId, "Status Available", ctx)
 		return CpErr
 	}
 
@@ -712,20 +712,20 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 	err = UpdateAKSCluster(cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterModel : Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		_, _ = utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
-		_, _ = utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.InfraId)
+		_, _ = utils.SendLog(companyId, err.Error(), "error", cluster.InfraId)
 
 		CpErr := ApiError(err, "Error while updating cluster in database", 500)
 
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, CpErr)
+		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, CpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.InfraId, "Status Available", ctx)
 		return ApiError(err, "Error while updating cluster in database", 500)
 	}
-	_, _ = utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+	_, _ = utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.InfraId)
+	publisher.Notify(cluster.InfraId, "Status Available", ctx)
 	return types.CustomCPError{}
 }
 
@@ -751,11 +751,11 @@ func GetKubeCofing(credentials vault.AzureCredentials, cluster AKSCluster, ctx u
 
 }
 
-func PrintError(confError error, name, projectId string, companyId string) {
+func PrintError(confError error, name, infraId string, companyId string) {
 	if confError != nil {
 		beego.Error(confError.Error())
-		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+name, "error", projectId)
-		_, _ = utils.SendLog(companyId, confError.Error(), "error", projectId)
+		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+name, "error", infraId)
+		_, _ = utils.SendLog(companyId, confError.Error(), "error", infraId)
 	}
 }
 
@@ -836,7 +836,7 @@ func ValidateAKSData(cluster *AKSCluster, ctx utils.Context) error {
 	if !cluster.IsAdvanced {
 		cluster.DNSPrefix = cluster.Name + "-dns"
 	}
-	if cluster.ProjectId == "" {
+	if cluster.InfraId == "" {
 
 		return errors.New("project ID is empty")
 
@@ -1040,22 +1040,22 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		cluster.Status = models.ClusterUpdateFailed
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
-			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
+			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.InfraId)
 
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, CpErr)
+		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, CpErr)
 		if err != nil {
 
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Redeploy Status Available", ctx)
+		publisher.Notify(cluster.InfraId, "Redeploy Status Available", ctx)
 
 		return CpErr
 	}
 
-	difCluster, previousPoolCount, newPoolCount, err1 := CompareClusters(cluster.ProjectId, companyId, ctx)
+	difCluster, previousPoolCount, newPoolCount, err1 := CompareClusters(cluster.InfraId, companyId, ctx)
 	if err1 != nil {
 		if strings.Contains(err1.Error(), "Nothing to update") {
 			cluster.Status = models.ClusterCreated
@@ -1063,14 +1063,14 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 			if confError_ != nil {
 				ctx.SendLogs("AKSRunningClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+			publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
 			return types.CustomCPError{}
 		}
 	}
 
-	_, _ = utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	_, _ = utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
-	aksOps.ProjectId = cluster.ProjectId
+	aksOps.ProjectId = cluster.InfraId
 	isClusterUpdated := false
 	if previousPoolCount < newPoolCount {
 		isPoolUpdated := make(map[int]bool)
@@ -1107,7 +1107,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 			}
 		}
 	} else if newPoolCount < previousPoolCount {
-		previousCluster, err := GetPreviousAKSCluster(cluster.ProjectId, companyId, ctx)
+		previousCluster, err := GetPreviousAKSCluster(cluster.InfraId, companyId, ctx)
 		if err != nil {
 			updationFailedError(cluster, ctx, types.CustomCPError{
 				StatusCode:  int(models.CloudStatusCode),
@@ -1231,7 +1231,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		}
 	}
 
-	//_ = DeletePreviousAKSCluster(cluster.ProjectId, companyId, ctx)
+	//_ = DeletePreviousAKSCluster(cluster.InfraId, companyId, ctx)
 
 	//latestCluster, err2 := aksOps.fetchClusterStatus(credentials.Profile, &cluster, ctx)
 	//if err2 != (types.CustomCPError{}) {
@@ -1250,8 +1250,8 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 
 	}
 
-	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
+	publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
 
 	return types.CustomCPError{}
 
@@ -1267,27 +1267,27 @@ func updationFailedError(cluster AKSCluster, ctx utils.Context, err types.Custom
 		ctx.SendLogs("AKSRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
-	utils.SendLog(ctx.Data.Company, "Error in running cluster update : "+err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+	utils.SendLog(ctx.Data.Company, "Error in running cluster update : "+err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.InfraId)
 
-	err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AKS, ctx, err)
+	err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.AKS, ctx, err)
 	if err_ != nil {
 		ctx.SendLogs("AKSRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
-	utils.SendLog(ctx.Data.Company, "Deployed cluster update failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+	utils.SendLog(ctx.Data.Company, "Deployed cluster update failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.InfraId)
 	utils.SendLog(ctx.Data.Company, err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
 
-	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+	publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
 	return err
 }
 
-func CompareClusters(projectId, companyId string, ctx utils.Context) (diff.Changelog, int, int, error) {
-	cluster, err := GetAKSCluster(projectId, companyId, ctx)
+func CompareClusters(infraId, companyId string, ctx utils.Context) (diff.Changelog, int, int, error) {
+	cluster, err := GetAKSCluster(infraId, companyId, ctx)
 	if err != nil {
 		return diff.Changelog{}, 0, 0, err
 	}
 
-	oldCluster, err := GetPreviousAKSCluster(projectId, companyId, ctx)
+	oldCluster, err := GetPreviousAKSCluster(infraId, companyId, ctx)
 	if err != nil && strings.Contains(err.Error(), "not found") {
 		return diff.Changelog{}, 0, 0, errors.New("Nothing to update")
 	}

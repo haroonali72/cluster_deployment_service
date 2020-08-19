@@ -20,20 +20,20 @@ type GcpClusterController struct {
 
 // @Title Get
 // @Description get cluster
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} gcp.Cluster_Def
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /:projectId/ [get]
+// @router /:infraId/ [get]
 func (c *GcpClusterController) Get() {
 
 	ctx := new(utils.Context)
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
-		ctx.SendLogs("GcpClusterController: projectId is empty", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
+		ctx.SendLogs("GcpClusterController: infraId is empty", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -57,12 +57,12 @@ func (c *GcpClusterController) Get() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("GcpClusterController: Get cluster with project id "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", projectId, "View", token, utils.Context{})
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", infraId, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -77,9 +77,9 @@ func (c *GcpClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs("GcpClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Get cluster with project id: "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err := gcp.GetCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
@@ -93,7 +93,7 @@ func (c *GcpClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -203,12 +203,12 @@ func (c *GcpClusterController) Post() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.InfraId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", cluster.InfraId, "Create", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -226,7 +226,7 @@ func (c *GcpClusterController) Post() {
 	ctx.SendLogs("GcpClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
-	network, err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
+	network, err := gcp.GetNetwork(token, cluster.InfraId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -258,7 +258,7 @@ func (c *GcpClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(201)
 	c.Data["json"] = map[string]string{"msg": "Cluster added successfully"}
@@ -331,12 +331,12 @@ func (c *GcpClusterController) Patch() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.InfraId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", cluster.InfraId, "Update", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -367,7 +367,7 @@ func (c *GcpClusterController) Patch() {
 
 	ctx.SendLogs("GcpClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
-	network, err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
+	network, err := gcp.GetNetwork(token, cluster.InfraId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -414,25 +414,25 @@ func (c *GcpClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 	c.ServeJSON()
 }
 
 // @Title Delete
 // @Description delete a cluster
-// @Param	projectId	path	string	true	"project id of the cluster"
+// @Param	infraId	path	string	true	"project id of the cluster"
 // @Param	forceDelete path  boolean	true "deleting cluster forcefully"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /:projectId/:forceDelete  [delete]
+// @router /:infraId/:forceDelete  [delete]
 func (c *GcpClusterController) Delete() {
 	ctx := new(utils.Context)
 
-	id := c.GetString(":projectId")
+	id := c.GetString(":infraId")
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
@@ -526,7 +526,7 @@ func (c *GcpClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Ctx.Output.SetStatus(204)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
@@ -536,14 +536,14 @@ func (c *GcpClusterController) Delete() {
 // @Description starts a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "token"
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Success 201 {"msg": "Cluster created successfully"}
 // @Success 202 {"msg": "Cluster creation started successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "Conflict"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /start/:projectId [post]
+// @router /start/:infraId [post]
 func (c *GcpClusterController) StartCluster() {
 
 	ctx := new(utils.Context)
@@ -557,8 +557,8 @@ func (c *GcpClusterController) StartCluster() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -582,10 +582,10 @@ func (c *GcpClusterController) StartCluster() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", infraId, "Start", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -600,7 +600,7 @@ func (c *GcpClusterController) StartCluster() {
 		return
 	}
 
-	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
+	region, zone, err := gcp.GetRegion(token, infraId, *ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -620,9 +620,9 @@ func (c *GcpClusterController) StartCluster() {
 
 	var cluster gcp.Cluster_Def
 
-	ctx.SendLogs("GcpClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Getting Cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err = gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err = gcp.GetCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -669,7 +669,7 @@ func (c *GcpClusterController) StartCluster() {
 
 	go gcp.DeployCluster(cluster, credentials, userInfo.CompanyId, token, *ctx)
 
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
 	c.ServeJSON()
@@ -679,12 +679,12 @@ func (c *GcpClusterController) StartCluster() {
 // @Description returns status of nodes
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "token"
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Success 200 {object} gcp.Cluster_Def
 // @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /status/:projectId/ [get]
+// @router /status/:infraId/ [get]
 func (c *GcpClusterController) GetStatus() {
 
 	ctx := new(utils.Context)
@@ -698,8 +698,8 @@ func (c *GcpClusterController) GetStatus() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -723,11 +723,11 @@ func (c *GcpClusterController) GetStatus() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", projectId, "View", token, utils.Context{})
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", infraId, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -741,7 +741,7 @@ func (c *GcpClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
+	region, zone, err := gcp.GetRegion(token, infraId, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -759,9 +759,9 @@ func (c *GcpClusterController) GetStatus() {
 		return
 	}
 
-	ctx.SendLogs("GcpClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Fetch Cluster Status of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err1 := gcp.FetchStatus(credentials, token, projectId, userInfo.CompanyId, *ctx)
+	cluster, err1 := gcp.FetchStatus(credentials, token, infraId, userInfo.CompanyId, *ctx)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GcpClusterController :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(err1.StatusCode)
@@ -775,7 +775,7 @@ func (c *GcpClusterController) GetStatus() {
 // @Title Terminate
 // @Description terminates a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
@@ -783,7 +783,7 @@ func (c *GcpClusterController) GetStatus() {
 // @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "Conflict"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /terminate/:projectId/ [post]
+// @router /terminate/:infraId/ [post]
 func (c *GcpClusterController) TerminateCluster() {
 
 	ctx := new(utils.Context)
@@ -797,8 +797,8 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -822,12 +822,12 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", projectId, "Terminate", token, utils.Context{})
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", infraId, "Terminate", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -842,7 +842,7 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 
-	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
+	region, zone, err := gcp.GetRegion(token, infraId, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -862,9 +862,9 @@ func (c *GcpClusterController) TerminateCluster() {
 
 	var cluster gcp.Cluster_Def
 
-	ctx.SendLogs("GcpClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	cluster.ProjectId=projectId
-	cluster, err = gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
+	ctx.SendLogs("GcpClusterController: Getting Cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	cluster.InfraId = infraId
+	cluster, err = gcp.GetCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -914,10 +914,10 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 
-	go gcp.TerminateCluster(cluster, credentials, token,userInfo.CompanyId, *ctx)
+	go gcp.TerminateCluster(cluster, credentials, token, userInfo.CompanyId, *ctx)
 
 	c.Ctx.Output.SetStatus(202)
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "Cluster termination is in progress"}
 	c.ServeJSON()
 }
@@ -1039,7 +1039,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 
 // @Title CreateSSHKey
 // @Description Generates new SSH key
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Param	keyname	 	path	string	true	"SSHKey"
 // @Param	username	path	string	true	"UserName"
 // @Param	X-Auth-Token		header	string	true "Token"
@@ -1049,14 +1049,14 @@ func (c *GcpClusterController) GetServiceAccounts() {
 // @Failure 401 		{"error": "Unauthorized"}
 // @Failure 404 		{"error": "Not Found"}
 // @Failure 500 		{"error": "Runtime Error"}
-// @router /sshkey/:keyname/:username/:projectId [post]
+// @router /sshkey/:keyname/:username/:infraId [post]
 func (c *GcpClusterController) PostSSHKey() {
 
 	ctx := new(utils.Context)
 	ctx.SendLogs("GcpClusterController: CreateSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -1084,7 +1084,7 @@ func (c *GcpClusterController) PostSSHKey() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: PostSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
@@ -1225,7 +1225,6 @@ func (c *GcpClusterController) GetAllMachines() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: GetAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-
 	zone := c.GetString(":zone")
 	if zone == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -1233,7 +1232,7 @@ func (c *GcpClusterController) GetAllMachines() {
 		c.ServeJSON()
 		return
 	}
-	region:=strings.Split(zone, "-")
+	region := strings.Split(zone, "-")
 	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region[0]+"-"+region[1], token, region[2], *ctx)
 	if !isValid {
 		ctx.SendLogs("GcpClusterController : Gcp credentials not valid ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

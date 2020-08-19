@@ -19,19 +19,19 @@ type AKSClusterController struct {
 }
 
 // @Title Get
-// @Description Get cluster against the projectId
-// @Param	projectId	path	string	true	"Id of the project"
+// @Description Get cluster against the infraId
+// @Param	infraId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} aks.AKSCluster
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /:projectId/ [get]
+// @router /:infraId/ [get]
 func (c *AKSClusterController) Get() {
 	ctx := new(utils.Context)
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -54,10 +54,10 @@ func (c *AKSClusterController) Get() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("AKSClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("AKSClusterController: Get cluster with project id "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "View", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", infraId, "View", token, utils.Context{})
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
@@ -77,9 +77,9 @@ func (c *AKSClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs("AKSClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Get cluster with project id: "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := aks.GetAKSCluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err := aks.GetAKSCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
@@ -93,7 +93,7 @@ func (c *AKSClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs(" AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" AKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -208,10 +208,10 @@ func (c *AKSClusterController) Post() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.InfraId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.InfraId, "Create", token, utils.Context{})
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
@@ -252,7 +252,7 @@ func (c *AKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	err = aks.GetNetwork(token, cluster.ProjectId, *ctx)
+	err = aks.GetNetwork(token, cluster.InfraId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -274,7 +274,7 @@ func (c *AKSClusterController) Post() {
 		return
 	}
 
-	ctx.SendLogs("AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("AKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Ctx.Output.SetStatus(201)
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
@@ -352,10 +352,10 @@ func (c *AKSClusterController) Patch() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.InfraId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.InfraId, "Update", token, utils.Context{})
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
@@ -399,7 +399,7 @@ func (c *AKSClusterController) Patch() {
 			return
 		}
 
-		ctx.SendLogs("AKS running cluster "+cluster.Name+" in project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+		ctx.SendLogs("AKS running cluster "+cluster.Name+" in project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
 		c.ServeJSON()
@@ -419,7 +419,7 @@ func (c *AKSClusterController) Patch() {
 		return
 	}
 
-	ctx.SendLogs("AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("AKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
 	c.ServeJSON()
 }
@@ -427,20 +427,20 @@ func (c *AKSClusterController) Patch() {
 // @Title Delete
 // @Description Delete a cluster
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	projectId	path 	string	true	"Project id of the cluster"
+// @Param	infraId	path 	string	true	"Project id of the cluster"
 // @Param	forceDelete path    boolean	true    "Forcefully delete cluster"
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in Cluster Created/Creating/Terminating/Termination Failed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /:projectId/:forceDelete [delete]
+// @router /:infraId/:forceDelete [delete]
 func (c *AKSClusterController) Delete() {
 	ctx := new(utils.Context)
 
-	id := c.GetString(":projectId")
+	id := c.GetString(":infraId")
 	if id == "" {
-		ctx.SendLogs("AKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: InfraId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -554,7 +554,7 @@ func (c *AKSClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs("AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("AKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Ctx.Output.SetStatus(204)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
@@ -564,7 +564,7 @@ func (c *AKSClusterController) Delete() {
 // @Description Deploy a kubernetes cluster
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Success 201 {"msg": "Cluster created successfully"}
 // @Success 202 {"msg": "Cluster creation initiated"}
 // @Failure 400 {"error": "Bad Request"}
@@ -572,7 +572,7 @@ func (c *AKSClusterController) Delete() {
 // @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /start/:projectId [post]
+// @router /start/:infraId [post]
 func (c *AKSClusterController) StartCluster() {
 
 	ctx := new(utils.Context)
@@ -587,9 +587,9 @@ func (c *AKSClusterController) StartCluster() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
-		ctx.SendLogs("AKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
+		ctx.SendLogs("AKSClusterController: InfraId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -619,9 +619,9 @@ func (c *AKSClusterController) StartCluster() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 
-	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", infraId, "Start", token, utils.Context{})
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
@@ -641,7 +641,7 @@ func (c *AKSClusterController) StartCluster() {
 		return
 	}
 
-	region, err := azure.GetRegion(token, projectId, *ctx)
+	region, err := azure.GetRegion(token, infraId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -657,9 +657,9 @@ func (c *AKSClusterController) StartCluster() {
 		return
 	}
 
-	ctx.SendLogs("AKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Getting Cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := aks.GetAKSCluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err := aks.GetAKSCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
@@ -711,7 +711,7 @@ func (c *AKSClusterController) StartCluster() {
 
 	go aks.DeployAKSCluster(cluster, azureProfile, userInfo.CompanyId, token, *ctx)
 
-	ctx.SendLogs(" AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" AKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
@@ -722,14 +722,14 @@ func (c *AKSClusterController) StartCluster() {
 // @Description Get live status of the running cluster
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Success 200 {object} aks.AKSCluster
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "Cluster is in deploying/terminating state"}
 // @Failure 500 {"error": "Internal Server Error"}
 // @Failure 512 {object} types.CustomCPError
-// @router /status/:projectId/ [get]
+// @router /status/:infraId/ [get]
 func (c *AKSClusterController) GetStatus() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("AKSClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -742,8 +742,8 @@ func (c *AKSClusterController) GetStatus() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -767,10 +767,10 @@ func (c *AKSClusterController) GetStatus() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "View", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", infraId, "View", token, utils.Context{})
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
@@ -789,7 +789,7 @@ func (c *AKSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-	region, err := azure.GetRegion(token, projectId, *ctx)
+	region, err := azure.GetRegion(token, infraId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -805,9 +805,9 @@ func (c *AKSClusterController) GetStatus() {
 		return
 	}
 
-	ctx.SendLogs("AKSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Fetch Cluster Status of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, cpErr := aks.FetchStatus(azureProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
+	cluster, cpErr := aks.FetchStatus(azureProfile.Profile, token, infraId, userInfo.CompanyId, *ctx)
 	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") || cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "not deployed") {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = cpErr.Description
@@ -828,7 +828,7 @@ func (c *AKSClusterController) GetStatus() {
 // @Description Terminate a running cluster
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Success 202 {"msg": "Cluster termination started successfully"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 400 {"error": "Bad Request"}
@@ -836,7 +836,7 @@ func (c *AKSClusterController) GetStatus() {
 // @Failure 409 {"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /terminate/:projectId/ [post]
+// @router /terminate/:infraId/ [post]
 func (c *AKSClusterController) TerminateCluster() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("AKSClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -850,9 +850,9 @@ func (c *AKSClusterController) TerminateCluster() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
-		ctx.SendLogs("AKSClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
+		ctx.SendLogs("AKSClusterController: InfraId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -876,10 +876,10 @@ func (c *AKSClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Terminate", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", infraId, "Terminate", token, utils.Context{})
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
@@ -899,7 +899,7 @@ func (c *AKSClusterController) TerminateCluster() {
 		return
 	}
 
-	region, err := azure.GetRegion(token, projectId, *ctx)
+	region, err := azure.GetRegion(token, infraId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -915,9 +915,9 @@ func (c *AKSClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.SendLogs("AKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Getting Cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := aks.GetAKSCluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err := aks.GetAKSCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
@@ -971,9 +971,9 @@ func (c *AKSClusterController) TerminateCluster() {
 	//	return
 	//}
 
-	go aks.TerminateCluster(azureProfile, projectId, userInfo.CompanyId, *ctx)
+	go aks.TerminateCluster(azureProfile, infraId, userInfo.CompanyId, *ctx)
 
-	ctx.SendLogs(" AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" AKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "Cluster termination initiated"}
@@ -1041,12 +1041,12 @@ func (c *AKSClusterController) GetAKSVms() {
 // @Description get cluter kubeconfig
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 500 {"error": "Internal Server Error"}
 // @Failure 512 {object} types.CustomCPError
-// @router /kubeconfig/:projectId [get]
+// @router /kubeconfig/:infraId [get]
 func (c *AKSClusterController) GetKubeConfig() {
 
 	ctx := new(utils.Context)
@@ -1060,8 +1060,8 @@ func (c *AKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -1090,9 +1090,9 @@ func (c *AKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 
-	region, err := azure.GetRegion(token, projectId, *ctx)
+	region, err := azure.GetRegion(token, infraId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1108,9 +1108,9 @@ func (c *AKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	ctx.SendLogs("AKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Getting Cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := aks.GetAKSCluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err := aks.GetAKSCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
@@ -1215,14 +1215,14 @@ func (c *AKSClusterController) FetchKubeVersions() {
 // @Description Update a running kubernetes cluster
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the project"
 // @Success 201 {"msg": "Running cluster updated successfully"}
 // @Success 202 {"msg": "Running cluster updation initiated"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in New/Creating/Creation Failed/Terminating/Terminated state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /update/:projectId [put]
+// @router /update/:infraId [put]
 func (c *AKSClusterController) PatchRunningCluster() {
 
 	ctx := new(utils.Context)
@@ -1237,8 +1237,8 @@ func (c *AKSClusterController) PatchRunningCluster() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	infraId := c.GetString(":infraId")
+	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -1261,14 +1261,14 @@ func (c *AKSClusterController) PatchRunningCluster() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
 
-	ctx.SendLogs("AKSClusterController: Updating cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Updating cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	ctx.Data.Company = userInfo.CompanyId
-	ctx.Data.ProjectId = projectId
+	ctx.Data.InfraId = infraId
 
-	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", infraId, "Start", token, utils.Context{})
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
@@ -1289,7 +1289,7 @@ func (c *AKSClusterController) PatchRunningCluster() {
 		return
 	}
 
-	region, err := azure.GetRegion(token, projectId, *ctx)
+	region, err := azure.GetRegion(token, infraId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1305,7 +1305,7 @@ func (c *AKSClusterController) PatchRunningCluster() {
 		return
 	}
 
-	cluster, err := aks.GetAKSCluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err := aks.GetAKSCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
@@ -1351,9 +1351,9 @@ func (c *AKSClusterController) PatchRunningCluster() {
 
 	go aks.PatchRunningAKSCluster(cluster, azureProfile, userInfo.CompanyId, token, *ctx)
 
-	ctx.SendLogs("AKSClusterController: Running cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Running cluster "+cluster.Name+" of project Id: "+cluster.InfraId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	ctx.SendLogs(" AKS running cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" AKS running cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "Running cluster update initiated"}

@@ -36,6 +36,7 @@ require (
 	github.com/signalsciences/ipv4 v1.0.1
 	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 // indirect
 	github.com/smartystreets/goconvey v1.6.3
+	github.com/streadway/amqp v1.0.0
 	github.com/swagger-api/swagger-ui v3.25.0+incompatible // indirect
 	github.com/swaggo/http-swagger v0.0.0-20200308142732-58ac5e232fba // indirect
 	github.com/swaggo/swag v1.6.5 // indirect

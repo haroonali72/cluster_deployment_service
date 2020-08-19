@@ -77,23 +77,22 @@ func (cloud *DOKS) createCluster(cluster *KubernetesCluster, ctx utils.Context, 
 	}
 
 	var doNetwork types.DONetwork
-	url := getNetworkHost("do", cluster.ProjectId)
+	url := getNetworkHost("do", cluster.InfraId)
 
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
-	if err !=nil && strings.Contains(err.Error(),"Not Found"){
+	if err != nil && strings.Contains(err.Error(), "Not Found") {
 		ctx.SendLogs("No Network found for this network", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	}else if err != nil || network == nil {
+	} else if err != nil || network == nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(err, "Error while fetching network",  credentials,ctx)
+		cpErr := ApiError(err, "Error while fetching network", credentials, ctx)
 		return cluster, cpErr
 	}
 
 	err = json.Unmarshal(network.([]byte), &doNetwork)
 	if err != nil {
-		cpErr := ApiError(err, "Error while fetching network",  credentials,ctx)
+		cpErr := ApiError(err, "Error while fetching network", credentials, ctx)
 		return cluster, cpErr
 	}
-
 
 	ctx.SendLogs(
 		"DOKS cluster creation of "+cluster.Name+"' submitted ",
@@ -127,21 +126,20 @@ func (cloud *DOKS) createCluster(cluster *KubernetesCluster, ctx utils.Context, 
 		NodePools:   nodepool,
 		//MaintenancePolicy: cluster.MaintenancePolicy,
 		AutoUpgrade: cluster.AutoUpgrade,
-		VPCUUID: doNetwork.Definition[0].VPCs[0].VPCId,
+		VPCUUID:     doNetwork.Definition[0].VPCs[0].VPCId,
 	}
-
 
 	clus, _, err := cloud.Client.Kubernetes.Create(context.Background(), &input)
 	if err != nil {
-		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.InfraId)
 		ctx.SendLogs("DOKS cluster creation of '"+cluster.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, ApiError(err, "Error in Cluster Creation", credentials, ctx)
 	}
 
 	cluster.ID = clus.ID
-	for i, pool := range cluster.NodePools{
-		pool.ID= clus.NodePools[i].ID
-		pool.PoolStatus =true
+	for i, pool := range cluster.NodePools {
+		pool.ID = clus.NodePools[i].ID
+		pool.PoolStatus = true
 	}
 
 	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
@@ -155,12 +153,12 @@ func (cloud *DOKS) createCluster(cluster *KubernetesCluster, ctx utils.Context, 
 
 	return cluster, types.CustomCPError{}
 }
-func (cloud *DOKS) addNodepool(nodepool KubernetesNodePool, ctx utils.Context, clusterId,projectId string, credentials vault.DOCredentials) ( string, types.CustomCPError) {
+func (cloud *DOKS) addNodepool(nodepool KubernetesNodePool, ctx utils.Context, clusterId, infraId string, credentials vault.DOCredentials) (string, types.CustomCPError) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != (types.CustomCPError{}) {
-			return  "",err
+			return "", err
 		}
 	}
 
@@ -176,48 +174,45 @@ func (cloud *DOKS) addNodepool(nodepool KubernetesNodePool, ctx utils.Context, c
 		MaxNodes:  nodepool.MaxNodes,
 	}
 
-
-
-	pool, _, err := cloud.Client.Kubernetes.CreateNodePool(context.Background(),clusterId, &input)
+	pool, _, err := cloud.Client.Kubernetes.CreateNodePool(context.Background(), clusterId, &input)
 	if err != nil {
-		utils.SendLog(ctx.Data.Company, "Error in cluster updating : "+err.Error(), models.LOGGING_LEVEL_ERROR, projectId)
+		utils.SendLog(ctx.Data.Company, "Error in cluster updating : "+err.Error(), models.LOGGING_LEVEL_ERROR, infraId)
 		ctx.SendLogs("DOKS ndepool creation of '"+nodepool.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return "",ApiError(err, "Error in updating cluster", credentials, ctx)
+		return "", ApiError(err, "Error in updating cluster", credentials, ctx)
 	}
 
-	_, res, err := cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,pool.ID)
+	_, res, err := cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId, pool.ID)
 	for res.StatusCode != 200 {
 		time.Sleep(30 * time.Second)
-		_,res, err = cloud.Client.Kubernetes.GetNodePool(context.Background(),clusterId,pool.ID)
+		_, res, err = cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId, pool.ID)
 	}
-
 
 	time.Sleep(60 * time.Second)
 
-	return pool.ID,types.CustomCPError{}
+	return pool.ID, types.CustomCPError{}
 
 }
-func (cloud *DOKS) deleteNodepool( ctx utils.Context,nodepoolId , clusterId,projectId string, credentials vault.DOCredentials) ( types.CustomCPError) {
+func (cloud *DOKS) deleteNodepool(ctx utils.Context, nodepoolId, clusterId, infraId string, credentials vault.DOCredentials) types.CustomCPError {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != (types.CustomCPError{}) {
-			return  err
+			return err
 		}
 	}
 
-	_, err := cloud.Client.Kubernetes.DeleteNodePool(context.Background(),clusterId,nodepoolId)
+	_, err := cloud.Client.Kubernetes.DeleteNodePool(context.Background(), clusterId, nodepoolId)
 	if err != nil {
-		utils.SendLog(ctx.Data.Company, "Error in nodepool deletion : "+err.Error(), models.LOGGING_LEVEL_ERROR, projectId)
+		utils.SendLog(ctx.Data.Company, "Error in nodepool deletion : "+err.Error(), models.LOGGING_LEVEL_ERROR, infraId)
 		ctx.SendLogs("DOKS nodepool deletion of '"+nodepoolId+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return ApiError(err, "Error in deleting nodepool during updating", credentials, ctx)
 	}
 
-	_, response, err := cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,nodepoolId)
+	_, response, err := cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId, nodepoolId)
 
 	for response.StatusCode != 200 {
 		time.Sleep(30 * time.Second)
-		_, response, err = cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,nodepoolId)
+		_, response, err = cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId, nodepoolId)
 	}
 
 	time.Sleep(15 * time.Second)
@@ -236,17 +231,16 @@ func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context) t
 
 	_, err := cloud.Client.Kubernetes.Delete(context.Background(), cluster.ID)
 	if err != nil {
-		utils.SendLog(ctx.Data.Company, "Error in cluster termination: "+err.Error(), models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, "Error in cluster termination: "+err.Error(), models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 		return ApiError(err, "Error in terminating kubernetes cluster", vault.DOCredentials{}, ctx)
 	}
 
 	time.Sleep(20 * time.Second)
-	
+
 	return types.CustomCPError{}
 }
 
-
-func (cloud *DOKS) UpdateCluster(cluster *KubernetesCluster, ctx utils.Context, credentials vault.DOCredentials) ( types.CustomCPError) {
+func (cloud *DOKS) UpdateCluster(cluster *KubernetesCluster, ctx utils.Context, credentials vault.DOCredentials) types.CustomCPError {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
@@ -256,16 +250,16 @@ func (cloud *DOKS) UpdateCluster(cluster *KubernetesCluster, ctx utils.Context, 
 	}
 
 	input := godo.KubernetesClusterUpdateRequest{
-		Name:              cluster.Name,
-		AutoUpgrade:       &cluster.AutoUpgrade,
-		Tags:              cluster.Tags,
+		Name:        cluster.Name,
+		AutoUpgrade: &cluster.AutoUpgrade,
+		Tags:        cluster.Tags,
 	}
 
-	clus, _, err := cloud.Client.Kubernetes.Update(context.Background(),cluster.ID, &input)
+	clus, _, err := cloud.Client.Kubernetes.Update(context.Background(), cluster.ID, &input)
 	if err != nil {
-		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.InfraId)
 		ctx.SendLogs("DOKS cluster creation of '"+cluster.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  ApiError(err, "Error in updating cluster autoupgrade", credentials, ctx)
+		return ApiError(err, "Error in updating cluster autoupgrade", credentials, ctx)
 	}
 
 	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
@@ -273,9 +267,9 @@ func (cloud *DOKS) UpdateCluster(cluster *KubernetesCluster, ctx utils.Context, 
 		time.Sleep(30 * time.Second)
 		status, _, err = cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
 	}
-	return  types.CustomCPError{}
+	return types.CustomCPError{}
 }
-func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Context, clusterId,projectId string, credentials vault.DOCredentials) ( types.CustomCPError) {
+func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Context, clusterId, infraId string, credentials vault.DOCredentials) types.CustomCPError {
 
 	input := godo.KubernetesNodePoolUpdateRequest{
 		Name:      nodepool.Name,
@@ -283,44 +277,44 @@ func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Contex
 		AutoScale: &nodepool.AutoScale,
 		MinNodes:  &nodepool.MinNodes,
 		MaxNodes:  &nodepool.MaxNodes,
-		Tags:		nodepool.Tags,
+		Tags:      nodepool.Tags,
 	}
 
-	_, _, err := cloud.Client.Kubernetes.UpdateNodePool(context.Background(),clusterId,nodepool.ID,&input)
+	_, _, err := cloud.Client.Kubernetes.UpdateNodePool(context.Background(), clusterId, nodepool.ID, &input)
 	if err != nil {
-		utils.SendLog(ctx.Data.Company, "Error in updating nodepool : "+err.Error(), models.LOGGING_LEVEL_ERROR, projectId)
+		utils.SendLog(ctx.Data.Company, "Error in updating nodepool : "+err.Error(), models.LOGGING_LEVEL_ERROR, infraId)
 		ctx.SendLogs("DOKS nodepool updating of '"+nodepool.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  ApiError(err, "Error in updating nodepool "+nodepool.ID, credentials, ctx)
+		return ApiError(err, "Error in updating nodepool "+nodepool.ID, credentials, ctx)
 
 	}
 
-	_,res, err := cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,nodepool.ID)
+	_, res, err := cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId, nodepool.ID)
 	for res.StatusCode != 200 {
 		time.Sleep(30 * time.Second)
-		_, res, err = cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,nodepool.ID)
+		_, res, err = cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId, nodepool.ID)
 	}
 
-	return  types.CustomCPError{}
+	return types.CustomCPError{}
 
 }
-func (cloud *DOKS) UpgradeKubernetesVersion( cluster *KubernetesCluster, ctx utils.Context, credentials vault.DOCredentials ) ( types.CustomCPError) {
+func (cloud *DOKS) UpgradeKubernetesVersion(cluster *KubernetesCluster, ctx utils.Context, credentials vault.DOCredentials) types.CustomCPError {
 
 	input := godo.KubernetesClusterUpgradeRequest{
-		VersionSlug : cluster.KubeVersion,
+		VersionSlug: cluster.KubeVersion,
 	}
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != (types.CustomCPError{}) {
-			return  err
+			return err
 		}
 	}
 
-	_, err := cloud.Client.Kubernetes.Upgrade(context.Background(),cluster.ID, &input)
+	_, err := cloud.Client.Kubernetes.Upgrade(context.Background(), cluster.ID, &input)
 	if err != nil {
-		utils.SendLog(ctx.Data.Company, "Error in upgrading cluster version  : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, "Error in upgrading cluster version  : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.InfraId)
 		ctx.SendLogs("DOKS cluster kubernetes version of '"+cluster.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  ApiError(err, "Error in cluster version upgrade ", credentials, ctx)
+		return ApiError(err, "Error in cluster version upgrade ", credentials, ctx)
 	}
 
 	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), cluster.ID)
@@ -329,7 +323,7 @@ func (cloud *DOKS) UpgradeKubernetesVersion( cluster *KubernetesCluster, ctx uti
 		status, _, err = cloud.Client.Kubernetes.Get(context.Background(), cluster.ID)
 	}
 
-	return  types.CustomCPError{}
+	return types.CustomCPError{}
 
 }
 
@@ -356,7 +350,7 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, cluster KubernetesCluster) (Ku
 	response.ClusterIp = status.IPv4
 	response.Endpoint = status.Endpoint
 	response.State = string(status.Status.State)
-	for _,p := range cluster.NodePools {
+	for _, p := range cluster.NodePools {
 
 		for _, pool := range status.NodePools {
 			if p.ID == pool.ID {
@@ -427,7 +421,7 @@ func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (
 	config, _, err := cloud.Client.Kubernetes.GetKubeConfig(context.Background(), cluster.ID)
 	if err != nil {
 		ctx.SendLogs(
-			"DOKS terminate cluster for "+cluster.ProjectId+"' failed: "+err.Error(),
+			"DOKS terminate cluster for "+cluster.InfraId+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
