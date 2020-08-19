@@ -16,6 +16,7 @@ type WorkSchema struct {
 	InfraId string        `json:"infra_id"`
 	Token   string        `json:"token"`
 	Action  models.Action `json:"action"`
+	Cloud   models.Cloud  `json:"cloud"`
 }
 
 func Subscriber() {
@@ -111,32 +112,45 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 	}
 
 	if infra.infrastructureData.Cloud == models.AWS {
-		/*		controller := &aws.AWSClusterController{}
-				controller.Ctx = new(context.Context)
-
-				controller.Ctx.Input = new(context.BeegoInput)
-				controller.Ctx.Input.SetParam(":InfraId", task.InfraId)
-				controller.Ctx.Input.Context = new(context.Context)
-				controller.Ctx.Input.Context.Request = new(http.Request)
-				controller.Ctx.Input.Context.Request.Header = make(map[string][]string)
-				controller.Ctx.Input.Context.Request.Header.Set("X-Auth-Token", task.Token)
-				controller.Ctx.Input.Context.Request.Header.Set("X-Profile-Id", infra.infrastructureData.ProfileId)
-
-				controller.Ctx.Output = new(context.BeegoOutput)
-				controller.Ctx.Output.Context = new(context.Context)
-				controller.Ctx.Output.Context.ResponseWriter = new(context.Response)
-				controller.Ctx.Output.Context.Request = new(http.Request)
-
-				controller.Data = make(map[interface{}]interface{})*/
 
 		if task.Action == models.Create {
+
 			go AWSClusterStartHelper(task, infra)
 
 		} else if task.Action == models.Terminate {
 
 			go AWSClusterTerminateHelper(task, infra)
 		}
+	} else if infra.infrastructureData.Cloud == models.Azure {
 
+		if task.Action == models.Create {
+
+			go AzureClusterStartHelper(task, infra)
+
+		} else if task.Action == models.Terminate {
+
+			go AzureClusterTerminateHelper(task, infra)
+		}
+	} else if infra.infrastructureData.Cloud == models.GCP {
+
+		if task.Action == models.Create {
+
+			go GCPClusterStartHelper(task, infra)
+
+		} else if task.Action == models.Terminate {
+
+			go GCPClusterTerminateHelper(task, infra)
+		}
+	} else if infra.infrastructureData.Cloud == models.DO {
+
+		if task.Action == models.Create {
+
+			go DOClusterStartHelper(task, infra)
+
+		} else if task.Action == models.Terminate {
+
+			go DOClusterTerminateHelper(task, infra)
+		}
 	}
 }
 

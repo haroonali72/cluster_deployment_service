@@ -20,7 +20,7 @@ type GcpClusterController struct {
 
 // @Title Get
 // @Description get cluster
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} gcp.Cluster_Def
 // @Failure 401 {"error": "Unauthorized"}
@@ -35,7 +35,7 @@ func (c *GcpClusterController) Get() {
 	if infraId == "" {
 		ctx.SendLogs("GcpClusterController: infraId is empty", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -58,7 +58,7 @@ func (c *GcpClusterController) Get() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpClusterController: Get cluster with project id "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Get cluster with Infrastructure id "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 
@@ -77,7 +77,7 @@ func (c *GcpClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs("GcpClusterController: Get cluster with project id: "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Get cluster with Infrastructure id: "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := gcp.GetCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -93,7 +93,7 @@ func (c *GcpClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -249,7 +249,7 @@ func (c *GcpClusterController) Post() {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "Cluster against same project id already exists"}
+			c.Data["json"] = map[string]string{"error": "Cluster against same Infrastructure id already exists"}
 			c.ServeJSON()
 			return
 		}
@@ -258,7 +258,7 @@ func (c *GcpClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(201)
 	c.Data["json"] = map[string]string{"msg": "Cluster added successfully"}
@@ -414,14 +414,14 @@ func (c *GcpClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 	c.ServeJSON()
 }
 
 // @Title Delete
 // @Description delete a cluster
-// @Param	infraId	path	string	true	"project id of the cluster"
+// @Param	infraId	path	string	true	"Infrastructure id of the cluster"
 // @Param	forceDelete path  boolean	true "deleting cluster forcefully"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 204 {"msg": "Cluster deleted successfully"}
@@ -435,7 +435,7 @@ func (c *GcpClusterController) Delete() {
 	id := c.GetString(":infraId")
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -482,7 +482,7 @@ func (c *GcpClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs("GcpClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Delete cluster with Infrastructure id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := gcp.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -526,7 +526,7 @@ func (c *GcpClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Ctx.Output.SetStatus(204)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
@@ -536,7 +536,7 @@ func (c *GcpClusterController) Delete() {
 // @Description starts a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "token"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Success 201 {"msg": "Cluster created successfully"}
 // @Success 202 {"msg": "Cluster creation started successfully"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -560,7 +560,7 @@ func (c *GcpClusterController) StartCluster() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -620,7 +620,7 @@ func (c *GcpClusterController) StartCluster() {
 
 	var cluster gcp.Cluster_Def
 
-	ctx.SendLogs("GcpClusterController: Getting Cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Getting Cluster of Infrastructure. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = gcp.GetCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -669,7 +669,7 @@ func (c *GcpClusterController) StartCluster() {
 
 	go gcp.DeployCluster(cluster, credentials, userInfo.CompanyId, token, *ctx)
 
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
 	c.ServeJSON()
@@ -679,7 +679,7 @@ func (c *GcpClusterController) StartCluster() {
 // @Description returns status of nodes
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "token"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Success 200 {object} gcp.Cluster_Def
 // @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -701,7 +701,7 @@ func (c *GcpClusterController) GetStatus() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -759,7 +759,7 @@ func (c *GcpClusterController) GetStatus() {
 		return
 	}
 
-	ctx.SendLogs("GcpClusterController: Fetch Cluster Status of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Fetch Cluster Status of Infrastructure. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err1 := gcp.FetchStatus(credentials, token, infraId, userInfo.CompanyId, *ctx)
 	if err1 != (types.CustomCPError{}) {
@@ -775,7 +775,7 @@ func (c *GcpClusterController) GetStatus() {
 // @Title Terminate
 // @Description terminates a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
@@ -800,7 +800,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -862,7 +862,7 @@ func (c *GcpClusterController) TerminateCluster() {
 
 	var cluster gcp.Cluster_Def
 
-	ctx.SendLogs("GcpClusterController: Getting Cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Getting Cluster of Infrastructure. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	cluster.InfraId = infraId
 	cluster, err = gcp.GetCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -917,7 +917,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	go gcp.TerminateCluster(cluster, credentials, token, userInfo.CompanyId, *ctx)
 
 	c.Ctx.Output.SetStatus(202)
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "Cluster termination is in progress"}
 	c.ServeJSON()
 }
@@ -1039,7 +1039,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 
 // @Title CreateSSHKey
 // @Description Generates new SSH key
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Param	keyname	 	path	string	true	"SSHKey"
 // @Param	username	path	string	true	"UserName"
 // @Param	X-Auth-Token		header	string	true "Token"
@@ -1058,7 +1058,7 @@ func (c *GcpClusterController) PostSSHKey() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1166,7 +1166,7 @@ func (c *GcpClusterController) DeleteSSHKey() {
 	alreadyUsed := gcp.CheckKeyUsage(keyName, userInfo.CompanyId, *ctx)
 	if alreadyUsed {
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Key is used in other projects and can't be deleted"}
+		c.Data["json"] = map[string]string{"error": "Key is used in other Infrastructures and can't be deleted"}
 		c.ServeJSON()
 		return
 	}

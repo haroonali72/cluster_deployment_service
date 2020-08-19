@@ -21,8 +21,8 @@ import (
 
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	InfraId          string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]`
-	DOInfraId        string        `json:"_" bson:"do_project_id"`
+	InfraId          string        `json:"infra_id" bson:"infra_id" validate:"required" description:"ID of Infratructure [required]`
+	DOInfraId        string        `json:"_" bson:"do_infra_id"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster Name [required]`
 	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of cluster  [required]"`
@@ -30,7 +30,7 @@ type Cluster_Def struct {
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive"`
-	NetworkName      string        `json:"network_name" bson:"network_name" validate:"required" description:"Network name of corresponding project [required]`
+	NetworkName      string        `json:"network_name" bson:"network_name" validate:"required" description:"Network name of corresponding Infratructure [required]`
 	CompanyId        string        `json:"_" bson:"company_id"`
 	TokenName        string        `json:"token_name" bson:"token_name" description:"Rbac Token for Scaling Cluster [required]`
 }
@@ -72,8 +72,8 @@ type ImageReference struct {
 type Volume struct {
 	VolumeSize int64 `json:"volume_size" bson:"volume_size" description:"Block Store Volume Size ['required' if external volume is enabled']`
 }
-type Project struct {
-	ProjectData Data `json:"data"`
+type Infratructure struct {
+	InfratructureData Data `json:"data"`
 }
 type Data struct {
 	Region string `json:"region"`
@@ -81,7 +81,7 @@ type Data struct {
 
 type Cluster struct {
 	Name    string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
-	InfraId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	InfraId string      `json:"infra_id" bson:"infra_id"  description:"ID of Infratructure"`
 	Status  models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
 
@@ -96,7 +96,7 @@ func GetCluster(InfraId, companyId string, ctx utils.Context) (cluster Cluster_D
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoDOClusterCollection)
-	err = c.Find(bson.M{"project_id": InfraId, "company_id": companyId}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": InfraId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err
@@ -118,7 +118,7 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (doClusters
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoDOClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"infra_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
@@ -243,7 +243,7 @@ func DeleteCluster(InfraId, companyId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoDOClusterCollection)
-	err = c.Remove(bson.M{"project_id": InfraId, "company_id": companyId})
+	err = c.Remove(bson.M{"infra_id": InfraId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -262,13 +262,13 @@ func GetRegion(token string, ctx utils.Context) (string, error) {
 		ctx.SendLogs("Error in fetching region: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
-	var region Project
-	err = json.Unmarshal(data.([]byte), &region.ProjectData)
+	var region Infratructure
+	err = json.Unmarshal(data.([]byte), &region.InfratructureData)
 	if err != nil {
 		ctx.SendLogs("Error in fetching region: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return region.ProjectData.Region, err
+		return region.InfratructureData.Region, err
 	}
-	return region.ProjectData.Region, nil
+	return region.InfratructureData.Region, nil
 
 }
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (int, vault.DOProfile, error) {
@@ -644,7 +644,7 @@ func ValidateProfile(key string, ctx utils.Context) types.CustomCPError {
 func ValidateDOData(cluster Cluster_Def, ctx utils.Context) error {
 	if cluster.InfraId == "" {
 
-		return errors.New("project Id is empty")
+		return errors.New("infrastructure Id is empty")
 
 	} else if cluster.Name == "" {
 

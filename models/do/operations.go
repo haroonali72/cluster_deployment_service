@@ -100,13 +100,13 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 		return cluster, cpErr
 	}
 
-	utils.SendLog(companyId, "Creating DO Project With ID : "+cluster.InfraId, "info", cluster.InfraId)
+	utils.SendLog(companyId, "Creating DO InfratructureWith ID : "+cluster.InfraId, "info", cluster.InfraId)
 	cpErr, cluster.DOInfraId = cloud.createProject(cluster.InfraId, ctx)
 	if cpErr != (types.CustomCPError{}) {
 		return cluster, cpErr
 	}
 	cloud.Resources["project"] = append(cloud.Resources["project"], cluster.DOInfraId)
-	utils.SendLog(companyId, "Project Created Successfully : "+cluster.InfraId, "info", cluster.InfraId)
+	utils.SendLog(companyId, "DO Project Created Successfully : "+cluster.InfraId, "info", cluster.InfraId)
 
 	for index, pool := range cluster.NodePools {
 		key, cpErr := cloud.getKey(*pool, cluster.InfraId, ctx, companyId, token)
@@ -274,7 +274,7 @@ func (cloud *DO) createProject(infraId string, ctx utils.Context) (types.CustomC
 	}
 	project, _, err := cloud.Client.Projects.Create(context.Background(), projectInput)
 	if err != nil {
-		ctx.SendLogs("Error in creating project on DO : "+infraId+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Error in creating Infratructureon DO : "+infraId+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "Error while creating digital ocean  project", 512)
 		return cpErr, ""
 	}

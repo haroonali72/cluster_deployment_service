@@ -26,7 +26,7 @@ type SSHKeyPair struct {
 
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	InfraId          string        `json:"project_id" bson:"project_id" valid:"required" description:"Id of project [required]"`
+	InfraId          string        `json:"infra_id" bson:"infra_id" valid:"required" description:"Id of infra_id [required]"`
 	Name             string        `json:"name" bson:"name" valid:"required" description:"Unique name of the cluster [required]"`
 	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of the cluster [optional]"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=AZURE|eq=azure|eq=Azure" description:"Name of the cloud [optional]"`
@@ -102,8 +102,8 @@ type ImageReference struct {
 	Version   string        `json:"version" bson:"version,omitempty" valid:"required" description:"Version of the Vm image [required]"`
 	ImageId   string        `json:"image_id" bson:"image_id,omitempty"`
 }
-type Project struct {
-	ProjectData Data `json:"data"`
+type Infrastructure struct {
+	InfrastructureData Data `json:"data"`
 }
 
 type Data struct {
@@ -112,7 +112,7 @@ type Data struct {
 
 type AzureCluster struct {
 	Name    string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
-	InfraId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	InfraId string      `json:"infra_id" bson:"infra_id"  description:"ID of Infrastructure"`
 	Status  models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
 
@@ -153,13 +153,13 @@ func GetRegion(token, InfraId string, ctx utils.Context) (string, error) {
 		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
-	var region Project
-	err = json.Unmarshal(data.([]byte), &region.ProjectData)
+	var region Infrastructure
+	err = json.Unmarshal(data.([]byte), &region.InfrastructureData)
 	if err != nil {
 		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return region.ProjectData.Region, err
+		return region.InfrastructureData.Region, err
 	}
-	return region.ProjectData.Region, nil
+	return region.InfrastructureData.Region, nil
 
 }
 func GetNetwork(InfraId string, ctx utils.Context, resourceGroup string, token string) (types.AzureNetwork, error) {
@@ -217,7 +217,7 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 
 	_, err := GetCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found
-		text := fmt.Sprintf("Cluster model: Create - Cluster for project'%s' already exists in the database: ", cluster.Name)
+		text := fmt.Sprintf("Cluster model: Create - Cluster for Infrastructure'%s' already exists in the database: ", cluster.Name)
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
@@ -259,7 +259,7 @@ func GetCluster(InfraId, companyId string, ctx utils.Context) (cluster Cluster_D
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureClusterCollection)
-	err = c.Find(bson.M{"project_id": InfraId, "company_id": companyId}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": InfraId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err
@@ -281,7 +281,7 @@ func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (azurecluste
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"infra_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
@@ -346,7 +346,7 @@ func DeleteCluster(InfraId, companyId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureClusterCollection)
-	err = c.Remove(bson.M{"project_id": InfraId, "company_id": companyId})
+	err = c.Remove(bson.M{"infra_id": InfraId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -708,7 +708,7 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	for _, cluster := range clusters {
 		for _, pool := range cluster.NodePools {
 			if keyName == pool.KeyInfo.KeyName {
-				ctx.SendLogs("Key is used in other projects ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				ctx.SendLogs("Key is used in other infrastructures ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return true
 			}
 		}
@@ -821,13 +821,13 @@ func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region st
 
 func ApplyAgent(credentials vault.AzureProfile, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
 	companyId := ctx.Data.Company
-	projetcID := ctx.Data.InfraId
-	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
+	InfraID := ctx.Data.InfraId
+	data2, err := woodpecker.GetCertificate(InfraID, token, ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
+	filePath := "/tmp/" + companyId + "/" + InfraID + "/"
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
@@ -835,7 +835,7 @@ func ApplyAgent(credentials vault.AzureProfile, token string, ctx utils.Context,
 		return err
 	}
 
-	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e resourceGroup=" + resourceGroup + " -e cluster=" + clusterName + " -e clientID=" + credentials.Profile.ClientId + " -e tenant=" + credentials.Profile.TenantId + " -e clientSecret=" + credentials.Profile.ClientSecret + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.AKSAuthContainerName
+	cmd = "sudo docker run --rm --name " + companyId + InfraID + " -e resourceGroup=" + resourceGroup + " -e cluster=" + clusterName + " -e clientID=" + credentials.Profile.ClientId + " -e tenant=" + credentials.Profile.TenantId + " -e clientSecret=" + credentials.Profile.ClientSecret + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.AKSAuthContainerName
 
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {

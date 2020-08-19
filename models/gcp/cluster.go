@@ -101,9 +101,9 @@ var machines = []byte(`[
 
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	InfraId          string        `json:"project_id" bson:"project_id" validate:"required" description:"Project ID of the cluster [required]"`
+	InfraId          string        `json:"infra_id" bson:"infra_id" validate:"required" description:"Infrastructure ID of the cluster [required]"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Name of the cluster [required]"`
-	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated" description:"Status of the project [required]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated" description:"Status of the Infrastructure [required]"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"  validate:"eq=gcp|eq=Gcp|eq=GCP" description:"Cloud of the cluster.Valid value is gcp|GCP|Gcp [readonly]"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -175,7 +175,7 @@ type GcpCredentials struct {
 
 type AccountData struct {
 	Type          string `json:"type" valid:"required" description:"Type of the account[readonly]"`
-	InfraId       string `json:"project_id" valid:"required" description:"Project Id of the account [readonly]"`
+	InfraId       string `json:"infra_id" valid:"required" description:"Infrastructure Id of the account [readonly]"`
 	PrivateKeyId  string `json:"private_key_id" valid:"required" description:"Private key Id of the account [readonly]"`
 	PrivateKey    string `json:"private_key" valid:"required" description:"Private key of the account [readonly]"`
 	ClientEmail   string `json:"client_email" valid:"required" description:"Client email of the account [readonly]"`
@@ -185,8 +185,8 @@ type AccountData struct {
 	AuthProvider  string `json:"auth_provider_x509_cert_url" valid:"required" description:"Auth Provider of the account [readonly]"`
 	ClientCertUrl string `json:"client_x509_cert_url" valid:"required" description:"Client Cert Url of the account [readonly]"`
 }
-type Project struct {
-	ProjectData Data `json:"data"`
+type Infrastructure struct {
+	InfrastructureData Data `json:"data"`
 }
 type Data struct {
 	Region string `json:"region"`
@@ -253,13 +253,13 @@ func GetRegion(token, InfraId string, ctx utils.Context) (string, string, error)
 		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", "", err
 	}
-	var project Project
-	err = json.Unmarshal(data.([]byte), &project.ProjectData)
+	var infrastructure Infrastructure
+	err = json.Unmarshal(data.([]byte), &infrastructure.InfrastructureData)
 	if err != nil {
 		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", "", err
 	}
-	return project.ProjectData.Region, project.ProjectData.Zone, nil
+	return infrastructure.InfrastructureData.Region, infrastructure.InfrastructureData.Zone, nil
 
 }
 func checkClusterSize(cluster Cluster_Def) error {
@@ -305,7 +305,7 @@ func IsValidGcpCredentials(profileId, region, token, zone string, ctx utils.Cont
 func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if err == nil {
-		text := fmt.Sprintf("Cluster model: Create - Cluster for project'%s' already exists in the database: ", cluster.Name)
+		text := fmt.Sprintf("Cluster model: Create - Cluster for Infrastructure'%s' already exists in the database: ", cluster.Name)
 		ctx.SendLogs("GcpClusterModel: "+text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
@@ -362,7 +362,7 @@ func GetCluster(InfraId string, companyId string, ctx utils.Context) (cluster Cl
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGcpClusterCollection)
-	err = c.Find(bson.M{"project_id": InfraId, "company_id": companyId}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": InfraId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		beego.Error(err.Error())
 		return Cluster_Def{}, err
@@ -383,7 +383,7 @@ func GetAllCluster(data rbac_athentication.List, ctx utils.Context) (clusters []
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGcpClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}}).All(&clusters)
+	err = c.Find(bson.M{"infra_id": bson.M{"$in": copyData}}).All(&clusters)
 	if err != nil {
 		beego.Error(err.Error())
 		return nil, err
@@ -447,7 +447,7 @@ func DeleteCluster(InfraId, companyId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGcpClusterCollection)
-	err = c.Remove(bson.M{"project_id": InfraId, "company_id": companyId})
+	err = c.Remove(bson.M{"infra_id": InfraId, "company_id": companyId})
 	if err != nil {
 		beego.Error(err.Error())
 		return err
@@ -867,7 +867,7 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	for _, cluster := range clusters {
 		for _, pool := range cluster.NodePools {
 			if keyName == pool.KeyInfo.KeyName {
-				ctx.SendLogs("Key is used in other projects ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				ctx.SendLogs("Key is used in other Infrastructures ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return true
 			}
 		}

@@ -78,7 +78,7 @@ func (c *AzureClusterController) Get() {
 
 	//==================================================================================//
 
-	ctx.SendLogs("AzureClusterController: Getting cluster with project id "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: Getting cluster with infrastructure Id "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := azure.GetCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -88,8 +88,8 @@ func (c *AzureClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -157,7 +157,7 @@ func (c *AzureClusterController) GetAll() {
 // @Success 400 {"msg": "Bad Request"}
 // @Success 401 {"msg": "Unauthorized"}
 // @Success 404 {"msg": "Not Found"}
-// @Failure 409 {"error": "Cluster against same project id already exists"}
+// @Failure 409 {"error": "Cluster against same infrastructure Id already exists"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [post]
 func (c *AzureClusterController) Post() {
@@ -251,8 +251,8 @@ func (c *AzureClusterController) Post() {
 		return
 	}
 
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(201)
 	c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyAdded)}
@@ -400,8 +400,8 @@ func (c *AzureClusterController) Patch() {
 		return
 	}
 
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyUpdated)}
 	c.ServeJSON()
@@ -410,7 +410,7 @@ func (c *AzureClusterController) Patch() {
 // @Title Delete
 // @Description delete a cluster
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path	string	true	"Project id of the cluster"
+// @Param	infraId	path	string	true	"infrastructure Id of the cluster"
 // @Param	forceDelete path    boolean	true     ""
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -662,8 +662,8 @@ func (c *AzureClusterController) StartCluster() {
 
 	go azure.DeployCluster(cluster, azureProfile, *ctx, userInfo.CompanyId, token)
 
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": string(models.CreationInitialised)}
@@ -890,7 +890,7 @@ func (c *AzureClusterController) TerminateCluster() {
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminated state"}
 		c.ServeJSON()
 		return
-	} else if cluster.Status == models.Terminating {
+	} else if cluster.Status == models.ClusterCreationFailed {
 		ctx.SendLogs("AzureClusterController: Cluster creation is in failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.StateConflict))
 		c.Data["json"] = map[string]string{"error": "Cluster creation is in failed state"}
@@ -908,7 +908,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	ctx.SendLogs("AzureClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId)
 
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": string(models.TerminationInitialised)}
