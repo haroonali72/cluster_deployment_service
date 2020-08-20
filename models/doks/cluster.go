@@ -532,7 +532,13 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err1.Error + "\n" + err1.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return err1
 	}
 
@@ -546,7 +552,13 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err1.Error + "\n" + err1.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return cpErr
 	}
 
@@ -563,7 +575,13 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: errr.Error + "\n" + errr.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return errr
 	}
 
@@ -576,7 +594,13 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: confError.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return CpErr
 	}
 
@@ -586,7 +610,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		PrintError(ctx, confErr.Description, cluster.Name)
 		utils.SendLog(ctx.Data.Company, "Cleaning up resources", "info", cluster.InfraId)
 		cluster.CloudplexStatus = models.ClusterCreationFailed
-		_ = TerminateCluster(credentials, ctx)
+		_ = TerminateCluster(credentials, token, ctx)
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
 			PrintError(ctx, confError.Error(), cluster.Name)
@@ -596,7 +620,13 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Apply agent  - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: confErr.Error + "\n" + confErr.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return confErr
 
 	}
@@ -611,7 +641,13 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: CpErr.Error + "\n" + CpErr.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return CpErr
 	}
 
@@ -620,7 +656,13 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	notify := publisher.RecieveNotification(ctx.Data.InfraId, ctx, pubSub)
 	if notify {
 		ctx.SendLogs("DOKSClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  true,
+			Message: "Cluster created successfully",
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 	} else {
 		ctx.SendLogs("DOKSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.CloudplexStatus = models.ClusterCreationFailed
@@ -634,7 +676,14 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Apply agent  - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Notification not recieved from agent",
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
+
 	}
 
 	return types.CustomCPError{}
@@ -916,20 +965,20 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (KubeCluste
 	return status, errr
 }
 
-func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (customError types.CustomCPError) {
+func TerminateCluster(credentials vault.DOCredentials, token string, ctx utils.Context) (customError types.CustomCPError) {
 
-	publisher := utils.Notifier{}
-	confError := publisher.Init_notifier()
-	if confError != nil {
-		ctx.SendLogs("DOKSClusterModel:  Terminate Cluster : "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError.StatusCode = 500
-		customError.Description = confError.Error()
-		err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.DOKS, ctx, customError)
-		if err != nil {
-			ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		}
-		return customError
-	}
+	/*	publisher := utils.Notifier{}
+		confError := publisher.Init_notifier()
+		if confError != nil {
+			ctx.SendLogs("DOKSClusterModel:  Terminate Cluster : "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			customError.StatusCode = 500
+			customError.Description = confError.Error()
+			err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.DOKS, ctx, customError)
+			if err != nil {
+				ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			return customError
+		}*/
 
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
@@ -962,7 +1011,13 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: text,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return types.CustomCPError{StatusCode: 500, Error: "Error in cluster termination", Description: text}
 	}
 
@@ -977,7 +1032,13 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err_.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return cpErr
 	}
 	errr := doksOps.init(ctx)
@@ -994,7 +1055,13 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: errr.Error,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return errr
 	}
 
@@ -1011,14 +1078,26 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 			if err != nil {
 				ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(cluster.InfraId, "Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: errr.Error,
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Terminate,
+			}, ctx)
 			return errr
 		}
 		err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.DOKS, ctx, errr)
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: errr.Error,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return types.CustomCPError{}
 	}
 	cluster.ID = ""
@@ -1038,12 +1117,24 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return cpErr
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster terminated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
-	publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "Cluster terminated successfully",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Terminate,
+	}, ctx)
 	return types.CustomCPError{}
 }
 func GetKubeConfig(credentials vault.DOCredentials, ctx utils.Context, cluster KubernetesCluster) (config KubernetesConfig, customError types.CustomCPError) {

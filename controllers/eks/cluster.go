@@ -870,7 +870,7 @@ func (c *EKSClusterController) TerminateCluster() {
 		return
 	}
 
-	go eks.TerminateCluster(cluster, awsProfile, infraId, userInfo.CompanyId, *ctx)
+	go eks.TerminateCluster(cluster, awsProfile, infraId, userInfo.CompanyId, token, *ctx)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "Cluster termination initiated"}

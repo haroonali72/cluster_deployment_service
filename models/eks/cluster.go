@@ -438,7 +438,13 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: confError.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return cpErr
 	}
 
@@ -462,7 +468,13 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 			if err != nil {
 				ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(cluster.InfraId, "Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: confError.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Create,
+			}, ctx)
 			return cpErr
 
 		}
@@ -472,7 +484,13 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: confError.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return cpError
 	}
 	/**
@@ -485,7 +503,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 
 		cluster.Status = models.ClusterCreationFailed
 		profile := vault.AwsProfile{Profile: credentials.Profile}
-		_ = TerminateCluster(cluster, profile, cluster.InfraId, companyId, ctx)
+		_ = TerminateCluster(cluster, profile, cluster.InfraId, companyId, token, ctx)
 		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.InfraId)
 		confError_ := UpdateEKSCluster(cluster, ctx)
 		if confError_ != nil {
@@ -497,7 +515,13 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		if err != nil {
 			ctx.SendLogs("EKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: confError.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return cpErr
 	}
 	cluster.Status = models.ClusterCreated
@@ -512,14 +536,26 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: confError.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return cpErr
 	}
 	utils.SendLog(companyId, "Cluster Created Sccessfully "+cluster.Name, "info", cluster.InfraId)
 	notify := publisher.RecieveNotification(ctx.Data.InfraId, ctx, pubSub)
 	if notify {
 		ctx.SendLogs("EKSClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  true,
+			Message: "Cluster Created Sccessfully",
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 	} else {
 		ctx.SendLogs("EKSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.Status = models.ClusterCreationFailed
@@ -533,15 +569,21 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		if err != nil {
 			ctx.SendLogs("EKSDeployClusterModel:  Agent  - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  true,
+			Message: "Notification not recieved from agent",
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 	}
 
 	return types.CustomCPError{}
 }
 
-func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, InfraId, companyId string, ctx utils.Context) types.CustomCPError {
-	publisher := utils.Notifier{}
-	publisher.Init_notifier()
+func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, InfraId, companyId, token string, ctx utils.Context) types.CustomCPError {
+	/*	publisher := utils.Notifier{}
+		publisher.Init_notifier()*/
 
 	eksOps := GetEKS(InfraId, credentials.Profile)
 
@@ -557,7 +599,13 @@ func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, InfraId,
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err_.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return cpErr
 	}
 	eksOps.init()
@@ -578,7 +626,13 @@ func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, InfraId,
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: cpErr.Error + "\n" + cpErr.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return cpErr
 	}
 
@@ -593,12 +647,24 @@ func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, InfraId,
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return cpErr
 
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.InfraId)
-	publisher.Notify(cluster.InfraId, "Status Available", ctx)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "Cluster terminated successfully",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Terminate,
+	}, ctx)
 	return types.CustomCPError{}
 }
 
