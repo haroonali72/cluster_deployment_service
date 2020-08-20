@@ -906,7 +906,7 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 	ctx.SendLogs("AzureClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId)
+	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId, token)
 
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
