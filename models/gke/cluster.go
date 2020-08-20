@@ -650,7 +650,13 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		if err_ != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error + "\n" + err.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return err
 	}
 
@@ -664,7 +670,13 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err_.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return cpErr
 	}
 
@@ -686,7 +698,13 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		if err_ != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error + "\n" + err.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return err
 	}
 
@@ -697,14 +715,20 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		cluster.CloudplexStatus = models.ClusterCreationFailed
 		PrintError(errors.New(confError.Error), cluster.Name, ctx)
 		PrintError(errors.New("Cleaning up resources"), cluster.Name, ctx)
-		_ = TerminateCluster(credentials, ctx)
+		_ = TerminateCluster(credentials, token, ctx)
 
 		_ = UpdateGKECluster(cluster, ctx)
 		err := db.CreateError(cluster.InfraId, ctx.Data.Company, models.GKE, ctx, confError)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: confError.Error + "\n" + confError.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return confError
 	}
 
@@ -715,7 +739,13 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		PrintError(err1, cluster.Name, ctx)
 		cpErr := types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err1.Error()}
 
-		publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err1.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		err := db.CreateError(cluster.InfraId, ctx.Data.Company, models.GKE, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -727,7 +757,13 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	notify := publisher.RecieveNotification(ctx.Data.InfraId, ctx, pubSub)
 	if notify {
 		ctx.SendLogs("GKEClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  true,
+			Message: "Cluster created successfully",
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 	} else {
 		ctx.SendLogs("GKEClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.Status = models.ClusterCreationFailed
@@ -741,7 +777,13 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Agent  - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Notification not recieved from agent",
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 	}
 
 	return types.CustomCPError{}
@@ -1046,8 +1088,8 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 	return &customStatus, types.CustomCPError{}
 }
 
-func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.CustomCPError {
-	publisher := utils.Notifier{}
+func TerminateCluster(credentials gcp.GcpCredentials, token string, ctx utils.Context) types.CustomCPError {
+	/*publisher := utils.Notifier{}
 	pubErr := publisher.Init_notifier()
 	if pubErr != nil {
 		err_ := types.CustomCPError{StatusCode: 500, Error: "Error in terminating cluster", Description: pubErr.Error()}
@@ -1056,7 +1098,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		return err_
-	}
+	}*/
 
 	cluster, err := GetGKECluster(ctx)
 	if err != nil {
@@ -1078,7 +1120,13 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: text,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return err_
 	}
 
@@ -1111,7 +1159,13 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err1.Error + "\n" + err1.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return err1
 	}
 
@@ -1127,7 +1181,13 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err_.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return cpErr
 	}
 	errr := gkeOps.deleteCluster(cluster, ctx)
@@ -1144,14 +1204,26 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 			if err != nil {
 				ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: errr.Error + "\n" + errr.Description,
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Terminate,
+			}, ctx)
 			return errr
 		}
 		err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.GKE, ctx, errr)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: errr.Error + "\n" + errr.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return errr
 	}
 
@@ -1162,7 +1234,13 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		ctx.SendLogs("GKEClusterModel : Terminate "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.InfraId)
 		_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.InfraId)
-		publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		err_ := types.CustomCPError{StatusCode: 500, Error: "Error in terminating Cluster", Description: err.Error()}
 
 		err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.GKE, ctx, err_)
@@ -1172,7 +1250,13 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		return err_
 	}
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster terminated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
-	publisher.Notify(ctx.Data.InfraId, "Status Available", ctx)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "Cluster terminated successfully",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Terminate,
+	}, ctx)
 	return types.CustomCPError{}
 }
 
