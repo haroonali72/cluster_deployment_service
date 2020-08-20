@@ -532,7 +532,7 @@ func FetchStatus(credentials vault.AzureProfile, token, InfraId string, companyI
 }
 func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId, token string) types.CustomCPError {
 
-	publisher := utils.Notifier{}
+	/*publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		ctx.SendLogs(pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -542,11 +542,11 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 			ctx.SendLogs("AzureClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		return customError
-	}
+	}*/
 
 	cluster, err := GetCluster(cluster.InfraId, companyId, ctx)
 	if err != nil {
-		customError := ApiError(pub_err, "Error in cluster termination", int(models.CloudStatusCode))
+		customError := ApiError(err, "Error in cluster termination", int(models.CloudStatusCode))
 		err1 := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.Azure, ctx, customError)
 		if err1 != nil {
 			ctx.SendLogs("AzureClusterModel:  Terminate Cluster - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

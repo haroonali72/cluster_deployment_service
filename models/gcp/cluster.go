@@ -493,7 +493,13 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 		if err_ != nil {
 			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return err
 	}
 
@@ -524,7 +530,13 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: confErr.Error + "\n" + confErr.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return types.CustomCPError{}
 
 	}
@@ -542,7 +554,13 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.InfraId, companyId)
 		ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: confError.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.GCP, ctx, ApiErrors(confError, "Error in deploying cluster"))
 		if err_ != nil {
 			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -555,7 +573,13 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	notify := publisher.RecieveNotification(ctx.Data.InfraId, ctx, pubSub)
 	if notify {
 		ctx.SendLogs("GCPClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  true,
+			Message: "Cluster created successfully",
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 	} else {
 		ctx.SendLogs("GCPClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.Status = models.ClusterCreationFailed
@@ -568,9 +592,16 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 			if err != nil {
 				ctx.SendLogs("GcpDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(cluster.InfraId, "Status Available", ctx)
+
 			return types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in updating cluster status in database"}
 		}
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Notification not recieved from agent",
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 	}
 
 	return types.CustomCPError{}
@@ -651,16 +682,16 @@ func GetAllServiceAccounts(credentials GcpCredentials, ctx utils.Context) (servi
 
 func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, token, companyId string, ctx utils.Context) types.CustomCPError {
 
-	publisher := utils.Notifier{}
-	pub_err := publisher.Init_notifier()
-	if pub_err != nil {
-		ctx.SendLogs("GcpClusterModel :"+pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.GCP, ctx, ApiErrors(pub_err, "Error in terminating cluster"))
-		if err_ != nil {
-			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		}
-		return ApiErrors(pub_err, "Error in initializing notifier")
-	}
+	/*	publisher := utils.Notifier{}
+		pub_err := publisher.Init_notifier()
+		if pub_err != nil {
+			ctx.SendLogs("GcpClusterModel :"+pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.GCP, ctx, ApiErrors(pub_err, "Error in terminating cluster"))
+			if err_ != nil {
+				ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			return ApiErrors(pub_err, "Error in initializing notifier")
+		}*/
 
 	cluster, err := GetCluster(cluster.InfraId, companyId, ctx)
 	if err != nil {
@@ -675,7 +706,13 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, token, co
 	if cluster.Status == "" || strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
 		text := "GcpClusterModel :Cannot terminate a new cluster"
 		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: text,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return ApiErrors(errors.New(text), text)
 	}
 
@@ -708,7 +745,13 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, token, co
 		if err_ != nil {
 			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err1.Error,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return ApiErrors(err, "Error in cluster termination")
 	}
 
@@ -722,14 +765,26 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, token, co
 			ctx.SendLogs("GcpClusterModel :Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.InfraId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.InfraId)
-			publisher.Notify(cluster.InfraId, "Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err1.Error,
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Terminate,
+			}, ctx)
 			return ApiErrors(err, "Error in cluster termination")
 		}
 		err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.GCP, ctx, err1)
 		if err_ != nil {
 			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err1.Error,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return types.CustomCPError{}
 	}
 
@@ -748,11 +803,23 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, token, co
 		if err_ != nil {
 			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return ApiErrors(err, "Error in cluster termination")
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.InfraId)
-	publisher.Notify(cluster.InfraId, "Status Available", ctx)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "Cluster terminated successfully",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Terminate,
+	}, ctx)
 	return types.CustomCPError{}
 }
 
