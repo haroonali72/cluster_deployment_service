@@ -544,7 +544,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 			Message: text,
 			InfraId: cluster.InfraId,
 			Token:   token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, ctx)
 		return ApiError(errors.New(text), "Error in terminating cluster")
 	}
@@ -576,7 +576,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 			Message: err1.Error + "\n" + err1.Description,
 			InfraId: cluster.InfraId,
 			Token:   token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, ctx)
 		return err1
 	}
@@ -600,7 +600,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 			Message: "Cluster termination failed",
 			InfraId: cluster.InfraId,
 			Token:   token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, ctx)
 		return types.CustomCPError{}
 	}
@@ -648,7 +648,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 			Message: confErr.Error + "\n" + confErr.Description,
 			InfraId: cluster.InfraId,
 			Token:   token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, ctx)
 		return types.CustomCPError{}
 		return confErr
@@ -660,7 +660,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		Message: "Cluster termination successfully",
 		InfraId: cluster.InfraId,
 		Token:   token,
-		Action:  models.Create,
+		Action:  models.Terminate,
 	}, ctx)
 
 	return types.CustomCPError{}
