@@ -971,7 +971,7 @@ func (c *AKSClusterController) TerminateCluster() {
 	//	return
 	//}
 
-	go aks.TerminateCluster(azureProfile, infraId, userInfo.CompanyId, *ctx)
+	go aks.TerminateCluster(azureProfile, infraId, userInfo.CompanyId, token, *ctx)
 
 	ctx.SendLogs(" AKS cluster "+cluster.Name+" of Infrastructuret Id: "+cluster.InfraId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 

@@ -151,6 +151,46 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 
 			go DOClusterTerminateHelper(task, infra)
 		}
+	} else if infra.infrastructureData.Cloud == models.AKS {
+
+		if task.Action == models.Create {
+
+			go AKSClusterStartHelpler(task, infra)
+
+		} else if task.Action == models.Terminate {
+
+			go AKSClusterTerminateHelper(task, infra)
+		}
+	} else if infra.infrastructureData.Cloud == models.EKS {
+
+		if task.Action == models.Create {
+
+			//eks start
+
+		} else if task.Action == models.Terminate {
+
+		}
+	} else if infra.infrastructureData.Cloud == models.DOKS {
+
+		if task.Action == models.Create {
+
+		} else if task.Action == models.Terminate {
+
+		}
+	} else if infra.infrastructureData.Cloud == models.GKE {
+
+		if task.Action == models.Create {
+
+		} else if task.Action == models.Terminate {
+
+		}
+	} else if infra.infrastructureData.Cloud == models.AKS {
+
+		if task.Action == models.Create {
+
+		} else if task.Action == models.Terminate {
+
+		}
 	}
 }
 
