@@ -472,8 +472,8 @@ func DeleteAKSCluster(infraId, companyId string, ctx utils.Context) error {
 
 func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, companyId string, token string, ctx utils.Context) (confError types.CustomCPError) {
 
-	publisher := utils.Notifier{}
-	_ = publisher.Init_notifier()
+	/*publisher := utils.Notifier{}
+	_ = publisher.Init_notifier()*/
 
 	aksOps, _ := GetAKS(credentials.Profile)
 
@@ -494,7 +494,13 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: CpErr.Error + "\n" + CpErr.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 
 		return CpErr
 	}
@@ -512,7 +518,13 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: CpErr.Error + "\n" + CpErr.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return CpErr
 	}
 	err := aksOps.CreateCluster(cluster, token, ctx)
@@ -533,7 +545,13 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return cpErr
 	}
 	AgentErr := azure.ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGoup)
@@ -544,7 +562,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 
 		cluster.Status = models.ClusterCreationFailed
 		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.InfraId)
-		_ = TerminateCluster(credentials, cluster.InfraId, companyId, ctx)
+		_ = TerminateCluster(credentials, cluster.InfraId, companyId, token, ctx)
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
 			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.InfraId)
@@ -555,7 +573,13 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: AgentErr.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return cpErr
 	}
 	cluster.Status = models.ClusterCreated
@@ -566,16 +590,28 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.InfraId)
 		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: UpdationErr.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, CpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		return CpErr
 	}
-
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "Cluster created successfully",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Create,
+	}, ctx)
 	_, _ = utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.InfraId)
-	publisher.Notify(cluster.InfraId, "Status Available", ctx)
+
 	return types.CustomCPError{}
 }
 
@@ -623,7 +659,7 @@ func FetchStatus(credentials vault.AzureCredentials, token, infraId, companyId s
 	return clusterstatus, types.CustomCPError{}
 }
 
-func TerminateCluster(credentials vault.AzureProfile, infraId, companyId string, ctx utils.Context) types.CustomCPError {
+func TerminateCluster(credentials vault.AzureProfile, infraId, companyId, token string, ctx utils.Context) types.CustomCPError {
 	publisher := utils.Notifier{}
 	_ = publisher.Init_notifier()
 
@@ -647,7 +683,13 @@ func TerminateCluster(credentials vault.AzureProfile, infraId, companyId string,
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: text,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return cpErr
 	}
 
@@ -663,7 +705,13 @@ func TerminateCluster(credentials vault.AzureProfile, infraId, companyId string,
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err_.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return cpErr
 	}
 
@@ -682,7 +730,13 @@ func TerminateCluster(credentials vault.AzureProfile, infraId, companyId string,
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: CpErr.Error + "\n" + CpErr.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 
 		return CpErr
 	}
@@ -703,7 +757,13 @@ func TerminateCluster(credentials vault.AzureProfile, infraId, companyId string,
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: CpErr.Error + "\n" + CpErr.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return CpErr
 	}
 
@@ -721,11 +781,23 @@ func TerminateCluster(credentials vault.AzureProfile, infraId, companyId string,
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: CpErr.Error + "\n" + CpErr.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return ApiError(err, "Error while updating cluster in database", 500)
 	}
 	_, _ = utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.InfraId)
-	publisher.Notify(cluster.InfraId, "Status Available", ctx)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "Cluster terminated successfully",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Terminate,
+	}, ctx)
 	return types.CustomCPError{}
 }
 
