@@ -26,7 +26,7 @@ func SendLog(companyId, msg, message_type, env_id string) (int, error) {
 
 	data.ID = env_id
 	data.Service = "antelope"
-	data.Type = "project"
+	data.Type = "infrastructure"
 	data.Level = message_type
 	data.Message = msg
 	data.CompanyId = companyId
