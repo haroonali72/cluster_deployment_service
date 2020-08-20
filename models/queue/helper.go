@@ -688,7 +688,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 	}
 
 	ctx.SendLogs("AWSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId)
+	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId, task.Token)
 }
 func GCPClusterStartHelper(task WorkSchema, infraData Infrastructure) {
 
