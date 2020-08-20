@@ -1076,7 +1076,7 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	ctx.SendLogs("GKEClusterController: Terminating cluster"+cluster.Name+" of infrastructure "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go gke.TerminateCluster(credentials, *ctx)
+	go gke.TerminateCluster(credentials, token, *ctx)
 
 	/*err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
