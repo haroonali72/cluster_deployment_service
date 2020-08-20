@@ -1166,7 +1166,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 
 	ctx.SendLogs("DOKSClusterController: Terminating cluster"+cluster.Name+" of Infrastructure"+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go doks.TerminateCluster(doProfile.Profile, *ctx)
+	go doks.TerminateCluster(doProfile.Profile, token, *ctx)
 
 	ctx.SendLogs("DOKSClusterController: Cluster"+cluster.Name+" of Infrastructure"+infraId+" terminated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
