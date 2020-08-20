@@ -6,6 +6,7 @@ import (
 	"antelope/models/aws"
 	"antelope/models/azure"
 	"antelope/models/do"
+	"antelope/models/eks"
 	"antelope/models/gcp"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
@@ -220,7 +221,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 	if err != nil {
 		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
-			Message: "",
+			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
 			Action:  models.Create,
@@ -559,7 +560,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 	if err != nil {
 		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
-			Message: "",
+			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
 			Action:  models.Create,
@@ -889,7 +890,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 	if err != nil {
 		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
-			Message: "",
+			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
 			Action:  models.Create,
@@ -1232,7 +1233,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 	if err != nil {
 		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
-			Message: "",
+			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
 			Action:  models.Create,
@@ -1571,7 +1572,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 	if err != nil {
 		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
-			Message: "",
+			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
 			Action:  models.Create,
@@ -1700,4 +1701,341 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 
 	ctx.SendLogs("AKSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go aks.TerminateCluster(azureProfile, task.InfraId, userInfo.CompanyId, task.Token, *ctx)
+}
+func EKSClusterStartHelpler(task WorkSchema, infraData Infrastructure) {
+	if task.Token == "" {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	_, userInfo, err := rbac_athentication.GetInfo(task.Token)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger("", "POST", "", task.InfraId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	_, allowed, err := rbac_athentication.Authenticate(models.EKS, "cluster", task.InfraId, "Start", task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	if !allowed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "User is not allowed to perform this action",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	var cluster eks.EKSCluster
+
+	ctx.SendLogs("EKSClusterController: Getting Cluster of infrastructure. "+task.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	cluster, err = eks.GetEKSCluster(task.InfraId, userInfo.CompanyId, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	if cluster.Status == models.ClusterCreated {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Cluster is already in deployed state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+
+	} else if cluster.Status == models.Deploying {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Cluster is already in deploying state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == models.Terminating {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't deploy. Cluster is in terminating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == models.ClusterTerminationFailed {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "cluster is in invalid state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+
+	region, err := aws.GetRegion(task.Token, task.InfraId, *ctx)
+	if err != nil {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	_, awsProfile, err := aws.GetProfile(infraData.infrastructureData.ProfileId, region, task.Token, *ctx)
+	if err != nil {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+
+	cluster.Status = models.Deploying
+	err = eks.UpdateEKSCluster(cluster, *ctx)
+	if err != nil {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+
+	ctx.SendLogs("EKSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	eks.DeployEKSCluster(cluster, awsProfile, userInfo.CompanyId, task.Token, *ctx)
+
+}
+func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
+
+	if task.Token == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure id is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	_, userInfo, err := rbac_athentication.GetInfo(task.Token)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger("", "POST", "", task.InfraId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	_, allowed, err := rbac_athentication.Authenticate(models.EKS, "cluster", task.InfraId, "Terminate", task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	if !allowed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "User is not allowed to perform this action",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	var cluster eks.EKSCluster
+	ctx.SendLogs("EKSClusterController: Getting Cluster of infrastructure. "+task.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	cluster, err = eks.GetEKSCluster(task.InfraId, userInfo.CompanyId, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	if cluster.Status == models.Deploying {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't Terminate. Cluster is in deploying state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	} else if cluster.Status == models.Terminating {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Cluster is already in terminating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	} else if cluster.Status == models.ClusterTerminated {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "cluster is already in terminated state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+
+	} else if cluster.Status == models.ClusterCreationFailed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Cluster state is invalid for termination",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	} else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't Terminate an undeployed  cluster",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	region, err := aws.GetRegion(task.Token, task.InfraId, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	_, azureProfile, err := aws.GetProfile(infraData.infrastructureData.ProfileId, region, task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	cluster.Status = models.Terminating
+	err = eks.UpdateEKSCluster(cluster, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	ctx.SendLogs("EKSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	go eks.TerminateCluster(cluster, azureProfile, task.InfraId, userInfo.CompanyId, task.Token, *ctx)
 }

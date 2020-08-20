@@ -165,10 +165,10 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 
 		if task.Action == models.Create {
 
-			//eks start
+			go EKSClusterStartHelpler(task, infra)
 
 		} else if task.Action == models.Terminate {
-
+			go EKSClusterTerminateHelper(task, infra)
 		}
 	} else if infra.infrastructureData.Cloud == models.DOKS {
 
