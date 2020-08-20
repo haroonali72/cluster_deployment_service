@@ -168,13 +168,19 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 			go EKSClusterStartHelpler(task, infra)
 
 		} else if task.Action == models.Terminate {
+
 			go EKSClusterTerminateHelper(task, infra)
+
 		}
 	} else if infra.infrastructureData.Cloud == models.DOKS {
 
 		if task.Action == models.Create {
 
+			go DOKSClusterStartHelpler(task, infra)
+
 		} else if task.Action == models.Terminate {
+
+			go DOKSClusterTerminateHelper(task, infra)
 
 		}
 	} else if infra.infrastructureData.Cloud == models.GKE {
