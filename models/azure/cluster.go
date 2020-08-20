@@ -200,7 +200,7 @@ func GetProfile(profileId string, region string, token string, ctx utils.Context
 	err = json.Unmarshal(data, &azureProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 500, vault.AzureProfile{}, err
+		return statusCode, vault.AzureProfile{}, err
 	}
 	azureProfile.Profile.Location = region
 	return 0, azureProfile, nil
