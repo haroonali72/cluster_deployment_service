@@ -1482,7 +1482,6 @@ func (c *AzureClusterController) ApplyAgent() {
 
 	statusCode, azureProfile, err := azure.GetProfile(profileId, "", token, *ctx)
 	if err != nil {
-		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
