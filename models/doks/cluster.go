@@ -68,7 +68,7 @@ type User struct {
 
 type KubernetesCluster struct {
 	ID               string                `json:"id" bson:"id"`
-	InfraId          string                `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	InfraId          string                `json:"infra_id" bson:"infra_id" validate:"required" description:"ID of infrastructure [required]"`
 	CompanyId        string                `json:"company_id" bson:"company_id" validate:"required" description:"ID of compnay [optional]"`
 	Cloud            models.Cloud          `json:"cloud" bson:"cloud" validate:"eq=DOKS|eq=doks|eq=Doks"`
 	CreationDate     time.Time             `json:"-" bson:"creation_date"`
@@ -209,7 +209,7 @@ func GetNetwork(token, infraId string, ctx utils.Context) error {
 
 type DOKSCluster struct {
 	Name    string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
-	InfraId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	InfraId string      `json:"infra_id" bson:"infra_id"  description:"ID of infrastructure"`
 	Status  models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
 
@@ -222,7 +222,7 @@ func GetKubernetesCluster(ctx utils.Context) (cluster KubernetesCluster, err err
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoDOKSClusterCollection)
-	err = c.Find(bson.M{"project_id": ctx.Data.InfraId, "company_id": ctx.Data.Company}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs("DOKSGetClusterModel:  Get - Got error while fetching from database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err
@@ -246,7 +246,7 @@ func GetAllKubernetesCluster(data rbacAuthentication.List, ctx utils.Context) (d
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoDOKSClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"infra_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("DOKSGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return dokscluster, err
@@ -260,7 +260,7 @@ func GetAllKubernetesCluster(data rbacAuthentication.List, ctx utils.Context) (d
 func AddKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error {
 	_, err := GetKubernetesCluster(ctx)
 	if err == nil {
-		text := fmt.Sprintf("DOKSAddClusterModel:  Add - Cluster for project '%s' already exists in the database.", cluster.InfraId)
+		text := fmt.Sprintf("DOKSAddClusterModel:  Add - Cluster for infrastructure '%s' already exists in the database.", cluster.InfraId)
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
@@ -300,7 +300,7 @@ func DeleteKubernetesCluster(ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoDOKSClusterCollection)
-	err = c.Remove(bson.M{"project_id": ctx.Data.InfraId, "company_id": ctx.Data.Company})
+	err = c.Remove(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company})
 	if err != nil {
 		ctx.SendLogs("DOKSDeleteClusterModel:  Delete - Got error while deleting from the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -447,7 +447,7 @@ func DeletePreviousDOKSCluster(ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoDOKSPreviousClusterCollection)
-	err = c.Remove(bson.M{"project_id": ctx.Data.InfraId, "company_id": ctx.Data.Company})
+	err = c.Remove(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company})
 	if err != nil {
 		ctx.SendLogs(
 			"DOKSDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
@@ -473,7 +473,7 @@ func GetPreviousDOKSCluster(ctx utils.Context) (cluster KubernetesCluster, err e
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoDOKSPreviousClusterCollection)
-	err = c.Find(bson.M{"project_id": ctx.Data.InfraId, "company_id": ctx.Data.Company}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
 			"DOKSGetClusterModel:  Get previous cluster- Got error while fetching from database: "+err.Error(),
@@ -1085,14 +1085,14 @@ func GetDOKS(credentials vault.DOCredentials) (DOKS, error) {
 func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context, clusterName string) (confError types.CustomCPError) {
 
 	companyId := ctx.Data.Company
-	projetcID := ctx.Data.InfraId
-	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
+	infraID := ctx.Data.InfraId
+	data2, err := woodpecker.GetCertificate(infraID, token, ctx)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: "Agent Deployment failed " + err.Error()}
 	}
 
-	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
+	filePath := "/tmp/" + companyId + "/" + infraID + "/"
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
 
 	//	key:= beego.AppConfig.String("jump_host_ssh_key")
@@ -1104,7 +1104,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 		return types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err.Error()}
 	}
 
-	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e DIGITALOCEAN_ACCESS_TOKEN=" + credentials.AccessKey + " -e cluster=" + clusterName + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.DOAuthContainerName
+	cmd = "sudo docker run --rm --name " + companyId + infraID + " -e DIGITALOCEAN_ACCESS_TOKEN=" + credentials.AccessKey + " -e cluster=" + clusterName + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.DOAuthContainerName
 
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
@@ -1149,7 +1149,7 @@ func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context) (option
 func ValidateDOKSData(cluster KubernetesCluster, ctx utils.Context) error {
 	if cluster.InfraId == "" {
 
-		return errors.New("project Id is empty")
+		return errors.New("infrastructure Id is empty")
 
 	} else if cluster.Name == "" {
 

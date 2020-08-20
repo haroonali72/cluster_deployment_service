@@ -22,7 +22,7 @@ import (
 
 type GKECluster struct {
 	ID                             bson.ObjectId                   `json:"-" bson:"_id,omitempty"`
-	InfraId                        string                          `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	InfraId                        string                          `json:"infra_id" bson:"infra_id" validate:"required" description:"ID of infrastructure [required]"`
 	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud"`
 	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
 	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
@@ -254,7 +254,7 @@ type AutoUpgradeOptions struct {
 
 type Cluster struct {
 	Name    string      `json:"name,omitempty" bson:"name,omitempty" description:"Cluster name"`
-	InfraId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	InfraId string      `json:"infra_id" bson:"infra_id"  description:"ID of infrastructure"`
 	Status  models.Type `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster"`
 }
 
@@ -321,7 +321,7 @@ func GetGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGKEClusterCollection)
-	err = c.Find(bson.M{"project_id": ctx.Data.InfraId, "company_id": ctx.Data.Company}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
 			"GKEGetClusterModel:  Get - Got error while fetching from database: "+err.Error(),
@@ -353,7 +353,7 @@ func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (gkeClust
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGKEClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"infra_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs(
 			"GKEGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(),
@@ -372,7 +372,7 @@ func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (gkeClust
 func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
 	_, err := GetGKECluster(ctx)
 	if err == nil {
-		text := fmt.Sprintf("GKEAddClusterModel:  Add - Cluster for project '%s' already exists in the database."+err.Error(), cluster.InfraId)
+		text := fmt.Sprintf("GKEAddClusterModel:  Add - Cluster for infrastructure '%s' already exists in the database."+err.Error(), cluster.InfraId)
 		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
@@ -459,7 +459,7 @@ func DeleteGKECluster(ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGKEClusterCollection)
-	err = c.Remove(bson.M{"project_id": ctx.Data.InfraId, "company_id": ctx.Data.Company})
+	err = c.Remove(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company})
 	if err != nil {
 		ctx.SendLogs(
 			"GKEDeleteClusterModel:  Delete - Got error while deleting from the database: "+err.Error(),
@@ -547,7 +547,7 @@ func GetPreviousGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGKEPreviousClusterCollection)
-	err = c.Find(bson.M{"project_id": ctx.Data.InfraId, "company_id": ctx.Data.Company}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
 			"GKEGetClusterModel:  Get previous cluster- Got error while fetching from database: "+err.Error(),
@@ -598,7 +598,7 @@ func DeletePreviousGKECluster(ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGKEPreviousClusterCollection)
-	err = c.Remove(bson.M{"project_id": ctx.Data.InfraId, "company_id": ctx.Data.Company})
+	err = c.Remove(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company})
 	if err != nil {
 		ctx.SendLogs(
 			"GKEDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
@@ -1230,7 +1230,7 @@ func ApplyAgent(credentials gcp.GcpCredentials, token string, ctx utils.Context,
 
 func Validate(gkeCluster GKECluster) error {
 	if gkeCluster.InfraId == "" {
-		return errors.New("project id is empty")
+		return errors.New("infrastructure id is empty")
 	} else if gkeCluster.Name == "" {
 		return errors.New("cluster name is empty")
 	} else if len(gkeCluster.NodePools) > 0 {

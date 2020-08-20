@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func GetCertificate(projectID, token string, ctx utils.Context) (string, error) {
+func GetCertificate(InfraID, token string, ctx utils.Context) (string, error) {
 
 	client := utils.InitReq()
 	basePath := ""
@@ -19,7 +19,7 @@ func GetCertificate(projectID, token string, ctx utils.Context) (string, error) 
 		return "", errors.New("can not get woodpecker_url in env")
 	}
 	basePath = basePath + models.WoodPeckerCertificate
-	basePath = strings.Replace(basePath, "{profileId}", projectID, 1)
+	basePath = strings.Replace(basePath, "{profileId}", InfraID, 1)
 	req, err := utils.CreateGetRequest(basePath)
 	if err != nil {
 		beego.Info(err.Error())

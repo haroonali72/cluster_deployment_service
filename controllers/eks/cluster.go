@@ -21,7 +21,7 @@ type EKSClusterController struct {
 
 // @Title Get
 // @Description Get cluster against the infraId
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the infrastructure"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} eks.EKSCluster
 // @Failure 401 {"error": "Unauthorized"}
@@ -35,7 +35,7 @@ func (c *EKSClusterController) Get() {
 	if infraId == "" {
 		ctx.SendLogs("EKSClusterController: infraId is empty", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -58,13 +58,13 @@ func (c *EKSClusterController) Get() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, infraId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("EKSClusterController: Get cluster with project id "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("EKSClusterController: Get cluster with infrastructure id "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", infraId, "View", token, utils.Context{})
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -80,7 +80,7 @@ func (c *EKSClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs("EKSClusterController: Get cluster with project id: "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("EKSClusterController: Get cluster with infrastructure id: "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := eks.GetEKSCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -97,7 +97,7 @@ func (c *EKSClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs(" EKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" EKS cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -138,7 +138,7 @@ func (c *EKSClusterController) GetAll() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -176,7 +176,7 @@ func (c *EKSClusterController) GetAll() {
 // @Success 400 {"msg": "Runtime Error"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
-// @Failure 409 {"error": "Cluster against this project already exists"}
+// @Failure 409 {"error": "Cluster against this infrastructure already exists"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [post]
 func (c *EKSClusterController) Post() {
@@ -218,7 +218,7 @@ func (c *EKSClusterController) Post() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -268,7 +268,7 @@ func (c *EKSClusterController) Post() {
 		ctx.SendLogs("EKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
+			c.Data["json"] = map[string]string{"error": "cluster against same infrastructure id already exists"}
 			c.ServeJSON()
 			return
 		} else if strings.Contains(err.Error(), "Exceeds the cores limit") {
@@ -283,7 +283,7 @@ func (c *EKSClusterController) Post() {
 		return
 	}
 
-	ctx.SendLogs("EKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("EKS cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 }
@@ -366,7 +366,7 @@ func (c *EKSClusterController) Patch() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -404,7 +404,7 @@ func (c *EKSClusterController) Patch() {
 			return
 		}
 
-		ctx.SendLogs("EKS running cluster "+cluster.Name+" in project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+		ctx.SendLogs("EKS running cluster "+cluster.Name+" in infrastructure id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
 		c.ServeJSON()
@@ -430,7 +430,7 @@ func (c *EKSClusterController) Patch() {
 
 		}
 
-		ctx.SendLogs("EKS running cluster "+cluster.Name+" in project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+		ctx.SendLogs("EKS running cluster "+cluster.Name+" in infrastructure id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
 		c.ServeJSON()
@@ -450,7 +450,7 @@ func (c *EKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("EKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("EKS cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
 	c.ServeJSON()
 }
@@ -458,7 +458,7 @@ func (c *EKSClusterController) Patch() {
 // @Title Delete
 // @Description Delete a cluster
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path 	string	true	"Project id of the cluster"
+// @Param	infraId	path 	string	true	"infrastructure id of the cluster"
 // @Param	forceDelete path    boolean	true    "Forcefully delete cluster"
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -473,7 +473,7 @@ func (c *EKSClusterController) Delete() {
 	if id == "" {
 		ctx.SendLogs("AKSClusterController: InfraId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -498,7 +498,7 @@ func (c *EKSClusterController) Delete() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -515,7 +515,7 @@ func (c *EKSClusterController) Delete() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -531,7 +531,7 @@ func (c *EKSClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs("EKSClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("EKSClusterController: Delete cluster with infrastructure id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := eks.GetEKSCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -581,7 +581,7 @@ func (c *EKSClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs("EKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("EKS cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
@@ -590,7 +590,7 @@ func (c *EKSClusterController) Delete() {
 // @Description Deploy a kubernetes cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true "Vault credentials profile id"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the infrastructure"
 // @Success 201 {"msg": "Cluster created successfully"}
 // @Success 202 {"msg": "Cluster creation initiated"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -615,7 +615,7 @@ func (c *EKSClusterController) StartCluster() {
 	if infraId == "" {
 		ctx.SendLogs("EKSClusterController: InfraId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -643,7 +643,7 @@ func (c *EKSClusterController) StartCluster() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -676,7 +676,7 @@ func (c *EKSClusterController) StartCluster() {
 		return
 	}
 
-	ctx.SendLogs("EKSClusterController: Getting Cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("EKSClusterController: Getting Cluster of infrastructure. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := eks.GetEKSCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -727,7 +727,7 @@ func (c *EKSClusterController) StartCluster() {
 
 	go eks.DeployEKSCluster(cluster, awsProfile, userInfo.CompanyId, token, *ctx)
 
-	ctx.SendLogs(" EKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" EKS cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -737,7 +737,7 @@ func (c *EKSClusterController) StartCluster() {
 // @Description Terminate a running cluster
 // @Param	X-Profile-Id header	X-Profile-Id	string	true "Vault credentials profile Id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the infrastructure"
 // @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -762,7 +762,7 @@ func (c *EKSClusterController) TerminateCluster() {
 	if infraId == "" {
 		ctx.SendLogs("EKSClusterController: InfraId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -791,7 +791,7 @@ func (c *EKSClusterController) TerminateCluster() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -823,7 +823,7 @@ func (c *EKSClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.SendLogs("EKSClusterController: Getting Cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("EKSClusterController: Getting Cluster of infrastructure. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := eks.GetEKSCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -1046,7 +1046,7 @@ func (c *EKSClusterController) GetClusters() {
 // @Description Get live status of the running cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile Id"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the infrastructure"
 // @Success 200 {object} eks.EKSClusterStatus
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
@@ -1061,7 +1061,7 @@ func (c *EKSClusterController) GetStatus() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1098,7 +1098,7 @@ func (c *EKSClusterController) GetStatus() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -1116,7 +1116,7 @@ func (c *EKSClusterController) GetStatus() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("EKSClusterController: Fetch Cluster Status of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("EKSClusterController: Fetch Cluster Status of infrastructure. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	region, err := iks.GetRegion(token, infraId, *ctx)
 	if err != nil {
@@ -1134,7 +1134,7 @@ func (c *EKSClusterController) GetStatus() {
 		return
 	}
 
-	ctx.SendLogs("EKSClusterController: Fetching Status of project"+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("EKSClusterController: Fetching Status of infrastructure"+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, cpErr := eks.FetchStatus(eksProfile, infraId, *ctx, userInfo.CompanyId, token)
 	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") || cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "not deployed") {
@@ -1147,8 +1147,8 @@ func (c *EKSClusterController) GetStatus() {
 		c.Data["json"] = cpErr
 		c.ServeJSON()
 	}
-	ctx.SendLogs("EKSClusterController: Status fetched of project"+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("EKSClusterController: Status fetched of project"+infraId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("EKSClusterController: Status fetched of infrastructure"+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("EKSClusterController: Status fetched of infrastructure"+infraId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Data["json"] = cluster
 	c.ServeJSON()
@@ -1159,7 +1159,7 @@ func (c *EKSClusterController) GetStatus() {
 // @Param	clusterName	header	string	true "clusterName"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the infrastructure"
 // @Success 200 {"msg": "Agent Applied successfully"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -1181,7 +1181,7 @@ func (c *EKSClusterController) ApplyAgent() {
 	if infraId == "" {
 		ctx.SendLogs("EKSClusterController: InfraId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1255,7 +1255,7 @@ func (c *EKSClusterController) ApplyAgent() {
 // @Description Update a running kubernetes cluster
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the infrastructure"
 // @Success 201 {"msg": "Running cluster updated successfully"}
 // @Success 202 {"msg": "Running cluster updation initiated"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -1280,7 +1280,7 @@ func (c *EKSClusterController) PatchRunningCluster() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1303,7 +1303,7 @@ func (c *EKSClusterController) PatchRunningCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, infraId, ctx.Data.Company, userInfo.UserId)
 
-	ctx.SendLogs("EKSClusterController: Updating cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("EKSClusterController: Updating cluster of infrastructure. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	ctx.Data.Company = userInfo.CompanyId
 	ctx.Data.InfraId = infraId
@@ -1312,7 +1312,7 @@ func (c *EKSClusterController) PatchRunningCluster() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -1390,9 +1390,9 @@ func (c *EKSClusterController) PatchRunningCluster() {
 
 	go eks.PatchRunningEKSCluster(cluster, eksProfile.Profile, token, *ctx)
 
-	ctx.SendLogs("GKEClusterController: Running cluster "+cluster.Name+" of project Id: "+cluster.InfraId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Running cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	ctx.SendLogs(" GKE running cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GKE running cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "Running cluster update initiated"}

@@ -45,7 +45,7 @@ type ErrorMessage string
 const (
 	IsEmpty                ErrorMessage = "is empty"
 	Notauthorized          ErrorMessage = "User is unauthorized to perform this action"
-	AlreadyExist           ErrorMessage = "Cluster against same project id already exists"
+	AlreadyExist           ErrorMessage = "Cluster against same infrastructure id already exists"
 	SuccessfullyAdded      ErrorMessage = "Cluster added successfully"
 	SuccessfullyUpdated    ErrorMessage = "Cluster updated successfully"
 	SuccessfullyDeleted    ErrorMessage = "Cluster deleted successfully"
@@ -512,7 +512,7 @@ const (
 )
 const (
 	InfraGetEndpoint  = "/raccoon/innfrastructure/{infraId}"
-	WeaselGetEndpoint = "/weasel/network/{cloud}/{projectId}"
+	WeaselGetEndpoint = "/weasel/network/{cloud}/{infraId}"
 )
 const (
 	WoodpeckerEnpoint = "/agent/api/v1/clientconfig"

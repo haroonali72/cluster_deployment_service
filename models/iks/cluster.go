@@ -23,7 +23,7 @@ import (
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	ClusterId        string        `json:"cluster_id" bson:"cluster_id,omitempty"`
-	InfraId          string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	InfraId          string        `json:"infra_id" bson:"infra_id" validate:"required" description:"ID of infrastructure [required]"`
 	Kube_Credentials interface{}   `json:"-" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
 	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of cluster [required]"`
@@ -52,8 +52,8 @@ type NodePool struct {
 	PoolId           string        `json:"pool_Id" bson:"pool_Id"  description:"Cluster pool id [optional]"`
 }
 
-type Project struct {
-	ProjectData Data `json:"data"`
+type infrastructure struct {
+	infrastructureData Data `json:"data"`
 }
 type Data struct {
 	Region string `json:"region"`
@@ -67,7 +67,7 @@ type Regions struct {
 
 type Cluster struct {
 	Name    string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
-	InfraId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	InfraId string      `json:"infra_id" bson:"infra_id"  description:"ID of infrastructure"`
 	Status  models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
 
@@ -112,7 +112,7 @@ func GetCluster(infraId, companyId string, ctx utils.Context) (cluster Cluster_D
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoIKSClusterCollection)
-	err = c.Find(bson.M{"project_id": infraId, "company_id": companyId}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": infraId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err
@@ -136,7 +136,7 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (iksCluster
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoIKSClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"infra_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
@@ -210,7 +210,7 @@ func DeleteCluster(infraId, companyId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoIKSClusterCollection)
-	err = c.Remove(bson.M{"project_id": infraId, "company_id": companyId})
+	err = c.Remove(bson.M{"infra_id": infraId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -228,13 +228,13 @@ func GetRegion(token, infraId string, ctx utils.Context) (string, error) {
 		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
-	var region Project
-	err = json.Unmarshal(data.([]byte), &region.ProjectData)
+	var region infrastructure
+	err = json.Unmarshal(data.([]byte), &region.infrastructureData)
 	if err != nil {
 		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return region.ProjectData.Region, err
+		return region.infrastructureData.Region, err
 	}
-	return region.ProjectData.Region, nil
+	return region.infrastructureData.Region, nil
 
 }
 func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx utils.Context, companyId string, token string) types.CustomCPError {
@@ -654,14 +654,14 @@ func GetAllVersions(profile vault.IBMProfile, ctx utils.Context) (Versions, type
 }
 func ApplyAgent(credentials vault.IBMCredentials, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
 	companyId := ctx.Data.Company
-	projetcID := ctx.Data.InfraId
-	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
+	infraID := ctx.Data.InfraId
+	data2, err := woodpecker.GetCertificate(infraID, token, ctx)
 	if err != nil {
 		ctx.SendLogs("IKSKubernetesClusterController. : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
-	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
+	filePath := "/tmp/" + companyId + "/" + infraID + "/"
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
@@ -669,7 +669,7 @@ func ApplyAgent(credentials vault.IBMCredentials, token string, ctx utils.Contex
 		return err
 	}
 
-	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e resourceGroup=" + resourceGroup + " -e apikey=" + credentials.IAMKey + " -e cluster=" + clusterName + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.IBMKSAuthContainerName
+	cmd = "sudo docker run --rm --name " + companyId + infraID + " -e resourceGroup=" + resourceGroup + " -e apikey=" + credentials.IAMKey + " -e cluster=" + clusterName + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.IBMKSAuthContainerName
 
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
@@ -727,7 +727,7 @@ func ValidateIKSData(cluster Cluster_Def, ctx utils.Context) error {
 
 	if cluster.InfraId == "" {
 
-		return errors.New("project id is empty")
+		return errors.New("infrastructure id is empty")
 
 	} else if cluster.Name == "" {
 
@@ -869,7 +869,7 @@ func GetPreviousIKSCluster(ctx utils.Context) (cluster Cluster_Def, err error) {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoIKSPreviousClusterCollection)
-	err = c.Find(bson.M{"project_id": ctx.Data.InfraId, "company_id": ctx.Data.Company}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
 			"IKSGetClusterModel:  Get previous cluster- Got error while fetching from database: "+err.Error(),
@@ -920,7 +920,7 @@ func DeletePreviousIKSCluster(ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoIKSPreviousClusterCollection)
-	err = c.Remove(bson.M{"project_id": ctx.Data.InfraId, "company_id": ctx.Data.Company})
+	err = c.Remove(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company})
 	if err != nil {
 		ctx.SendLogs(
 			"ISKDeleteClusterModel:  Delete  previous cluster - "+err.Error(),

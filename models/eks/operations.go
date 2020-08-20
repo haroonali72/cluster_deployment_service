@@ -1049,7 +1049,7 @@ func (cloud *EKS) init() error {
 }
 func Validate(eksCluster EKSCluster) error {
 	if eksCluster.InfraId == "" {
-		return errors.New("project id is required")
+		return errors.New("infrastructure id is required")
 	} else if eksCluster.Name == "" {
 		return errors.New("cluster name is required")
 	}

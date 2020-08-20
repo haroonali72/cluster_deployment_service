@@ -24,7 +24,7 @@ type GKE struct {
 	Client      *gke.Service
 	Compute     *compute.Service
 	Credentials string
-	ProjectId   string
+	infraId     string
 	Region      string
 	Zone        string
 }
@@ -37,10 +37,10 @@ func (cloud *GKE) ListClusters(ctx utils.Context) ([]GKECluster, types.CustomCPE
 		}
 	}
 
-	list, err := cloud.Client.Projects.Zones.Clusters.List(cloud.ProjectId, cloud.Region+"-"+cloud.Zone).Do()
+	list, err := cloud.Client.Projects.Zones.Clusters.List(cloud.infraId, cloud.Region+"-"+cloud.Zone).Do()
 	if err != nil {
 		ctx.SendLogs(
-			"GKE list clusters for '"+cloud.ProjectId+"' failed: "+err.Error(),
+			"GKE list clusters for '"+cloud.infraId+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -59,7 +59,7 @@ func (cloud *GKE) ListClusters(ctx utils.Context) ([]GKECluster, types.CustomCPE
 
 func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.Context) types.CustomCPError {
 
-	clusterRequest := GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone, gkeCluster)
+	clusterRequest := GenerateClusterCreateRequest(cloud.infraId, cloud.Region, cloud.Zone, gkeCluster)
 	networkInformation := cloud.getGCPNetwork(token, ctx)
 
 	// overriding network configurations with network from current project
@@ -70,7 +70,7 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 		}
 	}
 
-	_, err := cloud.Client.Projects.Zones.Clusters.Create(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterRequest).Context(context.Background()).Do()
+	_, err := cloud.Client.Projects.Zones.Clusters.Create(cloud.infraId, cloud.Region+"-"+cloud.Zone, clusterRequest).Context(context.Background()).Do()
 	if err != nil && !strings.Contains(err.Error(), "alreadyExists") {
 		ctx.SendLogs(
 			"GKE cluster creation of '"+gkeCluster.Name+"' failed: "+err.Error(),
@@ -111,7 +111,7 @@ func (cloud *GKE) UpdateMasterVersion(cluster GKECluster, ctx utils.Context) typ
 	}
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		cluster.Name,
 		&gke.UpdateClusterRequest{
@@ -140,10 +140,10 @@ func (cloud *GKE) UpdateMaintenancePolicy(cluster GKECluster, ctx utils.Context)
 		cluster.MaintenancePolicy = &MaintenancePolicy{}
 
 	}
-	request := SetMaintenancePolicyFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster.Name, cluster.MaintenancePolicy)
+	request := SetMaintenancePolicyFromRequest(cloud.infraId, cloud.Region, cloud.Zone, cluster.Name, cluster.MaintenancePolicy)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.SetMaintenancePolicy(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		cluster.Name,
 		request,
@@ -170,10 +170,10 @@ func (cloud *GKE) UpdateLegacyAbac(cluster GKECluster, ctx utils.Context) types.
 		cluster.LegacyAbac.Enabled = false
 	}
 
-	request := SetLegacyAbacFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster.Name, cluster.LegacyAbac)
+	request := SetLegacyAbacFromRequest(cloud.infraId, cloud.Region, cloud.Zone, cluster.Name, cluster.LegacyAbac)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.LegacyAbac(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		cluster.Name,
 		request,
@@ -199,7 +199,7 @@ func (cloud *GKE) UpdateNodePoolVersion(clusterName, nodeName, newVersion string
 	}
 
 	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Update(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		clusterName,
 		nodeName,
@@ -226,10 +226,10 @@ func (cloud *GKE) UpdateHttpLoadBalancing(cluster GKECluster, ctx utils.Context)
 		cluster.AddonsConfig.HttpLoadBalancing.Disabled = false
 	}
 
-	response := GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster)
+	response := GenerateClusterCreateRequest(cloud.infraId, cloud.Region, cloud.Zone, cluster)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		cluster.Name,
 		&gke.UpdateClusterRequest{
@@ -262,10 +262,10 @@ func (cloud *GKE) UpdateMonitoringAndLoggingService(cluster GKECluster, ctx util
 		cluster.LoggingService = "none"
 	}
 
-	response := GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster)
+	response := GenerateClusterCreateRequest(cloud.infraId, cloud.Region, cloud.Zone, cluster)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		cluster.Name,
 		&gke.UpdateClusterRequest{
@@ -297,10 +297,10 @@ func (cloud *GKE) UpdateClusterZone(cluster GKECluster, ctx utils.Context) types
 		return types.CustomCPError{512, "Zone cant be empty", "Zone cant be empty"}
 	}
 
-	response := GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster)
+	response := GenerateClusterCreateRequest(cloud.infraId, cloud.Region, cloud.Zone, cluster)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		cluster.Name,
 		&gke.UpdateClusterRequest{
@@ -331,10 +331,10 @@ func (cloud *GKE) UpdateMasterAuthorizedNetworksConfig(cluster GKECluster, ctx u
 		cluster.MasterAuthorizedNetworksConfig.Enabled = false
 
 	}
-	response := GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster)
+	response := GenerateClusterCreateRequest(cloud.infraId, cloud.Region, cloud.Zone, cluster)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		cluster.Name,
 		&gke.UpdateClusterRequest{
@@ -367,7 +367,7 @@ func (cloud *GKE) UpdateNetworkPolicy(cluster GKECluster, ctx utils.Context) typ
 	}
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		cluster.Name,
 		&gke.UpdateClusterRequest{
@@ -396,10 +396,10 @@ func (cloud *GKE) UpdateNetworkPolicy(cluster GKECluster, ctx utils.Context) typ
 		return err1
 	}
 
-	response := SetNetworkPolicyFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster.Name, cluster.NetworkPolicy)
+	response := SetNetworkPolicyFromRequest(cloud.infraId, cloud.Region, cloud.Zone, cluster.Name, cluster.NetworkPolicy)
 
 	_, err = cloud.Client.Projects.Zones.Clusters.SetNetworkPolicy(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		cluster.Name,
 		response,
@@ -431,7 +431,7 @@ func (cloud *GKE) UpdateResourceUsageExportConfig(cluster GKECluster, ctx utils.
 	response := GenerateResourceUsageExportConfigFromRequest(cluster.ResourceUsageExportConfig)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		cluster.Name,
 		&gke.UpdateClusterRequest{
@@ -467,9 +467,9 @@ func (cloud *GKE) UpdateNodepoolManagement(clusterName string, nodepool NodePool
 		nodepool.Management.AutoUpgrade = false
 	}
 
-	request := GenerateNodePoolManagementFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone, nodepool)
+	request := GenerateNodePoolManagementFromRequest(cloud.infraId, cloud.Region, cloud.Zone, nodepool)
 
-	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.SetManagement(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName, nodepool.Name, request).Context(context.Background()).Do()
+	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.SetManagement(cloud.infraId, cloud.Region+"-"+cloud.Zone, clusterName, nodepool.Name, request).Context(context.Background()).Do()
 	if err != nil {
 		ctx.SendLogs(
 			"GKE running cluster nodepool count update request of "+clusterName+" nodepool "+nodepool.Name+" failed "+err.Error(),
@@ -493,7 +493,7 @@ func (cloud *GKE) UpdateNodepoolScaling(clusterName string, nodepool NodePool, c
 	}
 
 	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Autoscaling(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		clusterName,
 		nodepool.Name,
@@ -519,9 +519,9 @@ func (cloud *GKE) UpdateNodepoolScaling(clusterName string, nodepool NodePool, c
 }
 func (cloud *GKE) AddNodePool(clusterName string, nodepool []*NodePool, ctx utils.Context) types.CustomCPError {
 
-	nodepoolRequest := GenerateNodepoolCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone, clusterName, nodepool)
+	nodepoolRequest := GenerateNodepoolCreateRequest(cloud.infraId, cloud.Region, cloud.Zone, clusterName, nodepool)
 
-	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Create(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName, nodepoolRequest).Context(context.Background()).Do()
+	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Create(cloud.infraId, cloud.Region+"-"+cloud.Zone, clusterName, nodepoolRequest).Context(context.Background()).Do()
 	if err != nil && !strings.Contains(err.Error(), "Already exists") {
 		ctx.SendLogs(
 			"GKE nodepool creation of '"+clusterName+"' failed: "+err.Error(),
@@ -557,7 +557,7 @@ func (cloud *GKE) AddNodePool(clusterName string, nodepool []*NodePool, ctx util
 }
 func (cloud *GKE) DeleteNodePool(clusterName, nodepoolName string, ctx utils.Context) types.CustomCPError {
 
-	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName, nodepoolName).Context(context.Background()).Do()
+	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Delete(cloud.infraId, cloud.Region+"-"+cloud.Zone, clusterName, nodepoolName).Context(context.Background()).Do()
 	if err != nil {
 		ctx.SendLogs(
 			"GKE nodepool deletion of '"+nodepoolName+"' failed: "+err.Error(),
@@ -580,7 +580,7 @@ func (cloud *GKE) UpdateNodePoolImageType(clusterName string, pool NodePool, ctx
 	}
 
 	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Update(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		clusterName,
 		pool.Name,
@@ -609,7 +609,7 @@ func (cloud *GKE) UpdateNodePoolCount(clusterName string, pool NodePool, ctx uti
 	}
 
 	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.SetSize(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		clusterName,
 		pool.Name,
@@ -631,7 +631,7 @@ func (cloud *GKE) UpdateNodePoolCount(clusterName string, pool NodePool, ctx uti
 
 func (cloud *GKE) DeleteCluster(clusterName string, ctx utils.Context) types.CustomCPError {
 	_, err := cloud.Client.Projects.Zones.Clusters.Delete(
-		cloud.ProjectId,
+		cloud.infraId,
 		cloud.Region+"-"+cloud.Zone,
 		clusterName,
 	).Context(context.Background()).Do()
@@ -659,7 +659,7 @@ func (cloud *GKE) waitForCluster(clusterName string, ctx utils.Context) types.Cu
 	message := ""
 	for {
 		cluster, err := cloud.Client.Projects.Zones.Clusters.Get(
-			cloud.ProjectId,
+			cloud.infraId,
 			cloud.Region+"-"+cloud.Zone,
 			clusterName,
 		).Context(context.Background()).Do()
@@ -695,7 +695,7 @@ func (cloud *GKE) waitForNodePool(clusterName, nodeName string, ctx utils.Contex
 	message := ""
 	for {
 		nodepool, err := cloud.Client.Projects.Zones.Clusters.NodePools.Get(
-			cloud.ProjectId,
+			cloud.infraId,
 			cloud.Region+"-"+cloud.Zone,
 			clusterName,
 			nodeName,
@@ -735,7 +735,7 @@ func (cloud *GKE) getGKEVersions(ctx utils.Context) (*gke.ServerConfig, types.Cu
 
 	if err != nil {
 		ctx.SendLogs(
-			"GKE fetch options for '"+cloud.ProjectId+"' failed: "+err.Error(),
+			"GKE fetch options for '"+cloud.infraId+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -746,7 +746,7 @@ func (cloud *GKE) getGKEVersions(ctx utils.Context) (*gke.ServerConfig, types.Cu
 }
 
 func (cloud *GKE) getGCPNetwork(token string, ctx utils.Context) (gcpNetwork types.GCPNetwork) {
-	url := getNetworkHost(string(models.GCP), cloud.ProjectId)
+	url := getNetworkHost(string(models.GCP), cloud.infraId)
 
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
@@ -788,15 +788,15 @@ func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (clu
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
-			ctx.SendLogs("GKE get status for '"+cloud.ProjectId+" failed: "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("GKE get status for '"+cloud.infraId+" failed: "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return cluster, err
 		}
 	}
 
-	latestCluster, err1 := cloud.Client.Projects.Zones.Clusters.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName).Do()
+	latestCluster, err1 := cloud.Client.Projects.Zones.Clusters.Get(cloud.infraId, cloud.Region+"-"+cloud.Zone, clusterName).Do()
 	if err1 != nil && !strings.Contains(err1.Error(), "not exist") {
 		ctx.SendLogs(
-			"GKE get status for '"+cloud.ProjectId+" failed: "+err1.Error(),
+			"GKE get status for '"+cloud.infraId+" failed: "+err1.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -819,7 +819,7 @@ func (cloud *GKE) fetchNodePool(cluster GKECluster, status *KubeClusterStatus, c
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
-			ctx.SendLogs("GKE get status for '"+cloud.ProjectId+" failed: "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("GKE get status for '"+cloud.infraId+" failed: "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
@@ -828,7 +828,7 @@ func (cloud *GKE) fetchNodePool(cluster GKECluster, status *KubeClusterStatus, c
 
 		npool := pool.InstanceGroupUrls[0]
 		arr := strings.Split(npool, "/")
-		createdNodes, err := cloud.Compute.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, arr[10]).Context(context.Background()).Do()
+		createdNodes, err := cloud.Compute.InstanceGroupManagers.ListManagedInstances(cloud.infraId, cloud.Region+"-"+cloud.Zone, arr[10]).Context(context.Background()).Do()
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return ApiErrors(err, "Error in fetching cluster status")
@@ -838,7 +838,7 @@ func (cloud *GKE) fetchNodePool(cluster GKECluster, status *KubeClusterStatus, c
 
 			splits := strings.Split(node.Instance, "/")
 			nodeName := splits[len(splits)-1]
-			createdNode, err := cloud.Compute.Instances.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, nodeName).Context(context.Background()).Do()
+			createdNode, err := cloud.Compute.Instances.Get(cloud.infraId, cloud.Region+"-"+cloud.Zone, nodeName).Context(context.Background()).Do()
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return ApiErrors(err, "Error in fetching cluster status")
@@ -870,15 +870,15 @@ func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) types.Cus
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
-			ctx.SendLogs("GKE terminate cluster for "+cloud.ProjectId+"' failed: "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("GKE terminate cluster for "+cloud.infraId+"' failed: "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
 
-	_, err := cloud.Client.Projects.Zones.Clusters.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, cluster.Name).Do()
+	_, err := cloud.Client.Projects.Zones.Clusters.Delete(cloud.infraId, cloud.Region+"-"+cloud.Zone, cluster.Name).Do()
 	if err != nil {
 		ctx.SendLogs(
-			"GKE terminate cluster for "+cloud.ProjectId+"' failed: "+err.Error(),
+			"GKE terminate cluster for "+cloud.infraId+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -888,14 +888,14 @@ func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) types.Cus
 	return types.CustomCPError{}
 }
 
-func getNetworkHost(cloudType, projectId string) string {
+func getNetworkHost(cloudType, infraId string) string {
 	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
 
 	if strings.Contains(host, "{cloud}") {
 		host = strings.Replace(host, "{cloud}", cloudType, -1)
 	}
-	if strings.Contains(host, "{projectId}") {
-		host = strings.Replace(host, "{projectId}", projectId, -1)
+	if strings.Contains(host, "{infraId}") {
+		host = strings.Replace(host, "{infraId}", infraId, -1)
 	}
 	return host
 }
@@ -903,7 +903,7 @@ func getNetworkHost(cloudType, projectId string) string {
 func GetGKE(credentials gcp.GcpCredentials) (GKE, types.CustomCPError) {
 	return GKE{
 		Credentials: credentials.RawData,
-		ProjectId:   credentials.AccountData.InfraId,
+		infraId:     credentials.AccountData.InfraId,
 		Region:      credentials.Region,
 		Zone:        credentials.Zone,
 	}, types.CustomCPError{}

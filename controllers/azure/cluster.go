@@ -23,7 +23,7 @@ type AzureClusterController struct {
 
 // @Title Get
 // @Description Get cluster against the infraId
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} azure.Cluster_Def
 // @Failure 401 {"error": "Unauthorized"}
@@ -507,7 +507,7 @@ func (c *AzureClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController: Delete cluster of project "+id, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: Delete cluster of Infrastructure "+id, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 	err = azure.DeleteCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -517,8 +517,8 @@ func (c *AzureClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project  "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project  "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of Infrastructure  "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of Infrastructure  "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(204)
 	c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyDeleted)}
@@ -527,7 +527,7 @@ func (c *AzureClusterController) Delete() {
 
 // @Title Create
 // @Description Deploy a  cluster
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Success 201 {"msg": "Cluster created successfully"}
@@ -604,7 +604,7 @@ func (c *AzureClusterController) StartCluster() {
 
 	var cluster azure.Cluster_Def
 
-	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: Getting Cluster of Infrastructure. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = azure.GetCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -673,7 +673,7 @@ func (c *AzureClusterController) StartCluster() {
 // @Title Status
 // @Description Get live status of the cluster
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Success 200 {object} azure.Cluster_Def
 // @Failure 401 {"error": "Unauthorized"}
@@ -752,7 +752,7 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController: Fetching cluster status of project "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: Fetching cluster status of Infrastructure "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err1 := azure.FetchStatus(azureProfile, token, infraId, userInfo.CompanyId, *ctx)
 	if err1 != (types.CustomCPError{}) {
@@ -762,8 +762,8 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController:Cluster status of project "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("AzureClusterController:Cluster status of project "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController:Cluster status of Infrastructure "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController:Cluster status of Infrastructure "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	c.Data["json"] = cluster
 	c.ServeJSON()
@@ -771,7 +771,7 @@ func (c *AzureClusterController) GetStatus() {
 
 // @Title Terminate
 // @Description terminates a running cluster
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 202 {"msg": "Cluster termination initialized"}
@@ -857,7 +857,7 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: Getting Cluster of Infrastructure. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = azure.GetCluster(infraId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -964,7 +964,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 
 // @Title CreateSSHKey
 // @Description Generates new SSH key
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Param	keyname	 	path	string	true	"SSHKey"
 // @Param	X-Auth-Token		header	string	true 	"Token"
 // @Param	teams		header	string	teams 	""
@@ -1392,7 +1392,7 @@ func (c *AzureClusterController) ValidateProfile() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {"msg": "Agent Applied successfully"}
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 500 {"error": "Runtime Error"}

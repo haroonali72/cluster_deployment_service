@@ -9,7 +9,7 @@ type CustomCPError struct {
 }
 type ClusterError struct {
 	Cloud     models.Cloud  `json:"cloud"  bson:"cloud"`
-	ProjectId string        `json:"project_id"  bson:"project_id"`
+	InfraId   string        `json:"infra_id"  bson:"infra_id"`
 	CompanyId string        `json:"company_id" bson:"company_id"`
 	Err       CustomCPError `json:"error" bson:"error"`
 }

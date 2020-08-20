@@ -79,7 +79,7 @@ func (c *GKEClusterController) GetServerConfig() {
 
 // @Title Get
 // @Description Get cluster against the infraId
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the infrastructure"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} gke.GKECluster
 // @Failure 401 {"error": "Unauthorized"}
@@ -94,7 +94,7 @@ func (c *GKEClusterController) Get() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -123,7 +123,7 @@ func (c *GKEClusterController) Get() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -139,7 +139,7 @@ func (c *GKEClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Getting cluster of project "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Getting cluster of infrastructure "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := gke.GetGKECluster(*ctx)
 	if err != nil {
@@ -155,9 +155,9 @@ func (c *GKEClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Cluster of project "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Cluster of infrastructure "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	ctx.SendLogs(" GKE cluster "+cluster.Name+" of project "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GKE cluster "+cluster.Name+" of infrastructure "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Data["json"] = cluster
 	c.ServeJSON()
@@ -198,7 +198,7 @@ func (c *GKEClusterController) GetAll() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -240,7 +240,7 @@ func (c *GKEClusterController) GetAll() {
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
-// @Failure 409 {"error": "Cluster against same project already exists"}
+// @Failure 409 {"error": "Cluster against same infrastructure already exists"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [post]
 func (c *GKEClusterController) Post() {
@@ -308,7 +308,7 @@ func (c *GKEClusterController) Post() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -334,7 +334,7 @@ func (c *GKEClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("GKEClusterController: Adding new cluster with name: "+cluster.Name+" in project "+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Adding new cluster with name: "+cluster.Name+" in infrastructure "+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = gke.AddGKECluster(cluster, *ctx)
 	if err != nil {
@@ -346,7 +346,7 @@ func (c *GKEClusterController) Post() {
 		}
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "Cluster against same project id already exists"}
+			c.Data["json"] = map[string]string{"error": "Cluster against same infrastructure id already exists"}
 			c.ServeJSON()
 			return
 		}
@@ -356,8 +356,8 @@ func (c *GKEClusterController) Post() {
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: New cluster with name: "+cluster.Name+" added in project "+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("GKE cluster "+cluster.Name+" add in project "+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("GKEClusterController: New cluster with name: "+cluster.Name+" added in infrastructure "+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKE cluster "+cluster.Name+" add in infrastructure "+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(201)
 	c.Data["json"] = map[string]string{"msg": "Cluster added successfully"}
@@ -452,7 +452,7 @@ func (c *GKEClusterController) Patch() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -468,7 +468,7 @@ func (c *GKEClusterController) Patch() {
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Updating cluster "+cluster.Name+" of project id "+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Updating cluster "+cluster.Name+" of infrastructure id "+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if cluster.CloudplexStatus == (models.ClusterCreated) || cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
 		err := gke.UpdatePreviousGKECluster(cluster, *ctx)
@@ -491,7 +491,7 @@ func (c *GKEClusterController) Patch() {
 			return
 		}
 
-		ctx.SendLogs("GKE running cluster "+cluster.Name+" in project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+		ctx.SendLogs("GKE running cluster "+cluster.Name+" in infrastructure Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
 		c.ServeJSON()
@@ -510,8 +510,8 @@ func (c *GKEClusterController) Patch() {
 			return
 		}
 
-		ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" of the project "+cluster.InfraId+" updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		ctx.SendLogs("GKE cluster "+cluster.Name+" of the project "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+		ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" of the infrastructure "+cluster.InfraId+" updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		ctx.SendLogs("GKE cluster "+cluster.Name+" of the infrastructure "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 		c.ServeJSON()
@@ -537,9 +537,9 @@ func (c *GKEClusterController) Patch() {
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" updated of project id "+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" updated of infrastructure id "+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	ctx.SendLogs("GKE cluster "+cluster.Name+" in project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("GKE cluster "+cluster.Name+" in infrastructure Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
 	c.ServeJSON()
@@ -548,7 +548,7 @@ func (c *GKEClusterController) Patch() {
 // @Title Delete
 // @Description Delete a cluster
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path	string	true	"Project id of the cluster"
+// @Param	infraId	path	string	true	"infrastructure id of the cluster"
 // @Param	forceDelete path  boolean	true "Forcefully delete cluster"
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -565,7 +565,7 @@ func (c *GKEClusterController) Delete() {
 	id := c.GetString(":infraId")
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -602,7 +602,7 @@ func (c *GKEClusterController) Delete() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -657,7 +657,7 @@ func (c *GKEClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Deleting cluster"+cluster.Name+"of project "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Deleting cluster"+cluster.Name+"of infrastructure "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	err = gke.DeleteGKECluster(*ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -672,8 +672,8 @@ func (c *GKEClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" of project "+id+" deleted", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("GKE cluster "+cluster.Name+" of project Id: "+id+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" of infrastructure "+id+" deleted", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKE cluster "+cluster.Name+" of infrastructure Id: "+id+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(204)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
@@ -684,7 +684,7 @@ func (c *GKEClusterController) Delete() {
 // @Description Deploy a kubernetes cluster
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the infrastructure"
 // @Success 201 {"msg": "Cluster created initiated"}
 // @Success 202 {"msg": "Cluster creation started successfully"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -706,7 +706,7 @@ func (c *GKEClusterController) StartCluster() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -729,7 +729,7 @@ func (c *GKEClusterController) StartCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, infraId, ctx.Data.Company, userInfo.UserId)
 
-	ctx.SendLogs("GKEClusterController: Strat cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Strat cluster of infrastructure. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	ctx.Data.Company = userInfo.CompanyId
 	ctx.Data.InfraId = infraId
@@ -737,7 +737,7 @@ func (c *GKEClusterController) StartCluster() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -827,9 +827,9 @@ func (c *GKEClusterController) StartCluster() {
 
 	go gke.DeployGKECluster(cluster, credentials, token, *ctx)
 
-	ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" of project Id: "+cluster.InfraId+"started", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+"started", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	ctx.SendLogs(" GKE cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GKE cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
@@ -840,7 +840,7 @@ func (c *GKEClusterController) StartCluster() {
 // @Description Get live status of the running cluster
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the infrastructure"
 // @Success 200 {object} gke.KubeClusterStatus
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
@@ -863,7 +863,7 @@ func (c *GKEClusterController) GetStatus() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -890,7 +890,7 @@ func (c *GKEClusterController) GetStatus() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -924,7 +924,7 @@ func (c *GKEClusterController) GetStatus() {
 
 	ctx.Data.Company = userInfo.CompanyId
 
-	ctx.SendLogs("GKEClusterController: Fetching status of cluster of the project  "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Fetching status of cluster of the infrastructure  "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	cluster, cpErr := gke.FetchStatus(credentials, token, *ctx)
 	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") || cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "not deployed") {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
@@ -936,7 +936,7 @@ func (c *GKEClusterController) GetStatus() {
 		c.Data["json"] = cpErr
 		c.ServeJSON()
 	}
-	ctx.SendLogs("GKEClusterController: Status Fetched of "+cluster.Name+" of the project "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Status Fetched of "+cluster.Name+" of the infrastructure "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -945,7 +945,7 @@ func (c *GKEClusterController) GetStatus() {
 // @Description Terminate a running cluster
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the infrastructure"
 // @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -968,7 +968,7 @@ func (c *GKEClusterController) TerminateCluster() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -997,7 +997,7 @@ func (c *GKEClusterController) TerminateCluster() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -1074,7 +1074,7 @@ func (c *GKEClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Terminating cluster"+cluster.Name+" of project "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Terminating cluster"+cluster.Name+" of infrastructure "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go gke.TerminateCluster(credentials, *ctx)
 
@@ -1092,9 +1092,9 @@ func (c *GKEClusterController) TerminateCluster() {
 		return
 	}*/
 
-	ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" of project "+infraId+" terminated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" of infrastructure "+infraId+" terminated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	ctx.SendLogs(" GKE cluster "+cluster.Name+" of project "+cluster.InfraId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GKE cluster "+cluster.Name+" of infrastructure "+cluster.InfraId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "cluster termination initiated"}
@@ -1105,7 +1105,7 @@ func (c *GKEClusterController) TerminateCluster() {
 // @Description Apply cloudplex Agent file to a gke cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the infrastructure"
 // @Success 200 {"msg": "Agent Applied successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
@@ -1128,7 +1128,7 @@ func (c *GKEClusterController) ApplyAgent() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1155,7 +1155,7 @@ func (c *GKEClusterController) ApplyAgent() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -1210,11 +1210,11 @@ func (c *GKEClusterController) ApplyAgent() {
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Applying agent on cluster of the project "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Applying agent on cluster of the infrastructure "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go gke.ApplyAgent(credentials, token, *ctx, cluster.Name)
 
-	ctx.SendLogs("GKEClusterController: Agent Applied on cluster of the project "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Agent Applied on cluster of the infrastructure "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	c.Data["json"] = map[string]string{"msg": "agent deployment in progress"}
 	c.ServeJSON()
@@ -1224,7 +1224,7 @@ func (c *GKEClusterController) ApplyAgent() {
 // @Description Update a running kubernetes cluster
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the infrastructure"
 // @Success 201 {"msg": "Running cluster updated successfully"}
 // @Success 202 {"msg": "Running cluster updation initiated"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -1249,7 +1249,7 @@ func (c *GKEClusterController) PatchRunningCluster() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1272,7 +1272,7 @@ func (c *GKEClusterController) PatchRunningCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, infraId, ctx.Data.Company, userInfo.UserId)
 
-	ctx.SendLogs("GKEClusterController: Updating cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Updating cluster of infrastructure. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	ctx.Data.Company = userInfo.CompanyId
 	ctx.Data.InfraId = infraId
@@ -1281,7 +1281,7 @@ func (c *GKEClusterController) PatchRunningCluster() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -1360,9 +1360,9 @@ func (c *GKEClusterController) PatchRunningCluster() {
 
 	go gke.PatchRunningGKECluster(cluster, credentials, token, *ctx)
 
-	ctx.SendLogs("GKEClusterController: Running cluster "+cluster.Name+" of project Id: "+cluster.InfraId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: Running cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	ctx.SendLogs(" GKE running cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GKE running cluster "+cluster.Name+" of infrastructure Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "Running cluster update initiated"}

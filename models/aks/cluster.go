@@ -29,7 +29,7 @@ import (
 //swagger:model akscluster
 type AKSCluster struct {
 	ID                     bson.ObjectId                        `json:"-" bson:"_id,omitempty"`
-	InfraId                string                               `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	InfraId                string                               `json:"infra_id" bson:"infra_id" validate:"required" description:"ID of infrastructure [required]"`
 	Cloud                  models.Cloud                         `json:"cloud" bson:"cloud"`
 	CreationDate           time.Time                            `json:"-" bson:"creation_date"`
 	ModificationDate       time.Time                            `json:"-" bson:"modification_date"`
@@ -154,7 +154,7 @@ type AzureRegion struct {
 
 type Cluster struct {
 	Name    string      `json:"name,omitempty" bson:"name,omitempty" description:"Cluster name"`
-	InfraId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	InfraId string      `json:"infra_id" bson:"infra_id"  description:"ID of infrastructure"`
 	Status  models.Type `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster"`
 }
 
@@ -233,7 +233,7 @@ func GetPreviousAKSCluster(infraId, companyId string, ctx utils.Context) (cluste
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAKSPreviousClusterCollection)
-	err = c.Find(bson.M{"project_id": infraId, "company_id": companyId}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": infraId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
 			"AKSGetClusterModel:  Get previous cluster- Got error while fetching from database: "+err.Error(),
@@ -290,7 +290,7 @@ func DeletePreviousAKSCluster(infraId, companyId string, ctx utils.Context) erro
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAKSPreviousClusterCollection)
-	err = c.Remove(bson.M{"project_id": infraId, "company_id": companyId})
+	err = c.Remove(bson.M{"infra_id": infraId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(
 			"AKSDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
@@ -317,7 +317,7 @@ func GetAKSCluster(infraId string, companyId string, ctx utils.Context) (cluster
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAKSClusterCollection)
-	err = c.Find(bson.M{"project_id": infraId, "company_id": companyId}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": infraId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
 			"AKSGetClusterModel:  Get - Got error while fetching from database: "+err.Error(),
@@ -350,7 +350,7 @@ func GetAllAKSCluster(data rbacAuthentication.List, ctx utils.Context) (aksClust
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAKSClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"infra_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs(
 			"AKSGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(),
@@ -370,7 +370,7 @@ func GetAllAKSCluster(data rbacAuthentication.List, ctx utils.Context) (aksClust
 func AddAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 	_, err := GetAKSCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if err == nil {
-		text := fmt.Sprintf("AKSAddClusterModel:  Add - Cluster for project '%s' already exists in the database.", cluster.InfraId)
+		text := fmt.Sprintf("AKSAddClusterModel:  Add - Cluster for infrastructure '%s' already exists in the database.", cluster.InfraId)
 		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text + err.Error())
 	}
@@ -457,7 +457,7 @@ func DeleteAKSCluster(infraId, companyId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAKSClusterCollection)
-	err = c.Remove(bson.M{"project_id": infraId, "company_id": companyId})
+	err = c.Remove(bson.M{"infra_id": infraId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(
 			"AKSDeleteClusterModel:  Delete - Got error while deleting from the database: "+err.Error(),
@@ -838,7 +838,7 @@ func ValidateAKSData(cluster *AKSCluster, ctx utils.Context) error {
 	}
 	if cluster.InfraId == "" {
 
-		return errors.New("project ID is empty")
+		return errors.New("infrastructure ID is empty")
 
 	} else if cluster.ResourceGoup == "" {
 
@@ -1070,7 +1070,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
-	aksOps.ProjectId = cluster.InfraId
+	aksOps.infraId = cluster.InfraId
 	isClusterUpdated := false
 	if previousPoolCount < newPoolCount {
 		isPoolUpdated := make(map[int]bool)

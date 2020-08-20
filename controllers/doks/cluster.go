@@ -83,7 +83,7 @@ func (c *DOKSClusterController) GetServerConfig() {
 // @Description Get valid kubernetes cluster version and machine sizes
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Success 200 {object} doks.KubernetesConfig
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
@@ -106,7 +106,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -123,7 +123,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this Infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -165,7 +165,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: Getting cluster configuration file of project "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Getting cluster configuration file of Infrastructure "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	config, err1 := doks.GetKubeConfig(doProfile.Profile, *ctx, cluster)
 	if err1 != (types.CustomCPError{}) {
@@ -175,7 +175,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: Cluster configuration file of project "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Cluster configuration file of Infrastructure "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	c.Data["json"] = config
 	c.ServeJSON()
@@ -183,7 +183,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 
 // @Title Get
 // @Description  Get saved cluster against the infraId
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} doks.KubernetesCluster
 // @Failure 401 {"error": "Unauthorized"}
@@ -197,7 +197,7 @@ func (c *DOKSClusterController) Get() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -226,7 +226,7 @@ func (c *DOKSClusterController) Get() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this Infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -242,7 +242,7 @@ func (c *DOKSClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: Getting cluster of project "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Getting cluster of Infrastructure "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
@@ -258,9 +258,9 @@ func (c *DOKSClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: Cluster of project "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Cluster of Infrastructure "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Data["json"] = cluster
 	c.ServeJSON()
@@ -300,7 +300,7 @@ func (c *DOKSClusterController) GetAll() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this Infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -341,7 +341,7 @@ func (c *DOKSClusterController) GetAll() {
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
-// @Failure 409 {"error": "Cluster against same project already exists"}
+// @Failure 409 {"error": "Cluster against same Infrastructure already exists"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [post]
 func (c *DOKSClusterController) Post() {
@@ -369,7 +369,7 @@ func (c *DOKSClusterController) Post() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this Infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -421,7 +421,7 @@ func (c *DOKSClusterController) Post() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this Infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -449,7 +449,7 @@ func (c *DOKSClusterController) Post() {
 		}
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
+			c.Data["json"] = map[string]string{"error": "cluster against same Infrastructure id already exists"}
 			c.ServeJSON()
 			return
 		}
@@ -459,8 +459,8 @@ func (c *DOKSClusterController) Post() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: New cluster "+cluster.Name+" in project "+cluster.InfraId+" added", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("DOKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" added ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("DOKSClusterController: New cluster "+cluster.Name+" in Infrastructure "+cluster.InfraId+" added", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKS cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+" added ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(201)
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
@@ -515,7 +515,7 @@ func (c *DOKSClusterController) Patch() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this Infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -560,7 +560,7 @@ func (c *DOKSClusterController) Patch() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: Updating cluster "+cluster.Name+" of the project "+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Updating cluster "+cluster.Name+" of the Infrastructure "+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
 	if cluster.CloudplexStatus == (models.ClusterCreated) || cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
@@ -577,8 +577,8 @@ func (c *DOKSClusterController) Patch() {
 			c.ServeJSON()
 			return
 		}
-		ctx.SendLogs("DOKSClusterController: Cluster "+cluster.Name+" of the project "+cluster.InfraId+" updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		ctx.SendLogs("DOKS cluster "+cluster.Name+" of the project "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+		ctx.SendLogs("DOKSClusterController: Cluster "+cluster.Name+" of the Infrastructure "+cluster.InfraId+" updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		ctx.SendLogs("DOKS cluster "+cluster.Name+" of the Infrastructure "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 		c.ServeJSON()
@@ -597,8 +597,8 @@ func (c *DOKSClusterController) Patch() {
 			return
 		}
 
-		ctx.SendLogs("DOKSClusterController: Cluster "+cluster.Name+" of the project "+cluster.InfraId+" updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		ctx.SendLogs("DOKS cluster "+cluster.Name+" of the project "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+		ctx.SendLogs("DOKSClusterController: Cluster "+cluster.Name+" of the Infrastructure "+cluster.InfraId+" updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		ctx.SendLogs("DOKS cluster "+cluster.Name+" of the Infrastructure "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 		c.ServeJSON()
@@ -623,8 +623,8 @@ func (c *DOKSClusterController) Patch() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: Cluster "+cluster.Name+" of the project "+cluster.InfraId+" updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("DOKS cluster "+cluster.Name+" of the project "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("DOKSClusterController: Cluster "+cluster.Name+" of the Infrastructure "+cluster.InfraId+" updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKS cluster "+cluster.Name+" of the Infrastructure "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 	c.ServeJSON()
@@ -633,7 +633,7 @@ func (c *DOKSClusterController) Patch() {
 // @Title Delete
 // @Description Delete a cluster
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path	string	true	"Project id of the cluster"
+// @Param	infraId	path	string	true	"Infrastructure id of the cluster"
 // @Param	forceDelete path  boolean	true "Forcefully delete cluster"
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -648,7 +648,7 @@ func (c *DOKSClusterController) Delete() {
 	id := c.GetString(":infraId")
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -683,7 +683,7 @@ func (c *DOKSClusterController) Delete() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this Infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -742,7 +742,7 @@ func (c *DOKSClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: Deleting cluster "+cluster.Name+" of the project"+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Deleting cluster "+cluster.Name+" of the Infrastructure"+cluster.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = doks.DeleteKubernetesCluster(*ctx)
 	if err != nil {
@@ -758,9 +758,9 @@ func (c *DOKSClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: Cluster "+cluster.Name+" of the project"+cluster.InfraId+" deleted", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Cluster "+cluster.Name+" of the Infrastructure"+cluster.InfraId+" deleted", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	ctx.SendLogs("DOKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("DOKS cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(204)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
@@ -771,7 +771,7 @@ func (c *DOKSClusterController) Delete() {
 // @Description Deploy a kubernetes cluster
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Success 202 {"msg": "Cluster creation initiated"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
@@ -802,7 +802,7 @@ func (c *DOKSClusterController) StartCluster() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -823,7 +823,7 @@ func (c *DOKSClusterController) StartCluster() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this Infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -914,7 +914,7 @@ func (c *DOKSClusterController) StartCluster() {
 
 	go doks.DeployKubernetesCluster(cluster, doProfile.Profile, token, *ctx)
 
-	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
 	c.ServeJSON()
@@ -924,7 +924,7 @@ func (c *DOKSClusterController) StartCluster() {
 // @Description Get live status of the running cluster
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Success 200 {object} doks.KubeClusterStatus
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
@@ -948,7 +948,7 @@ func (c *DOKSClusterController) GetStatus() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -975,7 +975,7 @@ func (c *DOKSClusterController) GetStatus() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this Infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -1006,7 +1006,7 @@ func (c *DOKSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("DOKSClusterController: Fetching cluster Status of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Fetching cluster Status of Infrastructure. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.Data.Company = userInfo.CompanyId
 
 	cluster, cpErr := doks.FetchStatus(doProfile.Profile, *ctx)
@@ -1022,7 +1022,7 @@ func (c *DOKSClusterController) GetStatus() {
 		c.ServeJSON()
 	}
 
-	ctx.SendLogs("DOKSClusterController: Cluster Status of project. "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Cluster Status of Infrastructure. "+infraId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	c.Data["json"] = cluster
 	c.ServeJSON()
@@ -1031,7 +1031,7 @@ func (c *DOKSClusterController) GetStatus() {
 // @Title Terminate
 // @Description Terminate a running cluster from cloud
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
@@ -1055,7 +1055,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1084,7 +1084,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this Infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -1164,11 +1164,11 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: Terminating cluster"+cluster.Name+" of project"+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Terminating cluster"+cluster.Name+" of Infrastructure"+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go doks.TerminateCluster(doProfile.Profile, *ctx)
 
-	ctx.SendLogs("DOKSClusterController: Cluster"+cluster.Name+" of project"+infraId+" terminated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Cluster"+cluster.Name+" of Infrastructure"+infraId+" terminated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	/*	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 		if err != nil {
@@ -1184,7 +1184,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 			return
 		}
 	*/
-	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "Cluster termination initiated"}
@@ -1195,7 +1195,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 // @Description Apply cloudplex Agent file to doks cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Success 200 {"msg": "Agent Applied successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 500 {"error": "Runtime Error"}
@@ -1217,7 +1217,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1245,7 +1245,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this Infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -1314,7 +1314,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 // @Description Update a running kubernetes cluster
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	infraId	path	string	true	"Id of the project"
+// @Param	infraId	path	string	true	"Id of the Infrastructure"
 // @Success 201 {"msg": "Running cluster updated successfully"}
 // @Success 202 {"msg": "Running cluster update initiated"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -1339,7 +1339,7 @@ func (c *DOKSClusterController) PatchRunningCluster() {
 	infraId := c.GetString(":infraId")
 	if infraId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "Infrastructure id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1382,13 +1382,13 @@ func (c *DOKSClusterController) PatchRunningCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, infraId, ctx.Data.Company, userInfo.UserId)
 
-	ctx.SendLogs("DOKSClusterController: Updating cluster of project. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Updating cluster of Infrastructure. "+infraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", infraId, "Start", token, utils.Context{})
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
-			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.Data["json"] = map[string]string{"error": "No policy exist against this Infrastructure id"}
 			c.ServeJSON()
 			return
 		}
@@ -1451,9 +1451,9 @@ func (c *DOKSClusterController) PatchRunningCluster() {
 
 	go doks.PatchRunningDOKSCluster(cluster, doProfile.Profile, token, *ctx)
 
-	ctx.SendLogs("DOKSClusterController: Running cluster "+cluster.Name+" of project Id: "+cluster.InfraId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Running cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	ctx.SendLogs(" DOKS running cluster "+cluster.Name+" of project Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" DOKS running cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "Running cluster update initiated"}

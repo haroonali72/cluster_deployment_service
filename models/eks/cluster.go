@@ -22,7 +22,7 @@ import (
 
 type EKSCluster struct {
 	ID                 bson.ObjectId      `json:"-" bson:"_id,omitempty"`
-	InfraId            string             `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	InfraId            string             `json:"infra_id" bson:"infra_id" validate:"required" description:"ID of infrastructure [required]"`
 	Cloud              models.Cloud       `json:"cloud" bson:"cloud" validate:"eq=EKS|eq=eks"`
 	CreationDate       time.Time          `json:"-" bson:"creation_date"`
 	ModificationDate   time.Time          `json:"-" bson:"modification_date"`
@@ -103,7 +103,7 @@ type NodePoolScalingConfig struct {
 }
 
 type EKSClusterStatus struct {
-	InfraId         string          `json:"project_id"`
+	InfraId         string          `json:"infra_id"`
 	ClusterEndpoint *string         `json:"endpoint"`
 	Name            *string         `json:"name"`
 	Status          *string         `json:"status"`
@@ -235,7 +235,7 @@ func GetEKSCluster(InfraId string, companyId string, ctx utils.Context) (cluster
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoEKSClusterCollection)
-	err = c.Find(bson.M{"project_id": InfraId, "company_id": companyId}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": InfraId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
 			"EKSGetClusterModel:  Get - Got error while fetching from database: "+err.Error(),
@@ -266,7 +266,7 @@ func GetAllEKSCluster(data rbacAuthentication.List, ctx utils.Context) (clusters
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoEKSClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}}).All(&clusters)
+	err = c.Find(bson.M{"infra_id": bson.M{"$in": copyData}}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs(
 			"EKSGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(),
@@ -293,7 +293,7 @@ func GetNetwork(token, InfraId string, ctx utils.Context) error {
 func AddEKSCluster(cluster EKSCluster, ctx utils.Context) error {
 	_, err := GetEKSCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if err == nil {
-		text := fmt.Sprintf("EKSAddClusterModel:  Add - Cluster for project '%s' already exists in the database.", cluster.InfraId)
+		text := fmt.Sprintf("EKSAddClusterModel:  Add - Cluster for infrastructure '%s' already exists in the database.", cluster.InfraId)
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
@@ -405,7 +405,7 @@ func DeleteEKSCluster(InfraId, companyId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoEKSClusterCollection)
-	err = c.Remove(bson.M{"project_id": InfraId, "company_id": companyId})
+	err = c.Remove(bson.M{"infra_id": InfraId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(
 			"EKSDeleteClusterModel:  Delete - Got error while deleting from the database: "+err.Error(),
@@ -605,7 +605,7 @@ func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, InfraId,
 func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
 	if cluster.InfraId == "" {
 
-		return errors.New("project ID is empty")
+		return errors.New("infrastructure ID is empty")
 
 	} else if cluster.Version == nil {
 
@@ -686,14 +686,14 @@ func FetchStatus(credentials vault.AwsProfile, InfraId string, ctx utils.Context
 }
 func ApplyAgent(credentials vault.AwsProfile, token string, ctx utils.Context, clusterName string) (confError error) {
 	companyId := ctx.Data.Company
-	projetcID := ctx.Data.InfraId
-	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
+	infraID := ctx.Data.InfraId
+	data2, err := woodpecker.GetCertificate(infraID, token, ctx)
 	if err != nil {
 		ctx.SendLogs("EKSClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
-	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
+	filePath := "/tmp/" + companyId + "/" + infraID + "/"
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
@@ -701,7 +701,7 @@ func ApplyAgent(credentials vault.AwsProfile, token string, ctx utils.Context, c
 		return err
 	}
 
-	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e accessKey=" + credentials.Profile.AccessKey + " -e cluster=" + clusterName + " -e secretKey=" + credentials.Profile.SecretKey + " -e region=" + credentials.Profile.Region + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.EKSAuthContainerName
+	cmd = "sudo docker run --rm --name " + companyId + infraID + " -e accessKey=" + credentials.Profile.AccessKey + " -e cluster=" + clusterName + " -e secretKey=" + credentials.Profile.SecretKey + " -e region=" + credentials.Profile.Region + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.EKSAuthContainerName
 
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
@@ -1098,7 +1098,7 @@ func GetPreviousEKSCluster(ctx utils.Context) (cluster EKSCluster, err error) {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoEKSPreviousClusterCollection)
-	err = c.Find(bson.M{"project_id": ctx.Data.InfraId, "company_id": ctx.Data.Company}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
 			"GKEGetClusterModel:  Get previous cluster- Got error while fetching from database: "+err.Error(),
@@ -1151,7 +1151,7 @@ func DeletePreviousEKSCluster(ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoEKSPreviousClusterCollection)
-	err = c.Remove(bson.M{"project_id": ctx.Data.InfraId, "company_id": ctx.Data.Company})
+	err = c.Remove(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company})
 	if err != nil {
 		ctx.SendLogs(
 			"GKEDeleteClusterModel:  Delete  previous cluster - "+err.Error(),

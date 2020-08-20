@@ -13,7 +13,7 @@ type GCPNetwork struct {
 }
 
 type AWSNetwork struct {
-	EnvironmentId    string           `json:"project_id" bson:"project_id"`
+	EnvironmentId    string           `json:"infra_id" bson:"infra_id"`
 	Name             string           `json:"name" bson:"name"`
 	Type             models.Type      `json:"type" bson:"type"`
 	Cloud            models.Cloud     `json:"cloud" bson:"cloud"`
@@ -38,19 +38,19 @@ type Vpc struct {
 }
 
 type AzureSubnet struct {
-	SubnetId string 	`json:"subnet_id" bson:"subnet_id"`
-	Name     string 	`json:"name" bson:"name"`
-	CIDR     string 	`json:"cidr" bson:"cidr"`
-	Link     string 	`json:"link" bson:"link"`
-	Zone     []string 	`json:"availability_zone" bson:"availability_zone"`
+	SubnetId string   `json:"subnet_id" bson:"subnet_id"`
+	Name     string   `json:"name" bson:"name"`
+	CIDR     string   `json:"cidr" bson:"cidr"`
+	Link     string   `json:"link" bson:"link"`
+	Zone     []string `json:"availability_zone" bson:"availability_zone"`
 }
 
 type Subnet struct {
-	SubnetId string 	`json:"subnet_id" bson:"subnet_id"`
-	Name     string 	`json:"name" bson:"name"`
-	CIDR     string 	`json:"cidr" bson:"cidr"`
-	Link     string 	`json:"link" bson:"link"`
-	Zone     string 	`json:"availability_zone" bson:"availability_zone"`
+	SubnetId string `json:"subnet_id" bson:"subnet_id"`
+	Name     string `json:"name" bson:"name"`
+	CIDR     string `json:"cidr" bson:"cidr"`
+	Link     string `json:"link" bson:"link"`
+	Zone     string `json:"availability_zone" bson:"availability_zone"`
 }
 
 type SecurityGroup struct {
@@ -70,7 +70,6 @@ type AzureNetwork struct {
 	ModificationDate time.Time          `json:"-" bson:"modification_date"`
 	Definition       []*AzureDefinition `json:"definition" bson:"definition"`
 	IsPrivate        bool               `json:"is_private" bson:"is_private"`
-
 }
 
 type AzureDefinition struct {
@@ -88,7 +87,7 @@ type VNet struct {
 }
 type DONetwork struct {
 	ID               bson.ObjectId   `json:"-" bson:"_id,omitempty"`
-	ProjectId        string          `json:"project_id" bson:"project_id" valid:"required"`
+	InfraId          string          `json:"infra_id" bson:"infra_id" valid:"required"`
 	Name             string          `json:"name" bson:"name" valid:"required"`
 	Type             models.Type     `json:"type" bson:"type" valid:"required,in(New|Existing|new|existing)"`
 	Cloud            models.Cloud    `json:"-" bson:"cloud" valid:"in(AWS|Azure|aws|azure)"`
@@ -124,7 +123,7 @@ type DOBound struct {
 }
 type IBMNetwork struct {
 	ID               bson.ObjectId    `json:"-" bson:"_id,omitempty"`
-	ProjectId        string           `json:"project_id" bson:"project_id" valid:"required"`
+	Infraid          string           `json:"infra_id" bson:"infra_id" valid:"required"`
 	Name             string           `json:"name" bson:"name" valid:"required"`
 	Type             models.Type      `json:"type" bson:"type" valid:"required,in(New|Existing|new|existing)"`
 	Cloud            models.Cloud     `json:"-" bson:"cloud" valid:"in(ibm|Azure|ibm|azure)"`
