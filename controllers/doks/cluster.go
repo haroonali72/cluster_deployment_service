@@ -530,6 +530,10 @@ func (c *DOKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
+	ctx.Data.Company = userInfo.CompanyId
+	cluster.CompanyId = ctx.Data.Company
+	ctx.Data.ProjectId = cluster.ProjectId
+
 	savedCluster ,err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -555,9 +559,7 @@ func (c *DOKSClusterController) Patch() {
 		return
 	}
 
-	ctx.Data.Company = userInfo.CompanyId
-	cluster.CompanyId = ctx.Data.Company
-	ctx.Data.ProjectId = cluster.ProjectId
+
 
 	err = doks.ValidateDOKSData(cluster, *ctx)
 	if err != nil {
