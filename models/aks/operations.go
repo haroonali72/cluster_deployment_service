@@ -575,14 +575,27 @@ func (cloud *AKS) CreatOrUpdateAgentPool(ctx utils.Context, token, resourceGroup
 		return err
 	}
 
-	err = future.WaitForCompletionRef(context.Background(), cloud.AgentPoolClient.Client)
-	if err != nil {
-		ctx.SendLogs(
-			"AKS agent node pool updation failed: "+err.Error(),
-			models.LOGGING_LEVEL_ERROR,
-			models.Backend_Logging,
-		)
-		return err
+	count := 0
+	for {
+		err = future.WaitForCompletionRef(context.Background(), cloud.AgentPoolClient.Client)
+		if err != nil && !strings.Contains(err.Error(), "context has been cancelled") {
+			ctx.SendLogs(
+				"AKS agent node pool updation failed: "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		} else if err == nil {
+			break
+		} else if count == 5 {
+			ctx.SendLogs(
+				"AKS agent node pool updation failed: "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
+		count++
 	}
 
 	nodePoolResp, err := future.Result(cloud.AgentPoolClient)
@@ -615,14 +628,27 @@ func (cloud *AKS) DeleteAgentPool(ctx utils.Context, resourceGroup, clusterName 
 		return err
 	}
 
-	err = future.WaitForCompletionRef(context.Background(), cloud.AgentPoolClient.Client)
-	if err != nil {
-		ctx.SendLogs(
-			"AKS agent node pool deletion failed: "+err.Error(),
-			models.LOGGING_LEVEL_ERROR,
-			models.Backend_Logging,
-		)
-		return err
+	count := 0
+	for {
+		err = future.WaitForCompletionRef(context.Background(), cloud.AgentPoolClient.Client)
+		if err != nil && !strings.Contains(err.Error(), "context has been cancelled") {
+			ctx.SendLogs(
+				"AKS agent node pool deletion failed: "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		} else if err == nil {
+			break
+		} else if count == 5 {
+			ctx.SendLogs(
+				"AKS agent node pool deletion failed: "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
+		count++
 	}
 
 	_, err = future.Result(cloud.AgentPoolClient)
