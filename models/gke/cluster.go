@@ -790,20 +790,20 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 }
 
 func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token string, ctx utils.Context) (confError types.CustomCPError) {
+	/*
+		publisher := utils.Notifier{}
 
-	publisher := utils.Notifier{}
-
-	errr := publisher.Init_notifier()
-	if errr != nil {
-		PrintError(errr, cluster.Name, ctx)
-		ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := types.CustomCPError{StatusCode: int(models.CloudStatusCode), Error: "Error in deploying GKE Cluster", Description: errr.Error()}
-		err := db.CreateError(cluster.InfraId, ctx.Data.Company, models.GKE, ctx, cpErr)
-		if err != nil {
-			ctx.SendLogs("GKEUpdateRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		}
-		return cpErr
-	}
+		errr := publisher.Init_notifier()
+		if errr != nil {
+			PrintError(errr, cluster.Name, ctx)
+			ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			cpErr := types.CustomCPError{StatusCode: int(models.CloudStatusCode), Error: "Error in deploying GKE Cluster", Description: errr.Error()}
+			err := db.CreateError(cluster.InfraId, ctx.Data.Company, models.GKE, ctx, cpErr)
+			if err != nil {
+				ctx.SendLogs("GKEUpdateRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			return cpErr
+		}*/
 
 	gkeOps, err := GetGKE(credentials)
 	if err != (types.CustomCPError{}) {
@@ -828,7 +828,13 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 		if err_ != nil {
 			ctx.SendLogs("GKEUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error + "\n" + err.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Update,
+		}, ctx)
 		return err
 	}
 
@@ -840,7 +846,13 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 			if confError_ != nil {
 				ctx.SendLogs("GKERunningClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err1.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Update,
+			}, ctx)
 			return types.CustomCPError{}
 		}
 	}
@@ -1022,7 +1034,13 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
-	publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "cluster updated successfully",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Update,
+	}, ctx)
 
 	return types.CustomCPError{}
 

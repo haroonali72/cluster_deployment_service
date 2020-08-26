@@ -690,9 +690,9 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 }
 func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCredentials, token string, ctx utils.Context) (confError types.CustomCPError) {
 
-	publisher := utils.Notifier{}
+	//publisher := utils.Notifier{}
 
-	err := publisher.Init_notifier()
+	/*err := publisher.Init_notifier()
 	if err != nil {
 		PrintError(ctx, err.Error(), cluster.Name)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -702,7 +702,7 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 			ctx.SendLogs("DOKSUpdateRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		return cpErr
-	}
+	}*/
 
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
@@ -728,7 +728,13 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 		if err != nil {
 			ctx.SendLogs("DOKSUpdateRunningClusterModel:  Update running cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err1.Error + "\n" + err1.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Update,
+		}, ctx)
 		return err1
 	}
 
@@ -740,7 +746,13 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 			if confError_ != nil {
 				ctx.SendLogs("DOKSUpdateRunningClusterModel: "+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err2.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Update,
+			}, ctx)
 			return types.CustomCPError{}
 		}
 	}
@@ -910,7 +922,13 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
-	publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "CLuster updated successfully",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Update,
+	}, ctx)
 
 	return types.CustomCPError{}
 

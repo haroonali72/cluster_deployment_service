@@ -1101,8 +1101,8 @@ func Task() {
 
 func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, companyId, token string, ctx utils.Context) (confError types.CustomCPError) {
 
-	publisher := utils.Notifier{}
-	_ = publisher.Init_notifier()
+	/*publisher := utils.Notifier{}
+	_ = publisher.Init_notifier()*/
 
 	aksOps, _ := GetAKS(credentials.Profile)
 	CpErr := aksOps.init()
@@ -1122,7 +1122,13 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.InfraId, "Redeploy Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: CpErr.Error + "\n" + CpErr.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Update,
+		}, ctx)
 
 		return CpErr
 	}
@@ -1135,7 +1141,13 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 			if confError_ != nil {
 				ctx.SendLogs("AKSRunningClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err1.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Update,
+			}, ctx)
 			return types.CustomCPError{}
 		}
 	}
@@ -1323,7 +1335,13 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
-	publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "Cluster updated sucessfully",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Update,
+	}, ctx)
 
 	return types.CustomCPError{}
 

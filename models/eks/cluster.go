@@ -787,8 +787,8 @@ func GetEKSClusters(InfraId string, credentials vault.AwsProfile, ctx utils.Cont
 }
 func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials, token string, ctx utils.Context) (confError types.CustomCPError) {
 
-	publisher := utils.Notifier{}
-	publisher.Init_notifier()
+	/*publisher := utils.Notifier{}
+	publisher.Init_notifier()*/
 
 	eks := GetEKS(cluster.InfraId, credentials)
 
@@ -813,11 +813,23 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			if err_ != nil {
 				ctx.SendLogs("GKEUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err1.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Update,
+			}, ctx)
 			return err
 		}
 
-		publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err1.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Update,
+		}, ctx)
 		return types.CustomCPError{}
 	}
 
@@ -910,7 +922,13 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			if err_ != nil {
 				ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err2.Error + "\n" + err2.Description,
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Update,
+			}, ctx)
 			return err2
 		}
 	}
@@ -968,7 +986,13 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				if err_ != nil {
 					ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
-				publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+				utils.Publisher(utils.ResponseSchema{
+					Status:  false,
+					Message: err.Error + "\n" + err.Description,
+					InfraId: cluster.InfraId,
+					Token:   token,
+					Action:  models.Update,
+				}, ctx)
 				return err
 			}
 			utils.SendLog(ctx.Data.Company, "Logging changes applied successfully on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
@@ -993,7 +1017,13 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				if err_ != nil {
 					ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
-				publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+				utils.Publisher(utils.ResponseSchema{
+					Status:  false,
+					Message: err.Error + "\n" + err.Description,
+					InfraId: cluster.InfraId,
+					Token:   token,
+					Action:  models.Update,
+				}, ctx)
 				return err
 			}
 			utils.SendLog(ctx.Data.Company, "Network changes applied successfully on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
@@ -1018,7 +1048,13 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				if err_ != nil {
 					ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
-				publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+				utils.Publisher(utils.ResponseSchema{
+					Status:  false,
+					Message: err.Error + "\n" + err.Description,
+					InfraId: cluster.InfraId,
+					Token:   token,
+					Action:  models.Update,
+				}, ctx)
 				return err
 			}
 			utils.SendLog(ctx.Data.Company, "Kubernetes version updated of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
@@ -1044,7 +1080,13 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				if err_ != nil {
 					ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
-				publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+				utils.Publisher(utils.ResponseSchema{
+					Status:  false,
+					Message: err.Error + "\n" + err.Description,
+					InfraId: cluster.InfraId,
+					Token:   token,
+					Action:  models.Update,
+				}, ctx)
 				return err
 			}
 			utils.SendLog(ctx.Data.Company, "Scaling config updated successfully", models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
@@ -1083,7 +1125,13 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 		ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+err_update.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
-	publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "Cluster updated successfully",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Update,
+	}, ctx)
 
 	return types.CustomCPError{}
 

@@ -982,8 +982,8 @@ func DeletePreviousIKSCluster(ctx utils.Context) error {
 }
 func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredentials, token string, ctx utils.Context) (confError types.CustomCPError) {
 
-	publisher := utils.Notifier{}
-	publisher.Init_notifier()
+	/*	publisher := utils.Notifier{}
+		publisher.Init_notifier()*/
 
 	iks := GetIBM(credentials)
 
@@ -1008,11 +1008,23 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 			if err_ != nil {
 				ctx.SendLogs("IKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err.Error + "\n" + err.Description,
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Update,
+			}, ctx)
 			return err
 		}
 
-		publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err1.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Update,
+		}, ctx)
 		return types.CustomCPError{}
 	}
 
@@ -1103,7 +1115,13 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 			if err_ != nil {
 				ctx.SendLogs("IKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err2.Error + "\n" + err2.Description,
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Update,
+			}, ctx)
 			return err2
 		}
 	}
@@ -1157,7 +1175,13 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 				if err_ != nil {
 					ctx.SendLogs("IKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
-				publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+				utils.Publisher(utils.ResponseSchema{
+					Status:  false,
+					Message: err.Error + "\n" + err.Description,
+					InfraId: cluster.InfraId,
+					Token:   token,
+					Action:  models.Update,
+				}, ctx)
 				return err
 			}
 			utils.SendLog(ctx.Data.Company, "Kubernetes version updated of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
@@ -1183,7 +1207,13 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 				if err_ != nil {
 					ctx.SendLogs("IKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
-				publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+				utils.Publisher(utils.ResponseSchema{
+					Status:  false,
+					Message: err.Error + "\n" + err.Description,
+					InfraId: cluster.InfraId,
+					Token:   token,
+					Action:  models.Update,
+				}, ctx)
 				return err
 			}
 			utils.SendLog(ctx.Data.Company, "Nodepool size updated successfully", models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
@@ -1222,7 +1252,13 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 		ctx.SendLogs("IKSpdateRunningClusterModel:  Update - "+err_update.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
-	publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "Cluster updated successfully",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Update,
+	}, ctx)
 
 	return types.CustomCPError{}
 
