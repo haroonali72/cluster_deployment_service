@@ -1211,7 +1211,7 @@ paths:
         type: string
       responses:
         "200":
-          description: '[]models.AzureZone'
+          description: '[]string'
         "400":
           description: '{"error": "Bad Request"}'
         "401":
@@ -7294,41 +7294,41 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  499.0xc04384ac90.false:
+  482.0xc00197b350.false:
     title: "false"
     type: object
-  641.0xc042d6a7b0.false:
+  618.0xc000e94960.false:
     title: "false"
     type: object
-  721.0xc0430e0a50.false:
+  721.0xc001824de0.false:
     title: "false"
     type: object
-  747.0xc0436f87e0.false:
+  964.0xc001219050.false:
     title: "false"
     type: object
-  2279.string:
+  7432.string:
     title: string
     type: object
-  4943.string:
+  10096.string:
     title: string
     type: object
-  5701.string:
+  10854.string:
     title: string
     type: object
   11902.string:
     title: string
     type: object
-  14770.0xc043872c00.false:
-    title: "false"
-    type: object
-  86698.string:
+  103951.string:
     title: string
     type: object
-  91140.0xc04381a1e0.false:
+  14391.0xc0019b12c0.false:
     title: "false"
     type: object
-  105734.string:
+  86074.string:
     title: string
+    type: object
+  89503.0xc0019405d0.false:
+    title: "false"
     type: object
   X-Profile-Id:
     title: X-Profile-Id
@@ -7438,7 +7438,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/86698.string'
+        $ref: '#/definitions/86074.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -7609,7 +7609,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/641.0xc042d6a7b0.false'
+        $ref: '#/definitions/618.0xc000e94960.false'
       name:
         description: Name of the project [required]
         type: string
@@ -8051,7 +8051,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/721.0xc0430e0a50.false'
+        $ref: '#/definitions/964.0xc001219050.false'
       name:
         type: string
       network_name:
@@ -8631,7 +8631,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/105734.string'
+        $ref: '#/definitions/103951.string'
       template_id:
         type: string
       version:
@@ -9918,7 +9918,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/91140.0xc04381a1e0.false'
+        $ref: '#/definitions/89503.0xc0019405d0.false'
       kube_version:
         type: string
       name:
@@ -10193,7 +10193,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14770.0xc043872c00.false'
+        $ref: '#/definitions/14391.0xc0019b12c0.false'
       name:
         type: string
       node_pools:
