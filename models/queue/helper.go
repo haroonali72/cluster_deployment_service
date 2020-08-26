@@ -9,6 +9,7 @@ import (
 	"antelope/models/doks"
 	"antelope/models/eks"
 	"antelope/models/gcp"
+	"antelope/models/gke"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"strings"
@@ -2376,4 +2377,360 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 
 	ctx.SendLogs("DOKSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go doks.TerminateCluster(doProfile.Profile, task.Token, *ctx)
+}
+func GKEClusterStartHelpler(task WorkSchema, infraData Infrastructure) {
+	if task.Token == "" {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	_, userInfo, err := rbac_athentication.GetInfo(task.Token)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger("", "POST", "", task.InfraId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	_, allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", task.InfraId, "Start", task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	if !allowed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "User is not allowed to perform this action",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	var cluster gke.GKECluster
+
+	ctx.SendLogs("GKEClusterController: Getting Cluster of infrastructure. "+task.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	cluster, err = gke.GetGKECluster(*ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	if cluster.CloudplexStatus == models.ClusterCreated {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Cluster is already in deployed state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+
+	} else if cluster.CloudplexStatus == models.Deploying {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Cluster is already in deploying state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.CloudplexStatus == models.Terminating {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't deploy. Cluster is in terminating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.CloudplexStatus == models.ClusterTerminationFailed {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "cluster is in invalid state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+
+	region, zone, err := gcp.GetRegion(task.Token, task.InfraId, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	isValid, credentials := gcp.IsValidGcpCredentials(infraData.infrastructureData.ProfileId, region, task.Token, zone, *ctx)
+	if !isValid {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Invalid Credentials",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+
+	cluster.CloudplexStatus = models.Deploying
+	err = gke.UpdateGKECluster(cluster, *ctx)
+	if err != nil {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+
+	ctx.SendLogs("GKEClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	gke.DeployGKECluster(cluster, credentials, task.Token, *ctx)
+
+}
+func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
+
+	if task.Token == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure id is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	_, userInfo, err := rbac_athentication.GetInfo(task.Token)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger("", "POST", "", task.InfraId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	_, allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", task.InfraId, "Terminate", task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	if !allowed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "User is not allowed to perform this action",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	var cluster gke.GKECluster
+	ctx.SendLogs("GKEClusterController: Getting Cluster of infrastructure. "+task.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	cluster, err = gke.GetGKECluster(*ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	if cluster.CloudplexStatus == models.Deploying {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't Terminate. Cluster is in deploying state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	} else if cluster.CloudplexStatus == models.Terminating {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Cluster is already in terminating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	} else if cluster.CloudplexStatus == models.ClusterTerminated {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "cluster is already in terminated state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+
+	} else if cluster.CloudplexStatus == models.ClusterCreationFailed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Cluster state is invalid for termination",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	} else if strings.ToLower(string(cluster.CloudplexStatus)) == strings.ToLower(string(models.New)) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't Terminate an undeployed  cluster",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	region, zone, err := gcp.GetRegion(task.Token, task.InfraId, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	isValid, credentials := gcp.IsValidGcpCredentials(infraData.infrastructureData.ProfileId, region, task.Token, zone, *ctx)
+	if !isValid {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Invalid Credentials",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	cluster.CloudplexStatus = models.Terminating
+	err = gke.UpdateGKECluster(cluster, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	ctx.SendLogs("GKEClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	go gke.TerminateCluster(credentials, task.Token, *ctx)
 }
