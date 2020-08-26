@@ -120,6 +120,7 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 		} else if task.Action == models.Terminate {
 
 			go AWSClusterTerminateHelper(task, infra)
+
 		}
 	} else if infra.infrastructureData.Cloud == models.Azure {
 
@@ -160,6 +161,11 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 		} else if task.Action == models.Terminate {
 
 			go AKSClusterTerminateHelper(task, infra)
+
+		} else if task.Action == models.Update {
+
+			UpdateAKSRunningCluster(task, infra)
+
 		}
 	} else if infra.infrastructureData.Cloud == models.EKS {
 
@@ -170,6 +176,10 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 		} else if task.Action == models.Terminate {
 
 			go EKSClusterTerminateHelper(task, infra)
+
+		} else if task.Action == models.Update {
+
+			UpdateEKSRunningCluster(task, infra)
 
 		}
 	} else if infra.infrastructureData.Cloud == models.DOKS {
@@ -182,6 +192,10 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 
 			go DOKSClusterTerminateHelper(task, infra)
 
+		} else if task.Action == models.Update {
+
+			UpdateDOKSRunningCluster(task, infra)
+
 		}
 	} else if infra.infrastructureData.Cloud == models.GKE {
 
@@ -193,6 +207,10 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 
 			GKEClusterTerminateHelper(task, infra)
 
+		} else if task.Action == models.Update {
+
+			UpdateGKERunningCluster(task, infra)
+
 		}
 	} else if infra.infrastructureData.Cloud == models.IKS {
 
@@ -203,6 +221,11 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 		} else if task.Action == models.Terminate {
 
 			IKSClusterTerminateHelper(task, infra)
+
+		} else if task.Action == models.Update {
+
+			UpdateIKSRunningCluster(task, infra)
+
 		}
 	}
 }

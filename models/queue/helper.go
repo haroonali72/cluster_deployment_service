@@ -3082,3 +3082,808 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 	ctx.SendLogs("IKSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go iks.TerminateCluster(cluster, ibmProfile, *ctx, userInfo.CompanyId, task.Token)
 }
+func UpdateEKSRunningCluster(task WorkSchema, infraData Infrastructure) {
+
+	if task.Token == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure id is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	_, userInfo, err := rbac_athentication.GetInfo(task.Token)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger("", "POST", "", task.InfraId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	_, allowed, err := rbac_athentication.Authenticate(models.EKS, "cluster", task.InfraId, "Terminate", task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	if !allowed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "User is not allowed to perform this action",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	ctx.InitializeLogger("", "POST", "", task.InfraId, ctx.Data.Company, userInfo.UserId)
+
+	ctx.SendLogs("EKSClusterController: Updating cluster of infrastructure. "+task.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	ctx.Data.Company = userInfo.CompanyId
+	ctx.Data.InfraId = task.InfraId
+
+	region, err := aws.GetRegion(task.Token, task.InfraId, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	_, eksProfile, err := aws.GetProfile(infraData.infrastructureData.ProfileId, region, task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	cluster, err := eks.GetEKSCluster(task.InfraId, userInfo.CompanyId, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in new state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == models.ClusterCreationFailed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in failed state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == (models.Deploying) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in creating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == (models.Terminating) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in terminating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == (models.ClusterTerminated) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in terminated state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+
+	go eks.PatchRunningEKSCluster(cluster, eksProfile.Profile, task.Token, *ctx)
+
+	ctx.SendLogs("EKSClusterController: Running cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	ctx.SendLogs(" EKS running cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+}
+func UpdateAKSRunningCluster(task WorkSchema, infraData Infrastructure) {
+
+	if task.Token == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure id is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	_, userInfo, err := rbac_athentication.GetInfo(task.Token)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger("", "POST", "", task.InfraId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	_, allowed, err := rbac_athentication.Authenticate(models.AKS, "cluster", task.InfraId, "Terminate", task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	if !allowed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "User is not allowed to perform this action",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	ctx.InitializeLogger("", "POST", "", task.InfraId, ctx.Data.Company, userInfo.UserId)
+
+	ctx.SendLogs("AKSClusterController: Updating cluster of infrastructure. "+task.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	ctx.Data.Company = userInfo.CompanyId
+	ctx.Data.InfraId = task.InfraId
+
+	region, err := azure.GetRegion(task.Token, task.InfraId, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	_, aksProfile, err := azure.GetProfile(infraData.infrastructureData.ProfileId, region, task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	cluster, err := aks.GetAKSCluster(task.InfraId, userInfo.CompanyId, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in new state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == models.ClusterCreationFailed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in failed state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == (models.Deploying) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in creating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == (models.Terminating) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in terminating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == (models.ClusterTerminated) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in terminated state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+
+	go aks.PatchRunningAKSCluster(cluster, aksProfile, userInfo.CompanyId, task.Token, *ctx)
+
+	ctx.SendLogs("AKSClusterController: Running cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	ctx.SendLogs("AKS running cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+}
+func UpdateDOKSRunningCluster(task WorkSchema, infraData Infrastructure) {
+
+	if task.Token == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure id is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	_, userInfo, err := rbac_athentication.GetInfo(task.Token)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger("", "POST", "", task.InfraId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	_, allowed, err := rbac_athentication.Authenticate(models.DOKS, "cluster", task.InfraId, "Terminate", task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	if !allowed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "User is not allowed to perform this action",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	ctx.InitializeLogger("", "POST", "", task.InfraId, ctx.Data.Company, userInfo.UserId)
+
+	ctx.SendLogs("DOKSClusterController: Updating cluster of infrastructure. "+task.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	ctx.Data.Company = userInfo.CompanyId
+	ctx.Data.InfraId = task.InfraId
+
+	region, err := do.GetRegion(task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	_, doksProfile, err := do.GetProfile(infraData.infrastructureData.ProfileId, region, task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	cluster, err := doks.GetKubernetesCluster(*ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	if strings.ToLower(string(cluster.CloudplexStatus)) == strings.ToLower(string(models.New)) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in new state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.CloudplexStatus == models.ClusterCreationFailed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in failed state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.CloudplexStatus == (models.Deploying) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in creating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.CloudplexStatus == (models.Terminating) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in terminating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.CloudplexStatus == (models.ClusterTerminated) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in terminated state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+
+	go doks.PatchRunningDOKSCluster(cluster, doksProfile.Profile, task.Token, *ctx)
+
+	ctx.SendLogs("DOKSClusterController: Running cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	ctx.SendLogs("DOKS running cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+}
+func UpdateIKSRunningCluster(task WorkSchema, infraData Infrastructure) {
+
+	if task.Token == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure id is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	_, userInfo, err := rbac_athentication.GetInfo(task.Token)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger("", "POST", "", task.InfraId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	_, allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", task.InfraId, "Terminate", task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	if !allowed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "User is not allowed to perform this action",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	ctx.InitializeLogger("", "POST", "", task.InfraId, ctx.Data.Company, userInfo.UserId)
+
+	ctx.SendLogs("IKSClusterController: Updating cluster of infrastructure. "+task.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	ctx.Data.Company = userInfo.CompanyId
+	ctx.Data.InfraId = task.InfraId
+
+	region, err := iks.GetRegion(task.Token, task.InfraId, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	_, iksProfile, err := iks.GetProfile(infraData.infrastructureData.ProfileId, region, task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	cluster, err := iks.GetCluster(task.InfraId, userInfo.CompanyId, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in new state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == models.ClusterCreationFailed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in failed state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == (models.Deploying) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in creating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == (models.Terminating) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in terminating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.Status == (models.ClusterTerminated) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in terminated state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+
+	go iks.PatchRunningIKSCluster(cluster, iksProfile.Profile, task.Token, *ctx)
+
+	ctx.SendLogs("IKSClusterController: Running cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	ctx.SendLogs("IKS running cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+}
+func UpdateGKERunningCluster(task WorkSchema, infraData Infrastructure) {
+
+	if task.Token == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure id is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	_, userInfo, err := rbac_athentication.GetInfo(task.Token)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger("", "POST", "", task.InfraId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	_, allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", task.InfraId, "Terminate", task.Token, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	if !allowed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "User is not allowed to perform this action",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	ctx.InitializeLogger("", "POST", "", task.InfraId, ctx.Data.Company, userInfo.UserId)
+
+	ctx.SendLogs("GKEClusterController: Updating cluster of infrastructure. "+task.InfraId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	ctx.Data.Company = userInfo.CompanyId
+	ctx.Data.InfraId = task.InfraId
+
+	region, zone, err := gcp.GetRegion(task.Token, task.InfraId, *ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	isValid, credentials := gcp.IsValidGcpCredentials(infraData.infrastructureData.ProfileId, region, task.Token, zone, *ctx)
+	if !isValid {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Invalid credentials",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+	cluster, err := gke.GetGKECluster(*ctx)
+	if err != nil {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+	if strings.ToLower(string(cluster.CloudplexStatus)) == strings.ToLower(string(models.New)) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in new state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.CloudplexStatus == models.ClusterCreationFailed {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in failed state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.CloudplexStatus == (models.Deploying) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in creating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.CloudplexStatus == (models.Terminating) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in terminating state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	} else if cluster.CloudplexStatus == (models.ClusterTerminated) {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Can't redeploy.Cluster is in terminated state",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+
+	go gke.PatchRunningGKECluster(cluster, credentials, task.Token, *ctx)
+
+	ctx.SendLogs("GKEClusterController: Running cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	ctx.SendLogs("GKE running cluster "+cluster.Name+" of infrastructure id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+}
