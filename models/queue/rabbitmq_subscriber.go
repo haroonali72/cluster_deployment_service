@@ -187,15 +187,22 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 
 		if task.Action == models.Create {
 
+			GKEClusterStartHelpler(task, infra)
+
 		} else if task.Action == models.Terminate {
 
+			GKEClusterTerminateHelper(task, infra)
+
 		}
-	} else if infra.infrastructureData.Cloud == models.AKS {
+	} else if infra.infrastructureData.Cloud == models.IKS {
 
 		if task.Action == models.Create {
 
+			IKSClusterStartHelpler(task, infra)
+
 		} else if task.Action == models.Terminate {
 
+			IKSClusterTerminateHelper(task, infra)
 		}
 	}
 }
