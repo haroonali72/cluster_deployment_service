@@ -404,6 +404,9 @@ func (c *GKEClusterController) Patch() {
 		return
 	}
 
+	ctx.Data.Company = userInfo.CompanyId
+	ctx.Data.ProjectId = cluster.ProjectId
+
 	savedCluster ,err := gke.GetGKECluster(*ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -451,8 +454,7 @@ func (c *GKEClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.Data.Company = userInfo.CompanyId
-	ctx.Data.ProjectId = cluster.ProjectId
+
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, ctx.Data.Company, userInfo.UserId)
 
