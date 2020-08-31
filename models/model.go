@@ -511,7 +511,7 @@ const (
 	SSHKey   CredentialsType = "key"
 )
 const (
-	InfraGetEndpoint  = "/raccoon/innfrastructure/{infraId}"
+	InfraGetEndpoint  = "/raccoon/infrastructure/{infraId}"
 	WeaselGetEndpoint = "/weasel/network/{cloud}/{infraId}"
 )
 const (

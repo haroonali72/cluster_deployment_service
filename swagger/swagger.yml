@@ -70,19 +70,19 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster against this project already exists"}'
+          description: '{"error": "Cluster against this Infrastructuret already exists"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aks/{projectId}/:
+  /cluster/aks/{infraId}/:
     get:
       tags:
       - cluster/aks
-      description: Get cluster against the projectId
+      description: Get cluster against the infraId
       operationId: AKSClusterController.Get
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructuret
         required: true
         type: string
       - in: header
@@ -101,7 +101,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aks/{projectId}/{forceDelete}:
+  /cluster/aks/{infraId}/{forceDelete}:
     delete:
       tags:
       - cluster/aks
@@ -114,8 +114,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Project id of the cluster
+        name: infraId
+        description: Infrastructuret id of the cluster
         required: true
         type: string
       - in: path
@@ -221,7 +221,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aks/kubeconfig/{projectId}:
+  /cluster/aks/kubeconfig/{infraId}:
     get:
       tags:
       - cluster/aks
@@ -239,8 +239,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructuret
         required: true
         type: string
       responses:
@@ -252,7 +252,7 @@ paths:
           description: '{"error": "Internal Server Error"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/aks/start/{projectId}:
+  /cluster/aks/start/{infraId}:
     post:
       tags:
       - cluster/aks
@@ -270,8 +270,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructuret
         required: true
         type: string
       responses:
@@ -290,7 +290,7 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aks/status/{projectId}/:
+  /cluster/aks/status/{infraId}/:
     get:
       tags:
       - cluster/aks
@@ -308,8 +308,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructuret
         required: true
         type: string
       responses:
@@ -327,7 +327,7 @@ paths:
           description: '{"error": "Internal Server Error"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/aks/terminate/{projectId}/:
+  /cluster/aks/terminate/{infraId}/:
     post:
       tags:
       - cluster/aks
@@ -345,8 +345,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructuret
         required: true
         type: string
       responses:
@@ -365,7 +365,7 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aks/update/{projectId}:
+  /cluster/aks/update/{infraId}:
     put:
       tags:
       - cluster/aks
@@ -383,8 +383,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructuret
         required: true
         type: string
       responses:
@@ -462,7 +462,7 @@ paths:
           description: '{"error": "Conflict"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aws/{projectId}/:
+  /cluster/aws/{InfraId}/:
     get:
       tags:
       - cluster/aws
@@ -470,8 +470,8 @@ paths:
       operationId: AWSClusterController.Get
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: InfraId
+        description: Id of the infrastructure
         required: true
         type: string
       - in: header
@@ -490,7 +490,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aws/{projectId}/{forceDelete}:
+  /cluster/aws/{InfraId}/{forceDelete}:
     delete:
       tags:
       - cluster/aws
@@ -503,8 +503,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: project id of the cluster
+        name: InfraId
+        description: infrastructure id of the cluster
         required: true
         type: string
       - in: path
@@ -584,7 +584,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aws/applyagent/{projectId}:
+  /cluster/aws/applyagent/{InfraId}:
     post:
       tags:
       - cluster/aws
@@ -607,8 +607,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: InfraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -620,7 +620,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aws/enablescaling/{projectId}/:
+  /cluster/aws/enablescaling/{InfraId}/:
     post:
       tags:
       - cluster/aws
@@ -633,8 +633,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: InfraId
+        description: Id of the infrastructure
         required: true
         type: string
       - in: header
@@ -720,43 +720,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Bad Request"}'
-  /cluster/aws/sshkey/{keyname}/{region}:
-    delete:
-      tags:
-      - cluster/aws
-      description: Delete SSH key
-      operationId: AWSClusterController.DeleteSSHKey
-      parameters:
-      - in: path
-        name: keyname
-        description: keyname
-        required: true
-        type: string
-      - in: header
-        name: X-Profile-Id
-        description: profileId
-        required: true
-        type: string
-      - in: header
-        name: X-Auth-Token
-        description: token
-        required: true
-        type: string
-      - in: path
-        name: region
-        description: cloud region
-        required: true
-        type: string
-      responses:
-        "204":
-          description: '{"msg": "SSH key deleted successfully"}'
-        "401":
-          description: '{"error": "Unauthorized"}'
-        "404":
-          description: '{"error": "Not Found"}'
-        "409":
-          description: '{"error": "Conflict"}'
-  /cluster/aws/sshkey/{projectId}/{keyname}/{region}:
+  /cluster/aws/sshkey/{InfraId}/{keyname}/{region}:
     post:
       tags:
       - cluster/aws
@@ -764,8 +728,8 @@ paths:
       operationId: AWSClusterController.CreateSSHKey
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: InfraId
+        description: Id of the infrastructure
         required: true
         type: string
       - in: path
@@ -806,6 +770,42 @@ paths:
           description: '{"error": "Conflict"}'
         "500":
           description: '{"error": "Runtime Error"}'
+  /cluster/aws/sshkey/{keyname}/{region}:
+    delete:
+      tags:
+      - cluster/aws
+      description: Delete SSH key
+      operationId: AWSClusterController.DeleteSSHKey
+      parameters:
+      - in: path
+        name: keyname
+        description: keyname
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: profileId
+        required: true
+        type: string
+      - in: header
+        name: X-Auth-Token
+        description: token
+        required: true
+        type: string
+      - in: path
+        name: region
+        description: cloud region
+        required: true
+        type: string
+      responses:
+        "204":
+          description: '{"msg": "SSH key deleted successfully"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Conflict"}'
   /cluster/aws/sshkeys/{region}:
     get:
       tags:
@@ -836,7 +836,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aws/start/{projectId}:
+  /cluster/aws/start/{InfraId}:
     post:
       tags:
       - cluster/aws
@@ -854,8 +854,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: InfraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -871,7 +871,7 @@ paths:
           description: '{"error": "Conflict"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aws/status/{projectId}/:
+  /cluster/aws/status/{InfraId}/:
     get:
       tags:
       - cluster/aws
@@ -889,8 +889,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: InfraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -904,7 +904,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aws/terminate/{projectId}/:
+  /cluster/aws/terminate/{InfraId}/:
     post:
       tags:
       - cluster/aws
@@ -924,8 +924,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: InfraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -1027,19 +1027,20 @@ paths:
         "404":
           description: '{"msg": "Not Found"}'
         "409":
-          description: '{"error": "Cluster against same project id already exists"}'
+          description: '{"error": "Cluster against same infrastructure Id already
+            exists"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/azure/{projectId}/:
+  /cluster/azure/{infraId}/:
     get:
       tags:
       - cluster/azure
-      description: Get cluster against the projectId
+      description: Get cluster against the infraId
       operationId: AzureClusterController.Get
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       - in: header
@@ -1058,7 +1059,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/azure/{projectId}/{forceDelete}: {}
+  /cluster/azure/{infraId}/{forceDelete}: {}
   /cluster/azure/all:
     get:
       tags:
@@ -1082,7 +1083,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/azure/applyagent/{projectId}:
+  /cluster/azure/applyagent/{infraId}:
     post:
       tags:
       - cluster/azure
@@ -1110,8 +1111,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       responses:
@@ -1259,7 +1260,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/azure/sshkey/{keyname}/{projectId}:
+  /cluster/azure/sshkey/{keyname}/{infraId}:
     post:
       tags:
       - cluster/azure
@@ -1267,8 +1268,8 @@ paths:
       operationId: AzureClusterController.CreateSSHKey
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       - in: path
@@ -1317,7 +1318,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/azure/start/{projectId}:
+  /cluster/azure/start/{infraId}:
     post:
       tags:
       - cluster/azure
@@ -1325,8 +1326,8 @@ paths:
       operationId: AzureClusterController.Create
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       - in: header
@@ -1355,7 +1356,7 @@ paths:
           description: '{"error": "Runtime Error"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/azure/status/{projectId}/:
+  /cluster/azure/status/{infraId}/:
     get:
       tags:
       - cluster/azure
@@ -1368,8 +1369,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       - in: header
@@ -1392,7 +1393,7 @@ paths:
           description: '{"error": "Runtime Error"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/azure/terminate/{projectId}/:
+  /cluster/azure/terminate/{infraId}/:
     post:
       tags:
       - cluster/azure
@@ -1400,8 +1401,8 @@ paths:
       operationId: AzureClusterController.Terminate
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       - in: header
@@ -1513,10 +1514,10 @@ paths:
         "404":
           description: '{"error": "Not found"}'
         "409":
-          description: '{"error": "Cluster against same project already exists"}'
+          description: '{"error": "Cluster against same infrastructure already exists"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/do/{projectId}/:
+  /cluster/do/{infraId}/:
     get:
       tags:
       - cluster/do
@@ -1524,8 +1525,8 @@ paths:
       operationId: DOClusterController.Get
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       - in: header
@@ -1544,7 +1545,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/do/{projectId}/{forceDelete}:
+  /cluster/do/{infraId}/{forceDelete}:
     delete:
       tags:
       - cluster/do
@@ -1556,8 +1557,8 @@ paths:
         description: token
         type: string
       - in: path
-        name: projectId
-        description: project id of the cluster
+        name: infraId
+        description: infrastructure id of the cluster
         required: true
         type: string
       - in: path
@@ -1628,45 +1629,7 @@ paths:
           description: '{"error": "Runtime error"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/do/sshkey/{keyname}:
-    delete:
-      tags:
-      - cluster/do
-      description: Delete SSH key
-      operationId: DOClusterController.DeleteSSHKey
-      parameters:
-      - in: path
-        name: keyname
-        description: keyname
-        required: true
-        type: string
-      - in: header
-        name: X-Profile-Id
-        description: profileId
-        required: true
-        type: string
-      - in: header
-        name: X-Auth-Token
-        description: Token
-        required: true
-        type: string
-      - in: path
-        name: region
-        description: region
-        required: true
-        type: string
-      responses:
-        "200":
-          description: '{"msg": "key deleted successfully"}'
-        "401":
-          description: '{"error": "Unauthorized"}'
-        "404":
-          description: '{"error": "Not Found"}'
-        "409":
-          description: '{"error": "key is in used by some projects"}'
-        "500":
-          description: '{"error": "Runtime Error"}'
-  /cluster/do/sshkey/{projectId}/{keyname}/{region}:
+  /cluster/do/sshkey/{infraId}/{keyname}/{region}:
     post:
       tags:
       - cluster/do
@@ -1674,8 +1637,8 @@ paths:
       operationId: DOClusterController.CreateSSHKey
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       - in: path
@@ -1718,6 +1681,44 @@ paths:
           description: '{"error": "Runtime Error"}'
         "512":
           description: '{object} types.CustomCPError'
+  /cluster/do/sshkey/{keyname}:
+    delete:
+      tags:
+      - cluster/do
+      description: Delete SSH key
+      operationId: DOClusterController.DeleteSSHKey
+      parameters:
+      - in: path
+        name: keyname
+        description: keyname
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: profileId
+        required: true
+        type: string
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      - in: path
+        name: region
+        description: region
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "key deleted successfully"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "key is in used by some infrastructures"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/do/sshkeys:
     get:
       tags:
@@ -1740,7 +1741,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/do/start/{projectId}:
+  /cluster/do/start/{infraId}:
     post:
       tags:
       - cluster/do
@@ -1758,8 +1759,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -1774,7 +1775,7 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/do/status/{projectId}/:
+  /cluster/do/status/{infraId}/:
     get:
       tags:
       - cluster/do
@@ -1792,8 +1793,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -1809,7 +1810,7 @@ paths:
           description: '{"error": "Cluster is in deploying/terminating state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/do/terminate/{projectId}/:
+  /cluster/do/terminate/{infraId}/:
     post:
       tags:
       - cluster/do
@@ -1829,8 +1830,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -1931,19 +1932,19 @@ paths:
         "404":
           description: '{"error": "Not found"}'
         "409":
-          description: '{"error": "Cluster against same project already exists"}'
+          description: '{"error": "Cluster against same Infrastructure already exists"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/doks/{projectId}/:
+  /cluster/doks/{infraId}/:
     get:
       tags:
       - cluster/doks
-      description: Get saved cluster against the projectId
+      description: Get saved cluster against the infraId
       operationId: DOKSClusterController.Get
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       - in: header
@@ -1962,7 +1963,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/doks/{projectId}/{forceDelete}:
+  /cluster/doks/{infraId}/{forceDelete}:
     delete:
       tags:
       - cluster/doks
@@ -1975,8 +1976,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Project id of the cluster
+        name: infraId
+        description: Infrastructure id of the cluster
         required: true
         type: string
       - in: path
@@ -2019,7 +2020,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/doks/applyagent/{projectId}:
+  /cluster/doks/applyagent/{infraId}:
     post:
       tags:
       - cluster/doks
@@ -2037,8 +2038,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       responses:
@@ -2078,7 +2079,7 @@ paths:
           description: '{"error": "Runtime Error"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/doks/kubeconfig/{projectId}:
+  /cluster/doks/kubeconfig/{infraId}:
     get:
       tags:
       - cluster/doks
@@ -2096,8 +2097,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       responses:
@@ -2111,7 +2112,7 @@ paths:
           description: '{"error": "Runtime Error"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/doks/start/{projectId}:
+  /cluster/doks/start/{infraId}:
     post:
       tags:
       - cluster/doks
@@ -2129,8 +2130,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       responses:
@@ -2145,7 +2146,7 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/doks/status/{projectId}/:
+  /cluster/doks/status/{infraId}/:
     get:
       tags:
       - cluster/doks
@@ -2163,8 +2164,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       responses:
@@ -2182,7 +2183,7 @@ paths:
           description: '{"error": "Runtime Error"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/doks/terminate/{projectId}/:
+  /cluster/doks/terminate/{infraId}/:
     post:
       tags:
       - cluster/doks
@@ -2195,8 +2196,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       - in: header
@@ -2218,7 +2219,7 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/doks/update/{projectId}:
+  /cluster/doks/update/{infraId}:
     put:
       tags:
       - cluster/doks
@@ -2236,8 +2237,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       responses:
@@ -2313,19 +2314,19 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster against this project already exists"}'
+          description: '{"error": "Cluster against this infrastructure already exists"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/eks/{projectId}/:
+  /cluster/eks/{infraId}/:
     get:
       tags:
       - cluster/eks
-      description: Get cluster against the projectId
+      description: Get cluster against the infraId
       operationId: EKSClusterController.Get
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       - in: header
@@ -2344,7 +2345,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/eks/{projectId}/{forceDelete}:
+  /cluster/eks/{infraId}/{forceDelete}:
     delete:
       tags:
       - cluster/eks
@@ -2357,8 +2358,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Project id of the cluster
+        name: infraId
+        description: infrastructure id of the cluster
         required: true
         type: string
       - in: path
@@ -2401,7 +2402,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/eks/ami/{projectId}/:
+  /cluster/eks/ami/{infraId}/:
     get:
       tags:
       - cluster/eks
@@ -2420,7 +2421,7 @@ paths:
             $ref: '#/definitions/eks.AMI'
         "404":
           description: '{"error": "Not Found"}'
-  /cluster/eks/applyagent/{projectId}:
+  /cluster/eks/applyagent/{infraId}:
     post:
       tags:
       - cluster/eks
@@ -2443,8 +2444,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -2456,7 +2457,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/eks/clusters/{region}/{projectId}/:
+  /cluster/eks/clusters/{region}/{infraId}/:
     get:
       tags:
       - cluster/eks
@@ -2482,7 +2483,7 @@ paths:
               $ref: '#/definitions/*string'
         "404":
           description: '{"error": "Not Found"}'
-  /cluster/eks/instances/{amiType}/{projectId}/:
+  /cluster/eks/instances/{amiType}/{infraId}/:
     get:
       tags:
       - cluster/eks
@@ -2501,7 +2502,7 @@ paths:
             $ref: '#/definitions/map[string][]string'
         "404":
           description: '{"error": "Not Found"}'
-  /cluster/eks/kube/versions/{projectId}/:
+  /cluster/eks/kube/versions/{infraId}/:
     get:
       tags:
       - cluster/eks
@@ -2522,7 +2523,7 @@ paths:
               type: string
         "404":
           description: '{"error": "Not Found"}'
-  /cluster/eks/start/{projectId}:
+  /cluster/eks/start/{infraId}:
     post:
       tags:
       - cluster/eks
@@ -2540,8 +2541,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -2558,7 +2559,7 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/eks/status/{projectId}/:
+  /cluster/eks/status/{infraId}/:
     get:
       tags:
       - cluster/eks
@@ -2576,8 +2577,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -2595,7 +2596,7 @@ paths:
           description: '{"error": "Runtime Error"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/eks/terminate/{projectId}/:
+  /cluster/eks/terminate/{infraId}/:
     post:
       tags:
       - cluster/eks
@@ -2615,8 +2616,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -2633,7 +2634,7 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/eks/update/{projectId}:
+  /cluster/eks/update/{infraId}:
     put:
       tags:
       - cluster/eks
@@ -2651,8 +2652,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -2731,7 +2732,7 @@ paths:
           description: '{"error": "Conflict"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/gcp/{projectId}/:
+  /cluster/gcp/{infraId}/:
     get:
       tags:
       - cluster/gcp
@@ -2739,8 +2740,8 @@ paths:
       operationId: GcpClusterController.Get
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       - in: header
@@ -2759,7 +2760,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/gcp/{projectId}/{forceDelete}: {}
+  /cluster/gcp/{infraId}/{forceDelete}: {}
   /cluster/gcp/all:
     get:
       tags:
@@ -2924,7 +2925,7 @@ paths:
           description: '{"error": "Conflict"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/gcp/sshkey/{keyname}/{username}/{projectId}:
+  /cluster/gcp/sshkey/{keyname}/{username}/{infraId}:
     post:
       tags:
       - cluster/gcp
@@ -2932,8 +2933,8 @@ paths:
       operationId: GcpClusterController.CreateSSHKey
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       - in: path
@@ -2994,7 +2995,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/gcp/start/{projectId}:
+  /cluster/gcp/start/{infraId}:
     post:
       tags:
       - cluster/gcp
@@ -3012,8 +3013,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       responses:
@@ -3029,7 +3030,7 @@ paths:
           description: '{"error": "Conflict"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/gcp/status/{projectId}/:
+  /cluster/gcp/status/{infraId}/:
     get:
       tags:
       - cluster/gcp
@@ -3047,8 +3048,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       responses:
@@ -3062,7 +3063,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/gcp/terminate/{projectId}/:
+  /cluster/gcp/terminate/{infraId}/:
     post:
       tags:
       - cluster/gcp
@@ -3075,8 +3076,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the Infrastructure
         required: true
         type: string
       - in: header
@@ -3183,19 +3184,19 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster against same project already exists"}'
+          description: '{"error": "Cluster against same infrastructure already exists"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/gke/{projectId}/:
+  /cluster/gke/{infraId}/:
     get:
       tags:
       - cluster/gke
-      description: Get cluster against the projectId
+      description: Get cluster against the infraId
       operationId: GKEClusterController.Get
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       - in: header
@@ -3214,7 +3215,7 @@ paths:
           description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/gke/{projectId}/{forceDelete}: {}
+  /cluster/gke/{infraId}/{forceDelete}: {}
   /cluster/gke/all:
     get:
       tags:
@@ -3238,7 +3239,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/gke/applyagent/{projectId}:
+  /cluster/gke/applyagent/{infraId}:
     post:
       tags:
       - cluster/gke
@@ -3256,8 +3257,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -3306,7 +3307,7 @@ paths:
           description: '{"error": "Runtime error"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/gke/start/{projectId}:
+  /cluster/gke/start/{infraId}:
     post:
       tags:
       - cluster/gke
@@ -3324,8 +3325,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -3342,7 +3343,7 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/gke/status/{projectId}/:
+  /cluster/gke/status/{infraId}/:
     get:
       tags:
       - cluster/gke
@@ -3360,8 +3361,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -3379,7 +3380,7 @@ paths:
           description: '{"error": "Runtime Error"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/gke/terminate/{projectId}/:
+  /cluster/gke/terminate/{infraId}/:
     post:
       tags:
       - cluster/gke
@@ -3397,8 +3398,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -3415,7 +3416,7 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/gke/update/{projectId}:
+  /cluster/gke/update/{infraId}:
     put:
       tags:
       - cluster/gke
@@ -3433,8 +3434,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -3510,19 +3511,19 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster against this project already exists"}'
+          description: '{"error": "Cluster against this infrastructure already exists"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/iks/{projectId}/:
+  /cluster/iks/{infraId}/:
     get:
       tags:
       - cluster/iks
-      description: Get cluster against the projectId
+      description: Get cluster against the infraId
       operationId: IKSClusterController.Get
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       - in: header
@@ -3541,7 +3542,7 @@ paths:
           description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/iks/{projectId}/{forceDelete}:
+  /cluster/iks/{infraId}/{forceDelete}:
     delete:
       tags:
       - cluster/iks
@@ -3554,8 +3555,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Project id of the cluster
+        name: infraId
+        description: infrastructure id of the cluster
         required: true
         type: string
       - in: path
@@ -3598,7 +3599,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Erorr"}'
-  /cluster/iks/applyagent/{projectId}:
+  /cluster/iks/applyagent/{infraId}:
     post:
       tags:
       - cluster/iks
@@ -3621,8 +3622,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -3755,7 +3756,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/iks/start/{projectId}:
+  /cluster/iks/start/{infraId}:
     post:
       tags:
       - cluster/iks
@@ -3773,8 +3774,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -3791,7 +3792,7 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/iks/status/{projectId}/:
+  /cluster/iks/status/{infraId}/:
     get:
       tags:
       - cluster/iks
@@ -3809,8 +3810,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -3828,7 +3829,7 @@ paths:
           description: '{"error": "Runtime Error"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/iks/terminate/{projectId}/:
+  /cluster/iks/terminate/{infraId}/:
     post:
       tags:
       - cluster/iks
@@ -3848,8 +3849,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -3866,7 +3867,7 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/iks/update/{projectId}:
+  /cluster/iks/update/{infraId}:
     put:
       tags:
       - cluster/iks
@@ -3884,8 +3885,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: infraId
+        description: Id of the infrastructure
         required: true
         type: string
       responses:
@@ -3998,19 +3999,19 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster against this project already exists"}'
+          description: '{"error": "Cluster against this Infrastructure already exists"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/op/{projectId}/:
+  /cluster/op/{InfraId}/:
     get:
       tags:
       - cluster/op
-      description: Get cluster against the projectId
+      description: Get cluster against the InfraId
       operationId: OPClusterController.Get
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: InfraId
+        description: Id of the Infrastructure
         required: true
         type: string
       - in: header
@@ -4029,7 +4030,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/op/{projectId}/{forceDelete}:
+  /cluster/op/{InfraId}/{forceDelete}:
     delete:
       tags:
       - cluster/op
@@ -4042,8 +4043,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Project id of the cluster
+        name: InfraId
+        description: Infrastructure id of the cluster
         required: true
         type: string
       - in: path
@@ -4088,7 +4089,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/op/checkCluster/{projectId}/:
+  /cluster/op/checkCluster/{InfraId}/:
     get:
       tags:
       - cluster/op
@@ -4101,8 +4102,8 @@ paths:
         required: true
         type: string
       - in: path
-        name: projectId
-        description: Id of the project
+        name: InfraId
+        description: Id of the Infrastructure
         required: true
         type: string
       responses:
@@ -7294,40 +7295,40 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  499.0xc04384ac90.false:
+  485.0xc0439350e0.false:
     title: "false"
     type: object
-  641.0xc042d6a7b0.false:
+  621.0xc042e3c450.false:
     title: "false"
     type: object
-  721.0xc0430e0a50.false:
+  696.0xc0431ad8f0.false:
     title: "false"
     type: object
-  747.0xc0436f87e0.false:
+  724.0xc0437c5c50.false:
     title: "false"
     type: object
-  2279.string:
+  2282.string:
     title: string
     type: object
-  4943.string:
+  4946.string:
     title: string
     type: object
-  5701.string:
+  5704.string:
     title: string
     type: object
-  11902.string:
+  11901.string:
     title: string
     type: object
-  14770.0xc043872c00.false:
+  14339.0xc04395d050.false:
     title: "false"
     type: object
-  86698.string:
+  88317.string:
     title: string
     type: object
-  91140.0xc04381a1e0.false:
+  91269.0xc0438f0630.false:
     title: "false"
     type: object
-  105734.string:
+  106395.string:
     title: string
     type: object
   X-Profile-Id:
@@ -7369,6 +7370,9 @@ definitions:
         description: Service principal configurations ['required' if advance settings
           enabled]
         type: boolean
+      infra_id:
+        description: ID of infrastructure [required]
+        type: string
       is_advance:
         description: Cluster advance level settings possible value 'true' or 'false'
         type: boolean
@@ -7391,9 +7395,6 @@ definitions:
           $ref: '#/definitions/aks.ManagedClusterAgentPoolProfile'
       pod_cidr:
         description: Pod CIDR for cluster ['required' if expert settings enabled]
-        type: string
-      project_id:
-        description: ID of project [required]
         type: string
       resource_group:
         description: Resources would be created within resource_group [required]
@@ -7438,7 +7439,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/86698.string'
+        $ref: '#/definitions/88317.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -7592,10 +7593,10 @@ definitions:
     title: AwsCluster
     type: object
     properties:
-      name:
+      infrastructure_id:
+        description: ID of infrastructure
         type: string
-      project_id:
-        description: ID of project
+      name:
         type: string
       status:
         $ref: '#/definitions/models.Type'
@@ -7606,12 +7607,15 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       company_id:
-        description: Company Id of the project [optional]
+        description: Company Id of the infrastructure [optional]
+        type: string
+      infra_id:
+        description: Id of the infrastructure [required]
         type: string
       kube_credentials:
-        $ref: '#/definitions/641.0xc042d6a7b0.false'
+        $ref: '#/definitions/621.0xc042e3c450.false'
       name:
-        description: Name of the project [required]
+        description: Name of the infrastructure [required]
         type: string
       network_name:
         description: Network to create cluster [required]
@@ -7620,9 +7624,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/aws.NodePool'
-      project_id:
-        description: Id of the project [required]
-        type: string
       status:
         $ref: '#/definitions/models.Type'
       token_name:
@@ -7799,10 +7800,10 @@ definitions:
     title: AzureCluster
     type: object
     properties:
-      name:
+      infra_id:
+        description: ID of Infrastructure
         type: string
-      project_id:
-        description: ID of project
+      name:
         type: string
       status:
         $ref: '#/definitions/models.Type'
@@ -7819,6 +7820,9 @@ definitions:
       creation_date:
         type: string
         format: datetime
+      infra_id:
+        description: Id of infra_id [required]
+        type: string
       modification_date:
         type: string
         format: datetime
@@ -7833,9 +7837,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/azure.NodePool'
-      project_id:
-        description: Id of project [required]
-        type: string
       resource_group:
         description: Resource group to deploy the cluster [required]
         type: string
@@ -8050,8 +8051,10 @@ definitions:
         type: string
       cloud:
         $ref: '#/definitions/models.Cloud'
+      infra_id:
+        type: string
       kube_credentials:
-        $ref: '#/definitions/721.0xc0430e0a50.false'
+        $ref: '#/definitions/696.0xc0431ad8f0.false'
       name:
         type: string
       network_name:
@@ -8060,8 +8063,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/do.NodePool'
-      project_id:
-        type: string
       status:
         $ref: '#/definitions/models.Type'
         description: Status of cluster  [required]
@@ -8264,10 +8265,10 @@ definitions:
     title: DOKSCluster
     type: object
     properties:
-      name:
+      infra_id:
+        description: ID of infrastructure
         type: string
-      project_id:
-        description: ID of project
+      name:
         type: string
       status:
         $ref: '#/definitions/models.Type'
@@ -8331,6 +8332,9 @@ definitions:
         type: string
       id:
         type: string
+      infra_id:
+        description: ID of infrastructure [required]
+        type: string
       is_advance:
         type: boolean
       is_expert:
@@ -8344,9 +8348,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/doks.KubernetesNodePool'
-      project_id:
-        description: ID of project [required]
-        type: string
       region:
         description: Location for cluster provisioning [required]
         type: string
@@ -8555,6 +8556,9 @@ definitions:
       encryption_config:
         $ref: '#/definitions/eks.EncryptionConfig'
         description: Encryption Configurations [optional]
+      infra_id:
+        description: ID of infrastructure [required]
+        type: string
       is_advance:
         description: Cluster advance level settings possible value 'true' or 'false'
         type: boolean
@@ -8569,9 +8573,6 @@ definitions:
         items:
           $ref: '#/definitions/eks.NodePool'
       output_arn:
-        type: string
-      project_id:
-        description: ID of project [required]
         type: string
       resources_vpc_config:
         $ref: '#/definitions/eks.VpcConfigRequest'
@@ -8592,6 +8593,8 @@ definitions:
         type: string
       endpoint:
         type: string
+      infra_id:
+        type: string
       kubernetes_version:
         type: string
       name:
@@ -8600,8 +8603,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/eks.EKSPoolStatus'
-      project_id:
-        type: string
       status:
         type: string
   eks.EKSClusterTemplate:
@@ -8631,7 +8632,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/105734.string'
+        $ref: '#/definitions/106395.string'
       template_id:
         type: string
       version:
@@ -8794,14 +8795,14 @@ definitions:
       client_x509_cert_url:
         description: Client Cert Url of the account [readonly]
         type: string
+      infra_id:
+        description: Infrastructure Id of the account [readonly]
+        type: string
       private_key:
         description: Private key of the account [readonly]
         type: string
       private_key_id:
         description: Private key Id of the account [readonly]
-        type: string
-      project_id:
-        description: Project Id of the account [readonly]
         type: string
       token_uri:
         description: Token Uri of the account [readonly]
@@ -8830,6 +8831,9 @@ definitions:
       company_id:
         description: CompanyId of the cluster [optional]
         type: string
+      infra_id:
+        description: Infrastructure ID of the cluster [required]
+        type: string
       name:
         description: Name of the cluster [required]
         type: string
@@ -8841,12 +8845,9 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/gcp.NodePool'
-      project_id:
-        description: Project ID of the cluster [required]
-        type: string
       status:
         $ref: '#/definitions/models.Type'
-        description: Status of the project [required]
+        description: Status of the Infrastructure [required]
       token_name:
         type: string
       vpc_name:
@@ -9107,11 +9108,11 @@ definitions:
     title: Cluster
     type: object
     properties:
+      infra_id:
+        description: ID of infrastructure
+        type: string
       name:
         description: Cluster name
-        type: string
-      project_id:
-        description: ID of project
         type: string
       status:
         $ref: '#/definitions/models.Type'
@@ -9179,6 +9180,9 @@ definitions:
       expire_time:
         description: Time the cluster will be automatically deleted [readonly]
         type: string
+      infra_id:
+        description: ID of infrastructure [required]
+        type: string
       initial_cluster_version:
         description: Initial kubernetes version for this cluster [optional]
         type: string
@@ -9234,9 +9238,6 @@ definitions:
           $ref: '#/definitions/gke.NodePool'
       private_cluster_config:
         $ref: '#/definitions/gke.PrivateClusterConfig'
-      project_id:
-        description: ID of project [required]
-        type: string
       resource_labels:
         additionalProperties:
           type: string
@@ -9734,10 +9735,10 @@ definitions:
     title: Cluster
     type: object
     properties:
-      name:
+      infra_id:
+        description: ID of infrastructure
         type: string
-      project_id:
-        description: ID of project
+      name:
         type: string
       status:
         $ref: '#/definitions/models.Type'
@@ -9755,6 +9756,9 @@ definitions:
       disable_public_service_endpoint:
         description: '[optional]'
         type: boolean
+      infra_id:
+        description: ID of infrastructure [required]
+        type: string
       is_advance:
         type: boolean
       kube_version:
@@ -9770,9 +9774,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/iks.NodePool'
-      project_id:
-        description: ID of project [required]
-        type: string
       resource_group:
         description: Resources would be created within resource_group [required]
         type: string
@@ -9918,7 +9919,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/91140.0xc04381a1e0.false'
+        $ref: '#/definitions/91269.0xc0438f0630.false'
       kube_version:
         type: string
       name:
@@ -10101,6 +10102,9 @@ definitions:
       company_id:
         description: ID of company which you are belong to [optional]
         type: string
+      infra_id:
+        description: ID of infrastructure [required]
+        type: string
       name:
         description: Name of cluster [required]
         type: string
@@ -10108,9 +10112,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/op.NodePool'
-      project_id:
-        description: ID of project [required]
-        type: string
       status:
         $ref: '#/definitions/models.Type'
         description: Cluster status can be New, Cluster Created, Cluster Terminated.
@@ -10193,7 +10194,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14770.0xc043872c00.false'
+        $ref: '#/definitions/14339.0xc04395d050.false'
       name:
         type: string
       node_pools:

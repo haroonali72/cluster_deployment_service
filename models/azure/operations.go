@@ -131,8 +131,8 @@ func getNetworkHost(cloudType, InfraId string) string {
 	if strings.Contains(host, "{cloud}") {
 		host = strings.Replace(host, "{cloud}", cloudType, -1)
 	}
-	if strings.Contains(host, "{InfraId}") {
-		host = strings.Replace(host, "{InfraId}", InfraId, -1)
+	if strings.Contains(host, "{infraId}") {
+		host = strings.Replace(host, "{infraId}", InfraId, -1)
 	}
 
 	return host
