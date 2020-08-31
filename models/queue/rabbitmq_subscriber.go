@@ -24,7 +24,8 @@ func Subscriber() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger("", "GET", "", "", "", "")
 
-	conn, err := amqp.Dial(beego.AppConfig.String("rabbitmq_url"))
+	url := "amqp://" + beego.AppConfig.String("rabbitmq_user") + ":" + beego.AppConfig.String("rabbitmq_password") + "@" + beego.AppConfig.String("rabbitmq_url") + "/"
+	conn, err := amqp.Dial(url)
 	if err != nil {
 		ctx.SendLogs("Error in fetching rabbitmq url "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return

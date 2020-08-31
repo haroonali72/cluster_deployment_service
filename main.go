@@ -17,7 +17,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-	//setEnv()
+	setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -55,13 +55,12 @@ func setEnv() {
 	os.Setenv("kill_bill_password", "password")
 	os.Setenv("kill_bill_secret_key", "cloudplex")
 	os.Setenv("kill_bill_api_key", "cloudplex")
-	os.Setenv("ca_cert", "/home/haroon/CloudPlex/cloudFiles/mongoCA.crt")
-	os.Setenv("client_cert", "/home/haroon/CloudPlex/cloudFiles/weasel.crt")
-	os.Setenv("client_pem", "/home/haroon/CloudPlex/cloudFiles/weasel.pem")
+	os.Setenv("ca_cert", "C:/Users/sadaf/Downloads/mongoCA.crt")
+	os.Setenv("client_cert", "C:/Users/sadaf/Downloads/antelope.crt")
+	os.Setenv("client_pem", "C:/Users/sadaf/Downloads/antelope.pem")
 	os.Setenv("subscription_host", "35.246.150.221:30906")
 	os.Setenv("mongo_host", "cloudplex-mongodb.cloudplex-system.svc.cluster.local:27017,mongodb-secondary-0.cloudplex-mongodb-headless:27017,mongodb-arbiter-0.cloudplex-mongodb-headless:27017")
 	//os.Setenv("mongo_host", "localhost:27017")
-
 	os.Setenv("mongo_auth", "true")
 	os.Setenv("mongo_db", "antelope")
 	os.Setenv("mongo_user", "antelope")
@@ -96,7 +95,10 @@ func setEnv() {
 	os.Setenv("rbac_url", "http://localhost:7777")
 	os.Setenv("jump_host_ip", "52.220.196.92")
 	os.Setenv("jump_host_ssh_key", "/home/zunaira/Downloads/ahmad.txt")
-	os.Setenv("jump_host_ip", "52.220.196.92")
 	os.Setenv("woodpecker_url", "http://localhost:3300")
+	os.Setenv("jump_host_ip", "52.220.196.92")
+	os.Setenv("rabbitmq_url", "localhost:5672")
+	os.Setenv("rabbitmq_user", "user")
+	os.Setenv("rabbitmq_password", "RX7fhyatpq")
 
 }
