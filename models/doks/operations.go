@@ -335,6 +335,7 @@ func (cloud *DOKS) UpgradeKubernetesVersion( cluster *KubernetesCluster, ctx uti
 
 func (cloud *DOKS) fetchStatus(ctx utils.Context, cluster KubernetesCluster) (KubeClusterStatus, types.CustomCPError) {
 	var response KubeClusterStatus
+	done :=false
 	count := 0
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
@@ -359,7 +360,13 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, cluster KubernetesCluster) (Ku
 	for _,p := range cluster.NodePools {
 
 		for _, pool := range status.NodePools {
-			if p.ID == pool.ID {
+			for _, worker := range response.WorkerPools {
+				done=false
+				if pool.ID == worker.ID {
+					done=true
+				}
+			}
+			if p.ID == pool.ID && !done{
 				count++
 				var workerPool KubeWorkerPoolStatus
 				workerPool.Name = pool.Name
@@ -392,6 +399,7 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, cluster KubernetesCluster) (Ku
 					workerPool.Nodes = append(workerPool.Nodes, poolNodes)
 				}
 				response.WorkerPools = append(response.WorkerPools, workerPool)
+				done =false
 			}
 		}
 	}
