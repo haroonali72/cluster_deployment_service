@@ -43,7 +43,7 @@ func Subscriber() {
 
 	q, err := ch.QueueDeclare(
 		string(models.WorkQueue), // name
-		false,                    // durable
+		true,                     // durable
 		false,                    // delete when unused
 		false,                    // exclusive
 		false,                    // no-wait
