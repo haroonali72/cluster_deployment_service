@@ -99,8 +99,8 @@ type Data_ struct {
 func ProcessWork(task WorkSchema, ctx utils.Context) {
 
 	url := beego.AppConfig.String("raccoon_url") + models.InfraGetEndpoint
-	if strings.Contains(url, "{InfraId}") {
-		url = strings.Replace(url, "{InfraId}", task.InfraId, -1)
+	if strings.Contains(url, "{infraId}") {
+		url = strings.Replace(url, "{infraId}", task.InfraId, -1)
 	}
 	data, err := api_handler.GetAPIStatus(task.Token, url, ctx)
 	if err != nil {

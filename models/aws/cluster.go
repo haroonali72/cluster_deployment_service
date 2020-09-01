@@ -89,7 +89,7 @@ type Data struct {
 
 type AwsCluster struct {
 	Name    string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
-	InfraId string      `json:"infrastructure_id" bson:"infrastructure_id"  description:"ID of infrastructure"`
+	InfraId string      `json:"infra_id" bson:"infra_id"  description:"ID of infrastructure"`
 	Status  models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
 
@@ -139,8 +139,8 @@ func GetProfile(profileId string, region string, token string, ctx utils.Context
 }
 func GetRegion(token, InfraId string, ctx utils.Context) (string, error) {
 	url := beego.AppConfig.String("raccoon_url") + models.InfraGetEndpoint
-	if strings.Contains(url, "{InfraId}") {
-		url = strings.Replace(url, "{InfraId}", InfraId, -1)
+	if strings.Contains(url, "{infraId}") {
+		url = strings.Replace(url, "{infraId}", InfraId, -1)
 	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
@@ -206,7 +206,7 @@ func GetCluster(InfraId, companyId string, ctx utils.Context) (cluster Cluster_D
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
-	err = c.Find(bson.M{"infrastructure_id": InfraId, "company_id": companyId}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": InfraId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err
@@ -228,7 +228,7 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (awscluster
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
-	err = c.Find(bson.M{"infrastructure_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"infra_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
@@ -295,7 +295,7 @@ func DeleteCluster(InfraId, companyId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
-	err = c.Remove(bson.M{"infrastructure_id": InfraId, "company_id": companyId})
+	err = c.Remove(bson.M{"infra_id": InfraId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err

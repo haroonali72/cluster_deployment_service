@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"github.com/streadway/amqp"
-	"log"
 )
 
 type ResponseSchema struct {
@@ -23,8 +22,9 @@ func Publisher(response ResponseSchema, ctx Context) {
 		ctx.SendLogs("Error in fetching rabbitmq url "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return
 	}
+	url := "amqp://" + beego.AppConfig.String("rabbitmq_user") + ":" + beego.AppConfig.String("rabbitmq_password") + "@" + beego.AppConfig.String("rabbitmq_url") + "/"
 
-	conn, err := amqp.Dial(beego.AppConfig.String("rabbitmq_url"))
+	conn, err := amqp.Dial(url)
 	if err != nil {
 		ctx.SendLogs("Error in fetching rabbitmq url "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return
@@ -41,7 +41,7 @@ func Publisher(response ResponseSchema, ctx Context) {
 
 	q, err := ch.QueueDeclare(
 		string(models.DoneQueue), // name
-		false,                    // durable
+		true,                     // durable
 		false,                    // delete when unused
 		false,                    // exclusive
 		false,                    // no-wait
@@ -66,5 +66,5 @@ func Publisher(response ResponseSchema, ctx Context) {
 		ctx.SendLogs("Error in fetching rabbitmq url "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return
 	}
-	log.Printf(" [x] Sent %s")
+	ctx.SendLogs(" Message Sent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 }

@@ -254,8 +254,8 @@ func DeleteCluster(InfraId, companyId string, ctx utils.Context) error {
 func GetRegion(token string, ctx utils.Context) (string, error) {
 	fmt.Println(ctx.Data.InfraId)
 	url := beego.AppConfig.String("raccoon_url") + models.InfraGetEndpoint
-	if strings.Contains(url, "{InfraId}") {
-		url = strings.Replace(url, "{InfraId}", ctx.Data.InfraId, -1)
+	if strings.Contains(url, "{infraId}") {
+		url = strings.Replace(url, "{infraId}", ctx.Data.InfraId, -1)
 	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {

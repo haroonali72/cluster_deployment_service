@@ -145,8 +145,8 @@ func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
 }
 func GetRegion(token, InfraId string, ctx utils.Context) (string, error) {
 	url := beego.AppConfig.String("raccoon_url") + models.InfraGetEndpoint
-	if strings.Contains(url, "{InfraId}") {
-		url = strings.Replace(url, "{InfraId}", InfraId, -1)
+	if strings.Contains(url, "{infraId}") {
+		url = strings.Replace(url, "{infraId}", InfraId, -1)
 	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
