@@ -7295,40 +7295,40 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  502.0xc04397ac30.false:
+  502.0xc043950f60.false:
     title: "false"
     type: object
-  644.0xc042e5ff80.false:
+  621.0xc042e58270.false:
     title: "false"
     type: object
-  721.0xc0431ef440.false:
+  696.0xc0431c7710.false:
     title: "false"
     type: object
-  750.0xc04380f7a0.false:
+  724.0xc0437dbad0.false:
     title: "false"
     type: object
-  2321.string:
+  2282.string:
     title: string
     type: object
-  5026.string:
+  4946.string:
     title: string
     type: object
-  5791.string:
+  5704.string:
     title: string
     type: object
   12046.string:
     title: string
     type: object
-  14700.0xc0439aaba0.false:
+  14700.0xc04397eed0.false:
     title: "false"
     type: object
   90678.string:
     title: string
     type: object
-  93795.0xc04394c180.false:
+  92381.0xc0439144b0.false:
     title: "false"
     type: object
-  109187.string:
+  107714.string:
     title: string
     type: object
   X-Profile-Id:
@@ -7593,7 +7593,7 @@ definitions:
     title: AwsCluster
     type: object
     properties:
-      infrastructure_id:
+      infra_id:
         description: ID of infrastructure
         type: string
       name:
@@ -7613,7 +7613,7 @@ definitions:
         description: Id of the infrastructure [required]
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc042e5ff80.false'
+        $ref: '#/definitions/621.0xc042e58270.false'
       name:
         description: Name of the infrastructure [required]
         type: string
@@ -8054,7 +8054,7 @@ definitions:
       infra_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/721.0xc0431ef440.false'
+        $ref: '#/definitions/696.0xc0431c7710.false'
       name:
         type: string
       network_name:
@@ -8632,7 +8632,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/109187.string'
+        $ref: '#/definitions/107714.string'
       template_id:
         type: string
       version:
@@ -9919,7 +9919,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/93795.0xc04394c180.false'
+        $ref: '#/definitions/92381.0xc0439144b0.false'
       kube_version:
         type: string
       name:
@@ -10031,6 +10031,7 @@ definitions:
     - IKS = "iks"
     - OP = "op"
     - AKS = "aks"
+    - IBM = "ibm"
     example: aws
   models.CredentialsType:
     title: CredentialsType
@@ -10194,7 +10195,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14700.0xc0439aaba0.false'
+        $ref: '#/definitions/14700.0xc04397eed0.false'
       name:
         type: string
       node_pools:

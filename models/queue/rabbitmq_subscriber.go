@@ -91,9 +91,10 @@ type Infrastructure struct {
 	infrastructureData Data_ `json:"data" description:"infrastructure data of the cluster [optional]"`
 }
 type Data_ struct {
-	Region    string       `json:"region" description:"Region of the cluster [optional]"`
-	Cloud     models.Cloud `json:"cloud" description:"cloud of the cluster [optional]"`
-	ProfileId string       `json:"profile_id" description:"profile id of the cluster [optional]"`
+	Region         string       `json:"region" description:"Region of the cluster [optional]"`
+	Cloud          models.Cloud `json:"cloud" description:"cloud of the cluster [optional]"`
+	ManagedCluster models.Cloud `json:"managed_cluster" description:"cloud of the cluster [optional]"`
+	ProfileId      string       `json:"profile_id" description:"profile id of the cluster [optional]"`
 }
 
 func ProcessWork(task WorkSchema, ctx utils.Context) {
@@ -112,7 +113,7 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
-	if infra.infrastructureData.Cloud == models.AWS {
+	if infra.infrastructureData.Cloud == models.AWS && infra.infrastructureData.ManagedCluster == "" {
 
 		if task.Action == models.Create {
 
@@ -123,7 +124,7 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 			go AWSClusterTerminateHelper(task, infra)
 
 		}
-	} else if infra.infrastructureData.Cloud == models.Azure {
+	} else if infra.infrastructureData.Cloud == models.Azure && infra.infrastructureData.ManagedCluster == "" {
 
 		if task.Action == models.Create {
 
@@ -133,7 +134,7 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 
 			go AzureClusterTerminateHelper(task, infra)
 		}
-	} else if infra.infrastructureData.Cloud == models.GCP {
+	} else if infra.infrastructureData.Cloud == models.GCP && infra.infrastructureData.ManagedCluster == "" {
 
 		if task.Action == models.Create {
 
@@ -143,7 +144,7 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 
 			go GCPClusterTerminateHelper(task, infra)
 		}
-	} else if infra.infrastructureData.Cloud == models.DO {
+	} else if infra.infrastructureData.Cloud == models.DO && infra.infrastructureData.ManagedCluster == "" {
 
 		if task.Action == models.Create {
 
@@ -153,7 +154,7 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 
 			go DOClusterTerminateHelper(task, infra)
 		}
-	} else if infra.infrastructureData.Cloud == models.AKS {
+	} else if infra.infrastructureData.Cloud == models.Azure && infra.infrastructureData.ManagedCluster == models.AKS {
 
 		if task.Action == models.Create {
 
@@ -168,7 +169,7 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 			UpdateAKSRunningCluster(task, infra)
 
 		}
-	} else if infra.infrastructureData.Cloud == models.EKS {
+	} else if infra.infrastructureData.Cloud == models.AWS && infra.infrastructureData.ManagedCluster == models.EKS {
 
 		if task.Action == models.Create {
 
@@ -183,7 +184,7 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 			UpdateEKSRunningCluster(task, infra)
 
 		}
-	} else if infra.infrastructureData.Cloud == models.DOKS {
+	} else if infra.infrastructureData.Cloud == models.DO && infra.infrastructureData.ManagedCluster == models.DOKS {
 
 		if task.Action == models.Create {
 
@@ -198,7 +199,7 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 			UpdateDOKSRunningCluster(task, infra)
 
 		}
-	} else if infra.infrastructureData.Cloud == models.GKE {
+	} else if infra.infrastructureData.Cloud == models.GCP && infra.infrastructureData.ManagedCluster == models.GKE {
 
 		if task.Action == models.Create {
 
@@ -213,7 +214,7 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 			UpdateGKERunningCluster(task, infra)
 
 		}
-	} else if infra.infrastructureData.Cloud == models.IKS {
+	} else if infra.infrastructureData.Cloud == models.IBM && infra.infrastructureData.ManagedCluster == models.IKS {
 
 		if task.Action == models.Create {
 

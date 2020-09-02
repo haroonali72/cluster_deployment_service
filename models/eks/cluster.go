@@ -486,7 +486,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		}
 		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
-			Message: confError.Error(),
+			Message: cpError.Error + "\n" + cpError.Description,
 			InfraId: cluster.InfraId,
 			Token:   token,
 			Action:  models.Create,

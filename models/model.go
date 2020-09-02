@@ -117,6 +117,7 @@ const (
 	IKS   Cloud = "iks"
 	OP    Cloud = "op"
 	AKS   Cloud = "aks"
+	IBM   Cloud = "ibm"
 )
 
 type KeyType string
