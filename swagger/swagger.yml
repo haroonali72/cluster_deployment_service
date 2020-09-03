@@ -7295,40 +7295,40 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  502.0xc043950f60.false:
+  502.0xc0439fc900.false:
     title: "false"
     type: object
-  621.0xc042e58270.false:
+  644.0xc042ee1bf0.false:
     title: "false"
     type: object
-  696.0xc0431c7710.false:
+  721.0xc04326d0b0.false:
     title: "false"
     type: object
-  724.0xc0437dbad0.false:
+  750.0xc043889470.false:
     title: "false"
     type: object
-  2282.string:
+  2321.string:
     title: string
     type: object
-  4946.string:
+  5026.string:
     title: string
     type: object
-  5704.string:
+  5791.string:
     title: string
     type: object
   12046.string:
     title: string
     type: object
-  14700.0xc04397eed0.false:
+  14700.0xc043a2c870.false:
     title: "false"
     type: object
   90678.string:
     title: string
     type: object
-  92381.0xc0439144b0.false:
+  93795.0xc04399de30.false:
     title: "false"
     type: object
-  107714.string:
+  109212.string:
     title: string
     type: object
   X-Profile-Id:
@@ -7613,7 +7613,7 @@ definitions:
         description: Id of the infrastructure [required]
         type: string
       kube_credentials:
-        $ref: '#/definitions/621.0xc042e58270.false'
+        $ref: '#/definitions/644.0xc042ee1bf0.false'
       name:
         description: Name of the infrastructure [required]
         type: string
@@ -8054,7 +8054,7 @@ definitions:
       infra_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/696.0xc0431c7710.false'
+        $ref: '#/definitions/721.0xc04326d0b0.false'
       name:
         type: string
       network_name:
@@ -8632,7 +8632,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/107714.string'
+        $ref: '#/definitions/109212.string'
       template_id:
         type: string
       version:
@@ -9919,7 +9919,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/92381.0xc0439144b0.false'
+        $ref: '#/definitions/93795.0xc04399de30.false'
       kube_version:
         type: string
       name:
@@ -10195,7 +10195,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14700.0xc04397eed0.false'
+        $ref: '#/definitions/14700.0xc043a2c870.false'
       name:
         type: string
       node_pools:

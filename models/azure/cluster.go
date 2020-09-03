@@ -416,9 +416,9 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		PrintError(errors.New(err.Description), cluster.Name, cluster.InfraId, ctx, companyId)
 		cluster.Status = models.ClusterCreationFailed
 		beego.Info("going to cleanup")
-		err = azure.CleanUp(cluster, ctx, companyId)
-		if err != (types.CustomCPError{}) {
-			PrintError(errors.New(err.Error), cluster.Name, cluster.InfraId, ctx, companyId)
+		err_ := azure.CleanUp(cluster, ctx, companyId)
+		if err_ != (types.CustomCPError{}) {
+			PrintError(errors.New(err_.Error), cluster.Name, cluster.InfraId, ctx, companyId)
 		}
 
 		cluster.Status = models.ClusterCreationFailed
