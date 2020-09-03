@@ -290,26 +290,43 @@ func (c *AzureClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	if cluster.Status == (models.Deploying) {
+
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	savedCluster, err := azure.GetCluster(cluster.InfraId, userInfo.CompanyId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if savedCluster.Status == (models.Deploying) {
 		ctx.SendLogs("AzureClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	} else if cluster.Status == (models.Terminating) {
+	} else if savedCluster.Status == (models.Terminating) {
 		ctx.SendLogs("AzureClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	} else if cluster.Status == (models.ClusterTerminationFailed) {
+	} else if savedCluster.Status == (models.ClusterTerminationFailed) {
 		ctx.SendLogs("AzureClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
 		c.ServeJSON()
 		return
 	}
-	if cluster.Status == (models.ClusterCreated) {
+	if savedCluster.Status == (models.ClusterCreated) {
 		c.Data["json"] = map[string]string{"msg": "No changes are applicable"}
 		c.ServeJSON()
 	}
@@ -318,13 +335,6 @@ func (c *AzureClusterController) Patch() {
 	err = validate.Struct(cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
-	if err != nil {
-		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1266,7 +1276,7 @@ func (c *AzureClusterController) GetRegions() {
 // @Title Get Availability Zone
 // @Description return zones against a region
 // @Param	region	 	path	string	true	"Azure region"
-// @Success 200  []models.AzureZone
+// @Success 200  []string
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}

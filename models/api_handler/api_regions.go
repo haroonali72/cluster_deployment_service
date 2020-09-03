@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"strings"
 )
+
 var AzureZoneNotSupportedRegions = []byte(
 	`[
 			{"region":"East Asia","location":"eastasia"},
@@ -36,11 +37,11 @@ var AzureZoneNotSupportedRegions = []byte(
 
 ]`)
 
-var AzureZone =[]byte(
+var AzureZone = []byte(
 	`[
-	{ "label": "a" ,"value": "1"},
-	{"label" :"b" ,"value" : "2"},
-	{"label" :"c" ,"value" : "3"}
+	 "1",
+	 "2",
+	"3"
 ]`)
 
 func GetAwsRegions() (reg []models.Region, err error) {

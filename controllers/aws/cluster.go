@@ -279,49 +279,10 @@ func (c *AWSClusterController) Post() {
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
 func (c *AWSClusterController) Patch() {
+
 	var cluster aws.Cluster_Def
+
 	ctx := new(utils.Context)
-
-	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-	if err != nil {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "Error while unmarshalling " + err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	if cluster.Status == (models.Deploying) {
-		ctx.SendLogs("AWSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
-		c.ServeJSON()
-		return
-	} else if cluster.Status == (models.Terminating) {
-		ctx.SendLogs("AWSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	} else if cluster.Status == (models.ClusterTerminationFailed) {
-		ctx.SendLogs("AwsClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
-		c.ServeJSON()
-		return
-	}
-	if cluster.Status == (models.ClusterCreated) {
-		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
-		c.ServeJSON()
-	}
-
-	validate := validator.New()
-	err = validate.Struct(cluster)
-	if err != nil {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
@@ -335,6 +296,55 @@ func (c *AWSClusterController) Patch() {
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	savedCluster, err := aws.GetCluster(cluster.InfraId, userInfo.CompanyId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if savedCluster.Status == (models.Deploying) {
+		ctx.SendLogs("AWSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	} else if savedCluster.Status == (models.Terminating) {
+		ctx.SendLogs("AWSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	} else if savedCluster.Status == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("AwsClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
+		c.ServeJSON()
+		return
+	}
+	if savedCluster.Status == (models.ClusterCreated) {
+		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
+		c.ServeJSON()
+	}
+
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

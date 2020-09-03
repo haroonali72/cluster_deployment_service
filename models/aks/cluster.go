@@ -1254,8 +1254,15 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 				}
 
 				//If user delete existing nodepool and create again with same nodepool name
-				if diff.Type == "update" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[1] == strconv.Itoa(poolIndex) && (diff.Path[2] == "VMSize" || diff.Path[2] == "OsDiskSizeGB" || diff.Path[2] == "MaxPods") && !isPoolUpdated[poolIndex] {
-					err := aksOps.DeleteAgentPool(ctx, cluster.ResourceGoup, cluster.Name, nodePool)
+				if diff.Type == "update" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[1] == strconv.Itoa(poolIndex) && (diff.Path[2] == "VMSize" || diff.Path[2] == "OsDiskSizeGB" || diff.Path[2] == "MaxPods" || diff.Path[2] == "Name") && !isPoolUpdated[poolIndex] {
+					poolName := nodePool.Name
+					if diff.Path[2] == "Name" {
+						if _, ok := diff.To.(string); ok {
+							v := diff.From.(string)
+							poolName = &v
+						}
+					}
+					err := aksOps.DeleteAgentPool(ctx, cluster.ResourceGoup, cluster.Name, ManagedClusterAgentPoolProfile{Name: poolName})
 					if err != nil {
 						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 						updationFailedError(cluster, ctx, types.CustomCPError{

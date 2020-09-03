@@ -957,7 +957,7 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 			scaling.AutoScale = true
 
 			poolResponse.Scaling = scaling
-			poolResponse.Name = poolOutput.Nodegroup.InstanceTypes[0]
+			poolResponse.MachineType = poolOutput.Nodegroup.InstanceTypes[0]
 
 			poolResponse.Nodes = nodes
 			response.NodePools = append(response.NodePools, poolResponse)

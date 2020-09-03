@@ -585,7 +585,7 @@ func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, zone, clusterID string
 				return cpErr
 			}
 		} else {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs(string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			cpErr := ApiError(errors.New(string(body)), "error occurred while adding zone to workpool: "+poolName, 512)
 			return cpErr
 		}

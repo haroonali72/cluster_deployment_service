@@ -1212,7 +1212,7 @@ paths:
         type: string
       responses:
         "200":
-          description: '[]models.AzureZone'
+          description: '[]string'
         "400":
           description: '{"error": "Bad Request"}'
         "401":
@@ -1681,7 +1681,7 @@ paths:
           description: '{"error": "Runtime Error"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/do/sshkey/{keyname}:
+  /cluster/do/sshkey/{keyname}/{region}:
     delete:
       tags:
       - cluster/do
@@ -1705,7 +1705,7 @@ paths:
         type: string
       - in: path
         name: region
-        description: region
+        description: cloud region
         required: true
         type: string
       responses:
@@ -7295,40 +7295,40 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  502.0xc0439fc900.false:
+  502.0xc04396aba0.false:
     title: "false"
     type: object
-  644.0xc042ee1bf0.false:
+  644.0xc042e59c80.false:
     title: "false"
     type: object
-  721.0xc04326d0b0.false:
+  721.0xc0431e3140.false:
     title: "false"
     type: object
-  750.0xc043889470.false:
+  750.0xc043807710.false:
     title: "false"
     type: object
-  2321.string:
+  2282.string:
     title: string
     type: object
-  5026.string:
+  4946.string:
     title: string
     type: object
-  5791.string:
+  5704.string:
     title: string
     type: object
   12046.string:
     title: string
     type: object
-  14700.0xc043a2c870.false:
+  14700.0xc0439a4b10.false:
     title: "false"
     type: object
-  90678.string:
+  91581.string:
     title: string
     type: object
-  93795.0xc04399de30.false:
+  93796.0xc0439420f0.false:
     title: "false"
     type: object
-  109212.string:
+  107771.string:
     title: string
     type: object
   X-Profile-Id:
@@ -7439,7 +7439,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/90678.string'
+        $ref: '#/definitions/91581.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -7613,7 +7613,7 @@ definitions:
         description: Id of the infrastructure [required]
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc042ee1bf0.false'
+        $ref: '#/definitions/644.0xc042e59c80.false'
       name:
         description: Name of the infrastructure [required]
         type: string
@@ -8054,7 +8054,7 @@ definitions:
       infra_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/721.0xc04326d0b0.false'
+        $ref: '#/definitions/721.0xc0431e3140.false'
       name:
         type: string
       network_name:
@@ -8632,7 +8632,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/109212.string'
+        $ref: '#/definitions/107771.string'
       template_id:
         type: string
       version:
@@ -9919,7 +9919,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/93795.0xc04399de30.false'
+        $ref: '#/definitions/93796.0xc0439420f0.false'
       kube_version:
         type: string
       name:
@@ -10195,7 +10195,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14700.0xc043a2c870.false'
+        $ref: '#/definitions/14700.0xc0439a4b10.false'
       name:
         type: string
       node_pools:

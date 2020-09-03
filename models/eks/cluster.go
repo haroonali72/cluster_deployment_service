@@ -1339,6 +1339,7 @@ func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*No
 			}
 			return err
 		}
+		pool.PoolStatus = true
 		utils.SendLog(ctx.Data.Company, pool.NodePoolName+" nodepool added successfully", models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 	}
@@ -1357,6 +1358,7 @@ func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*No
 
 	oldCluster.NodePools = cluster.NodePools
 	for in, mainPool := range pools {
+		mainPool.PoolStatus = true
 		cluster.NodePools[in].PoolStatus = true
 		oldCluster.NodePools = append(oldCluster.NodePools, mainPool)
 		for _, pool := range pools {

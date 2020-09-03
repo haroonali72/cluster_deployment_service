@@ -199,7 +199,7 @@ func GetProfile(profileId string, region string, token string, ctx utils.Context
 	err = json.Unmarshal(data, &azureProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 500, vault.AzureProfile{}, err
+		return statusCode, vault.AzureProfile{}, err
 	}
 	azureProfile.Profile.Location = region
 	return 0, azureProfile, nil
@@ -825,25 +825,25 @@ func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Reg
 	}
 	return regions, types.CustomCPError{}
 }
-func GetZones(region string) ([]models.AzureZone, types.CustomCPError) {
+func GetZones(region string) ([]string, types.CustomCPError) {
 	bytes := api_handler.AzureZoneNotSupportedRegions
 	bytes1 := api_handler.AzureZone
 	var regionList []models.AzureRegion
-	var zoneList []models.AzureZone
+	var zoneList models.AzureZone
 
 	err := json.Unmarshal(bytes, &regionList)
 	if err != nil {
-		return []models.AzureZone{}, types.CustomCPError{StatusCode: 512, Error: "Region not unmarshalled", Description: "Region not unmarshalled"}
+		return []string{}, types.CustomCPError{StatusCode: 512, Error: "Region not unmarshalled", Description: "Region not unmarshalled"}
 	}
 
-	err = json.Unmarshal(bytes1, &zoneList)
+	err = json.Unmarshal(bytes1, &zoneList.Value)
 	if err != nil {
-		return []models.AzureZone{}, types.CustomCPError{StatusCode: 512, Error: "Zones not unmarshalled", Description: "Zones not unmarshalled"}
+		return []string{}, types.CustomCPError{StatusCode: 512, Error: "Zones not unmarshalled", Description: "Zones not unmarshalled"}
 	}
 
 	for _, notAllowedRegion := range regionList {
 		if region == notAllowedRegion.Location {
-			return nil, types.CustomCPError{
+			return []string{}, types.CustomCPError{
 				StatusCode:  512,
 				Error:       "No availability zones in this region",
 				Description: "No availability zones in this region",
@@ -851,7 +851,7 @@ func GetZones(region string) ([]models.AzureZone, types.CustomCPError) {
 		}
 	}
 
-	return zoneList, types.CustomCPError{}
+	return zoneList.Value, types.CustomCPError{}
 }
 
 func GetAllMachines() ([]string, types.CustomCPError) {
