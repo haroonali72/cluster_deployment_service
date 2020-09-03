@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-func getNetworkHost(cloudType, projectId string) string {
+func getNetworkHost(cloudType, infraId string) string {
 
 	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
 
@@ -27,8 +27,8 @@ func getNetworkHost(cloudType, projectId string) string {
 		host = strings.Replace(host, "{cloud}", cloudType, -1)
 	}
 
-	if strings.Contains(host, "{projectId}") {
-		host = strings.Replace(host, "{projectId}", projectId, -1)
+	if strings.Contains(host, "{infraId}") {
+		host = strings.Replace(host, "{infraId}", infraId, -1)
 	}
 
 	return host
@@ -85,7 +85,7 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 		}
 	}
 	var doNetwork types.DONetwork
-	url := getNetworkHost("do", cluster.ProjectId)
+	url := getNetworkHost("do", cluster.InfraId)
 
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil || network == nil {
@@ -100,27 +100,27 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 		return cluster, cpErr
 	}
 
-	utils.SendLog(companyId, "Creating DO Project With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
-	cpErr, cluster.DOProjectId = cloud.createProject(cluster.ProjectId, ctx)
+	utils.SendLog(companyId, "Creating DO InfratructureWith ID : "+cluster.InfraId, "info", cluster.InfraId)
+	cpErr, cluster.DOInfraId = cloud.createProject(cluster.InfraId, ctx)
 	if cpErr != (types.CustomCPError{}) {
 		return cluster, cpErr
 	}
-	cloud.Resources["project"] = append(cloud.Resources["project"], cluster.DOProjectId)
-	utils.SendLog(companyId, "Project Created Successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
+	cloud.Resources["project"] = append(cloud.Resources["project"], cluster.DOInfraId)
+	utils.SendLog(companyId, "DO Project Created Successfully : "+cluster.InfraId, "info", cluster.InfraId)
 
 	for index, pool := range cluster.NodePools {
-		key, cpErr := cloud.getKey(*pool, cluster.ProjectId, ctx, companyId, token)
+		key, cpErr := cloud.getKey(*pool, cluster.InfraId, ctx, companyId, token)
 		if cpErr != (types.CustomCPError{}) {
 			return cluster, cpErr
 		}
 
-		utils.SendLog(companyId, "Creating Node Pools : "+cluster.Name, "info", cluster.ProjectId)
-		droplets, cpErr := cloud.createInstances(*pool, doNetwork, key, ctx, token, cluster.ProjectId)
+		utils.SendLog(companyId, "Creating Node Pools : "+cluster.Name, "info", cluster.InfraId)
+		droplets, cpErr := cloud.createInstances(*pool, doNetwork, key, ctx, token, cluster.InfraId)
 		if cpErr != (types.CustomCPError{}) {
-			utils.SendLog(companyId, "Error in instances creation: "+cpErr.Description, "info", cluster.ProjectId)
+			utils.SendLog(companyId, "Error in instances creation: "+cpErr.Description, "info", cluster.InfraId)
 			return cluster, cpErr
 		}
-		utils.SendLog(companyId, "Node Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
+		utils.SendLog(companyId, "Node Pool Created Successfully : "+cluster.Name, "info", cluster.InfraId)
 		var nodes []*Node
 		if droplets != nil && len(droplets) > 0 {
 			var dropletsIds []int
@@ -137,7 +137,7 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 				var volID string
 				if pool.IsExternal {
 
-					utils.SendLog(companyId, "Creating Volume : "+pool.Name+strconv.Itoa(in), "info", cluster.ProjectId)
+					utils.SendLog(companyId, "Creating Volume : "+pool.Name+strconv.Itoa(in), "info", cluster.InfraId)
 					volume, cpErr := cloud.createVolume(pool.Name+strconv.Itoa(in), pool.ExternalVolume, ctx)
 					if cpErr != (types.CustomCPError{}) {
 						return cluster, cpErr
@@ -148,13 +148,13 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 					if cpErr != (types.CustomCPError{}) {
 						return cluster, cpErr
 					}
-					utils.SendLog(companyId, "Volume Created Successfully : "+pool.Name+strconv.Itoa(in), "info", cluster.ProjectId)
+					utils.SendLog(companyId, "Volume Created Successfully : "+pool.Name+strconv.Itoa(in), "info", cluster.InfraId)
 
 				}
 				nodes = append(nodes, &Node{CloudId: droplet.ID, NodeState: droplet.Status, Name: droplet.Name, PublicIP: publicIp, PrivateIP: privateIp, UserName: "root", VolumeId: volID})
 			}
 
-			cpErr := cloud.assignResources(dropletsIds, cluster.DOProjectId, ctx)
+			cpErr := cloud.assignResources(dropletsIds, cluster.DOInfraId, ctx)
 			if cpErr != (types.CustomCPError{}) {
 				return cluster, cpErr
 			}
@@ -173,7 +173,7 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 
 	return cluster, types.CustomCPError{}
 }
-func (cloud *DO) getKey(pool NodePool, projectId string, ctx utils.Context, companyId string, token string) (existingKey key_utils.AZUREKey, err types.CustomCPError) {
+func (cloud *DO) getKey(pool NodePool, infraId string, ctx utils.Context, companyId string, token string) (existingKey key_utils.AZUREKey, err types.CustomCPError) {
 
 	bytes, err_ := vault.GetSSHKey(string(models.DO), pool.KeyInfo.KeyName, token, ctx, "")
 	if err_ != nil {
@@ -195,7 +195,7 @@ func (cloud *DO) getKey(pool NodePool, projectId string, ctx utils.Context, comp
 	err = ApiError(errors.New("Key not found"), "Error while fetching ssh key", 500)
 	return key_utils.AZUREKey{}, err
 }
-func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key_utils.AZUREKey, ctx utils.Context, token, projectId string) ([]godo.Droplet, types.CustomCPError) {
+func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key_utils.AZUREKey, ctx utils.Context, token, infraId string) ([]godo.Droplet, types.CustomCPError) {
 
 	vpcId := cloud.getVPCId(network, pool.VPC)
 	var nodeNames []string
@@ -222,7 +222,7 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 	pool.PrivateNetworking = true
 
 	var tags []string
-	tags = append(tags, projectId)
+	tags = append(tags, infraId)
 	input := &godo.DropletMultiCreateRequest{
 		Names:             nodeNames,
 		Region:            cloud.Region,
@@ -235,7 +235,7 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 	}
 
 	var fileName []string
-	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+infraId, fileName, pool.PoolRole, ctx)
 
 	if err != nil {
 		ctx.SendLogs("Error in creating node pool : "+pool.Name+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -265,39 +265,39 @@ func (cloud *DO) getDroplets(dropletId int, ctx utils.Context) (godo.Droplet, ty
 	}
 	return *droplet, types.CustomCPError{}
 }
-func (cloud *DO) createProject(projectId string, ctx utils.Context) (types.CustomCPError, string) {
+func (cloud *DO) createProject(infraId string, ctx utils.Context) (types.CustomCPError, string) {
 	projectInput := &godo.CreateProjectRequest{
-		Name:        projectId,
+		Name:        infraId,
 		Purpose:     "Operational / Developer tooling",
 		Description: "deploying customer solution on DO",
 		Environment: "Development",
 	}
 	project, _, err := cloud.Client.Projects.Create(context.Background(), projectInput)
 	if err != nil {
-		ctx.SendLogs("Error in creating project on DO : "+projectId+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Error in creating Infratructureon DO : "+infraId+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "Error while creating digital ocean  project", 512)
 		return cpErr, ""
 	}
 	return types.CustomCPError{}, project.ID
 }
-func (cloud *DO) deleteProject(projectId string, ctx utils.Context) types.CustomCPError {
+func (cloud *DO) deleteProject(infraId string, ctx utils.Context) types.CustomCPError {
 
-	_, err := cloud.Client.Projects.Delete(context.Background(), projectId)
+	_, err := cloud.Client.Projects.Delete(context.Background(), infraId)
 	if err != nil {
-		ctx.SendLogs("Error in creating project on DO : "+projectId+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Error in creating project on DO : "+infraId+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "Project Deletion Failed", 512)
 		return cpErr
 	}
 	return types.CustomCPError{}
 }
-func (cloud *DO) assignResources(droptlets []int, doProjectId string, ctx utils.Context) types.CustomCPError {
+func (cloud *DO) assignResources(droptlets []int, doInfraId string, ctx utils.Context) types.CustomCPError {
 
 	var resources []interface{}
 	for _, id := range droptlets {
 		resources = append(resources, "do:droplet:"+strconv.Itoa(id))
 	}
 
-	_, _, err := cloud.Client.Projects.AssignResources(context.Background(), doProjectId, resources...)
+	_, _, err := cloud.Client.Projects.AssignResources(context.Background(), doInfraId, resources...)
 	if err != nil {
 		ctx.SendLogs("Error in resource assignment : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "Error in resource assignment", 512)
@@ -460,38 +460,38 @@ func (cloud *DO) terminateCluster(cluster *Cluster_Def, ctx utils.Context, compa
 		}
 	}
 
-	utils.SendLog(companyId, "Terminating Node Pools : "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Terminating Node Pools : "+cluster.Name, "info", cluster.InfraId)
 	for in, pool := range cluster.NodePools {
 
 		for _, node := range cluster.NodePools[in].Nodes {
 
-			utils.SendLog(companyId, "Terminating Droplet : "+node.Name, "info", cluster.ProjectId)
+			utils.SendLog(companyId, "Terminating Droplet : "+node.Name, "info", cluster.InfraId)
 			cpErr = cloud.deleteDroplet(node.CloudId, ctx)
 
 			if cpErr != (types.CustomCPError{}) {
 				return cpErr
 			}
-			utils.SendLog(companyId, "Droplet "+node.Name+" Terminated Successfully ", "info", cluster.ProjectId)
+			utils.SendLog(companyId, "Droplet "+node.Name+" Terminated Successfully ", "info", cluster.InfraId)
 
 			if pool.IsExternal {
-				utils.SendLog(companyId, "Terminating Volume With ID : "+node.VolumeId, "info", cluster.ProjectId)
+				utils.SendLog(companyId, "Terminating Volume With ID : "+node.VolumeId, "info", cluster.InfraId)
 				cpErr = cloud.deleteVolume(node.VolumeId, ctx, node.CloudId)
 				if cpErr != (types.CustomCPError{}) {
 					return cpErr
 				}
-				utils.SendLog(companyId, "Volume "+node.VolumeId+"Terminated Successfully ", "info", cluster.ProjectId)
+				utils.SendLog(companyId, "Volume "+node.VolumeId+"Terminated Successfully ", "info", cluster.InfraId)
 			}
 
 		}
 	}
-	utils.SendLog(companyId, "Node Pools Terminated Successfully : "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Node Pools Terminated Successfully : "+cluster.Name, "info", cluster.InfraId)
 
-	utils.SendLog(companyId, "Deleting DO Project : "+cluster.Name, "info", cluster.ProjectId)
-	cpErr = cloud.deleteProject(cluster.DOProjectId, ctx)
+	utils.SendLog(companyId, "Deleting DO Project : "+cluster.Name, "info", cluster.InfraId)
+	cpErr = cloud.deleteProject(cluster.DOInfraId, ctx)
 	if cpErr != (types.CustomCPError{}) {
 		return cpErr
 	}
-	utils.SendLog(companyId, "DO Project Deleted Successfully : "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "DO Project Deleted Successfully : "+cluster.Name, "info", cluster.InfraId)
 	return types.CustomCPError{}
 }
 func (cloud *DO) deleteDroplet(dropletId int, ctx utils.Context) types.CustomCPError {

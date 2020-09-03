@@ -14,7 +14,7 @@ import (
 
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	InfraId          string        `json:"infra_id" bson:"infra_id" validate:"required" description:"ID of infrastructure [required]"`
 	Kube_Credentials interface{}   `json:"-" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Name of cluster [required]"`
 	Status           models.Type   `json:"status" bson:"status" validate:"eq=New|eq=new|eq=Cluster Creation Failed" description:"Cluster status can be New, Cluster Created, Cluster Terminated. By default value will be 'New' [readonly]"`
@@ -42,12 +42,12 @@ type Node struct {
 	UserName  string `json:"user_name" bson:"user_name,omitempty" validate:"required" description:"User name which will be used for ssh into machine [required]"`
 }
 type Cluster struct {
-	Name      string      `json:"name,omitempty" bson:"name,omitempty" description:"Cluster name"`
-	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
-	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster"`
+	Name    string      `json:"name,omitempty" bson:"name,omitempty" description:"Cluster name"`
+	InfraId string      `json:"infra_id" bson:"infra_id"  description:"ID of infrastructure"`
+	Status  models.Type `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster"`
 }
 
-func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
+func GetCluster(InfraId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -58,7 +58,7 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoOPClusterCollection)
-	err = c.Find(bson.M{"project_id": projectId, "company_id": companyId}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": InfraId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err
@@ -82,7 +82,7 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (opClusters
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoOPClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"infra_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
@@ -104,7 +104,7 @@ func checkMasterPools(cluster Cluster_Def) error {
 	return nil
 }
 func CreateCluster(cluster Cluster_Def, ctx utils.Context, token string, teams string) error {
-	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+	_, err := GetCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found
 		ctx.SendLogs("Cluster model: Create - Cluster  already exists in the database: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster model: Create - Cluster  already exists in the database: " + cluster.Name)
@@ -134,7 +134,7 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context, token string, teams s
 	return nil
 }
 func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context, teams, token string) error {
-	oldCluster, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+	oldCluster, err := GetCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Cluster   does not exist in the database: "+cluster.Name+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -154,7 +154,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context, teams, t
 		return errors.New("Cluster is in runnning state")
 
 	}
-	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx, token)
+	err = DeleteCluster(cluster.InfraId, cluster.CompanyId, ctx, token)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -171,8 +171,8 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context, teams, t
 
 	return nil
 }
-func DeleteCluster(projectId, companyId string, ctx utils.Context, token string) error {
-	oldCluster, err := GetCluster(projectId, companyId, ctx)
+func DeleteCluster(InfraId, companyId string, ctx utils.Context, token string) error {
+	oldCluster, err := GetCluster(InfraId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Cluster   does not exist in the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -195,7 +195,7 @@ func DeleteCluster(projectId, companyId string, ctx utils.Context, token string)
 
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoOPClusterCollection)
-	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
+	err = c.Remove(bson.M{"infra_id": InfraId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -203,16 +203,16 @@ func DeleteCluster(projectId, companyId string, ctx utils.Context, token string)
 
 	return nil
 }
-func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
+func PrintError(confError error, name, infraId string, ctx utils.Context, companyId string) {
 	if confError != nil {
 		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(companyId, "Cluster creation failed : "+name, "error", projectId)
-		utils.SendLog(companyId, confError.Error(), "error", projectId)
+		utils.SendLog(companyId, "Cluster creation failed : "+name, "error", infraId)
+		utils.SendLog(companyId, confError.Error(), "error", infraId)
 
 	}
 }
-func CheckCluster(projectId, companyId string, ctx utils.Context) error {
-	cluster, err := GetCluster(projectId, companyId, ctx)
+func CheckCluster(infraId, companyId string, ctx utils.Context) error {
+	cluster, err := GetCluster(infraId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -222,7 +222,7 @@ func CheckCluster(projectId, companyId string, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	err = agent.InitializeAgentClient(projectId, companyId)
+	err = agent.InitializeAgentClient(infraId, companyId)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err

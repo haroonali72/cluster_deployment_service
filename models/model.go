@@ -45,7 +45,7 @@ type ErrorMessage string
 const (
 	IsEmpty                ErrorMessage = "is empty"
 	Notauthorized          ErrorMessage = "User is unauthorized to perform this action"
-	AlreadyExist           ErrorMessage = "Cluster against same project id already exists"
+	AlreadyExist           ErrorMessage = "Cluster against same infrastructure id already exists"
 	SuccessfullyAdded      ErrorMessage = "Cluster added successfully"
 	SuccessfullyUpdated    ErrorMessage = "Cluster updated successfully"
 	SuccessfullyDeleted    ErrorMessage = "Cluster deleted successfully"
@@ -61,7 +61,7 @@ type HeaderVariable string
 const (
 	Token     HeaderVariable = "X-Auth-Token"
 	ProfileId HeaderVariable = "X-Profile-Id"
-	ProjectId HeaderVariable = "Project Id"
+	InfraId   HeaderVariable = "Infrastructure Id"
 )
 
 type PathVariable string
@@ -71,6 +71,14 @@ const (
 	RegionV       PathVariable = "region"
 	ClusterName   PathVariable = "clusterName"
 	ResourceGroup PathVariable = "resourceGroup"
+)
+
+type QueueType string
+
+const (
+	WorkQueue  QueueType = "bb.cluster.work"
+	AgentQueue QueueType = "bb.agent.work"
+	DoneQueue  QueueType = "bb.cluster.done"
 )
 
 type RequestType string
@@ -109,6 +117,7 @@ const (
 	IKS   Cloud = "iks"
 	OP    Cloud = "op"
 	AKS   Cloud = "aks"
+	IBM   Cloud = "ibm"
 )
 
 type KeyType string
@@ -488,6 +497,13 @@ const (
 //	// AKSVMTypeStandardNV6 ...
 //	AKSVMTypeStandardNV6 AKSVMType = "Standard_NV6"
 //)
+type Action string
+
+const (
+	Create    Action = "create"
+	Update    Action = "update"
+	Terminate Action = "terminate"
+)
 
 type CredentialsType string
 
@@ -496,8 +512,8 @@ const (
 	SSHKey   CredentialsType = "key"
 )
 const (
-	ProjectGetEndpoint = "/raccoon/projects/{projectId}"
-	WeaselGetEndpoint  = "/weasel/network/{cloud}/{projectId}"
+	InfraGetEndpoint  = "/raccoon/infrastructure/{infraId}"
+	WeaselGetEndpoint = "/weasel/network/{cloud}/{infraId}"
 )
 const (
 	WoodpeckerEnpoint = "/agent/api/v1/clientconfig"

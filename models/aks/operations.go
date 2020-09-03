@@ -38,7 +38,7 @@ type AKS struct {
 	KubeVersionClient containerservice.ContainerServicesClient
 	ResourceSkuClient skus.ResourceSkusClient
 	Context           context.Context
-	ProjectId         string
+	infraId           string
 	ID                string
 	Key               string
 	Tenant            string
@@ -209,7 +209,7 @@ func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.C
 	}
 
 	request := cloud.generateClusterCreateRequest(aksCluster)
-	cloud.ProjectId = aksCluster.ProjectId
+	cloud.infraId = aksCluster.InfraId
 
 	//Network will be added in every case BASIC, ADVANCE, EXPERT
 	networkInformation := cloud.getAzureNetwork(token, ctx)
@@ -366,7 +366,7 @@ func (cloud *AKS) GetKubeConfig(ctx utils.Context, cluster AKSCluster) (*contain
 }
 
 func (cloud *AKS) getAzureNetwork(token string, ctx utils.Context) (azureNetwork types.AzureNetwork) {
-	url := getNetworkHost(string(models.Azure), cloud.ProjectId)
+	url := getNetworkHost(string(models.Azure), cloud.infraId)
 
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
@@ -400,7 +400,7 @@ func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster)
 	}
 
 	return AKSCluster{
-		ProjectId:         cloud.ProjectId,
+		InfraId:           cloud.infraId,
 		Cloud:             models.AKS,
 		ProvisioningState: *v.ProvisioningState,
 		KubernetesVersion: *v.KubernetesVersion,
@@ -461,7 +461,7 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			AKSNodePools[i].MaxPods = nodepool.MaxPods
 
 			nodelabels := make(map[string]*string)
-			nodelabels["AKS-Custer-Node-Pool"] = to.StringPtr(c.ProjectId)
+			nodelabels["AKS-Custer-Node-Pool"] = to.StringPtr(c.InfraId)
 			AKSNodePools[i].NodeLabels = nodelabels
 		}
 	}
@@ -728,7 +728,7 @@ func generateClusterTags(c AKSCluster) map[string]*string {
 			AKSclusterTags[tag.Key] = &tag.Value
 		}
 	} else {
-		AKSclusterTags["AKS-Cluster"] = &c.ProjectId
+		AKSclusterTags["AKS-Cluster"] = &c.InfraId
 	}
 
 	return AKSclusterTags
@@ -961,22 +961,22 @@ func (cloud *AKS) WriteAzureSkus() {
 }
 
 func validate(aksCluster AKSCluster) error {
-	if aksCluster.ProjectId == "" {
-		return errors.New("project id is required")
+	if aksCluster.InfraId == "" {
+		return errors.New("infrastructure Id is required")
 	} else if aksCluster.Name == "" {
 		return errors.New("cluster name is required")
 	}
 	return nil
 }
 
-func getNetworkHost(cloudType, projectId string) string {
+func getNetworkHost(cloudType, infraId string) string {
 	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
 
 	if strings.Contains(host, "{cloud}") {
 		host = strings.Replace(host, "{cloud}", cloudType, -1)
 	}
-	if strings.Contains(host, "{projectId}") {
-		host = strings.Replace(host, "{projectId}", projectId, -1)
+	if strings.Contains(host, "{infraId}") {
+		host = strings.Replace(host, "{infraId}", infraId, -1)
 	}
 	return host
 }

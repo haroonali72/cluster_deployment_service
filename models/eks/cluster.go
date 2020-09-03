@@ -22,7 +22,7 @@ import (
 
 type EKSCluster struct {
 	ID                 bson.ObjectId      `json:"-" bson:"_id,omitempty"`
-	ProjectId          string             `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	InfraId            string             `json:"infra_id" bson:"infra_id" validate:"required" description:"ID of infrastructure [required]"`
 	Cloud              models.Cloud       `json:"cloud" bson:"cloud" validate:"eq=EKS|eq=eks"`
 	CreationDate       time.Time          `json:"-" bson:"creation_date"`
 	ModificationDate   time.Time          `json:"-" bson:"modification_date"`
@@ -103,7 +103,7 @@ type NodePoolScalingConfig struct {
 }
 
 type EKSClusterStatus struct {
-	ProjectId       string          `json:"project_id"`
+	InfraId         string          `json:"infra_id"`
 	ClusterEndpoint *string         `json:"endpoint"`
 	Name            *string         `json:"name"`
 	Status          *string         `json:"status"`
@@ -221,7 +221,7 @@ func GetInstances(amiType string, ctx utils.Context) []string {
 	return list
 
 }
-func GetEKSCluster(projectId string, companyId string, ctx utils.Context) (cluster EKSCluster, err error) {
+func GetEKSCluster(InfraId string, companyId string, ctx utils.Context) (cluster EKSCluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs(
@@ -235,7 +235,7 @@ func GetEKSCluster(projectId string, companyId string, ctx utils.Context) (clust
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoEKSClusterCollection)
-	err = c.Find(bson.M{"project_id": projectId, "company_id": companyId}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": InfraId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
 			"EKSGetClusterModel:  Get - Got error while fetching from database: "+err.Error(),
@@ -266,7 +266,7 @@ func GetAllEKSCluster(data rbacAuthentication.List, ctx utils.Context) (clusters
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoEKSClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}}).All(&clusters)
+	err = c.Find(bson.M{"infra_id": bson.M{"$in": copyData}}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs(
 			"EKSGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(),
@@ -278,9 +278,9 @@ func GetAllEKSCluster(data rbacAuthentication.List, ctx utils.Context) (clusters
 
 	return clusters, nil
 }
-func GetNetwork(token, projectId string, ctx utils.Context) error {
+func GetNetwork(token, InfraId string, ctx utils.Context) error {
 
-	url := getNetworkHost("aws", projectId)
+	url := getNetworkHost("aws", InfraId)
 
 	_, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
@@ -291,9 +291,9 @@ func GetNetwork(token, projectId string, ctx utils.Context) error {
 	return nil
 }
 func AddEKSCluster(cluster EKSCluster, ctx utils.Context) error {
-	_, err := GetEKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+	_, err := GetEKSCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if err == nil {
-		text := fmt.Sprintf("EKSAddClusterModel:  Add - Cluster for project '%s' already exists in the database.", cluster.ProjectId)
+		text := fmt.Sprintf("EKSAddClusterModel:  Add - Cluster for infrastructure '%s' already exists in the database.", cluster.InfraId)
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
@@ -333,7 +333,7 @@ func AddEKSCluster(cluster EKSCluster, ctx utils.Context) error {
 }
 
 func UpdateEKSCluster(cluster EKSCluster, ctx utils.Context) error {
-	oldCluster, err := GetEKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+	oldCluster, err := GetEKSCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if err != nil {
 		text := "EKSUpdateClusterModel:  Update - Cluster '" + cluster.Name + "' does not exist in the database: " + err.Error()
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -365,7 +365,7 @@ func UpdateEKSCluster(cluster EKSCluster, ctx utils.Context) error {
 		return errors.New("cluster is in running state")
 	}
 	*/
-	err = DeleteEKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+	err = DeleteEKSCluster(cluster.InfraId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs(
 			"EKSUpdateClusterModel:  Update - Got error deleting cluster "+err.Error(),
@@ -391,7 +391,7 @@ func UpdateEKSCluster(cluster EKSCluster, ctx utils.Context) error {
 	return nil
 }
 
-func DeleteEKSCluster(projectId, companyId string, ctx utils.Context) error {
+func DeleteEKSCluster(InfraId, companyId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs(
@@ -405,7 +405,7 @@ func DeleteEKSCluster(projectId, companyId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoEKSClusterCollection)
-	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
+	err = c.Remove(bson.M{"infra_id": InfraId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(
 			"EKSDeleteClusterModel:  Delete - Got error while deleting from the database: "+err.Error(),
@@ -422,30 +422,36 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 	publisher := utils.Notifier{}
 	publisher.Init_notifier()
 
-	eksOps := GetEKS(cluster.ProjectId, credentials.Profile)
+	eksOps := GetEKS(cluster.InfraId, credentials.Profile)
 	eksOps.init()
 
-	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.InfraId)
 
 	cluster.Status = (models.Deploying)
 	confError := UpdateEKSCluster(cluster, ctx)
 	if confError != nil {
 
-		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+		utils.SendLog(companyId, confError.Error(), "error", cluster.InfraId)
 		cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
 
-		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
+		err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.IKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: confError.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return cpErr
 	}
 
 	cpError := eksOps.CreateCluster(&cluster, token, ctx)
 
 	if cpError != (types.CustomCPError{}) {
-		utils.SendLog(ctx.Data.Company, "EKS CLuster Creation Failed", "error", cluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, "EKS CLuster Creation Failed", "error", cluster.InfraId)
 
 		//if cluster.OutputArn != nil {
 
@@ -456,48 +462,66 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		confError := UpdateEKSCluster(cluster, ctx)
 		if confError != nil {
 
-			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+			utils.SendLog(companyId, confError.Error(), "error", cluster.InfraId)
 			cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
-			err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpError)
+			err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.IKS, ctx, cpError)
 			if err != nil {
 				ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: confError.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Create,
+			}, ctx)
 			return cpErr
 
 		}
-		utils.SendLog(companyId, "Cluster creation failed : "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(companyId, "Cluster creation failed : "+cluster.Name, "error", cluster.InfraId)
 		ctx.SendLogs("Cluster creation failed", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpError)
+		err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.IKS, ctx, cpError)
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: cpError.Error + "\n" + cpError.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return cpError
 	}
 	/**
 	  TODO : Add Agent Deployment Process.Due on @Ahmad.
 	*/
-	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
+	pubSub := publisher.Subscribe(ctx.Data.InfraId, ctx)
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != nil {
-		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+		utils.SendLog(companyId, confError.Error(), "error", cluster.InfraId)
 
 		cluster.Status = models.ClusterCreationFailed
 		profile := vault.AwsProfile{Profile: credentials.Profile}
-		_ = TerminateCluster(cluster, profile, cluster.ProjectId, companyId, ctx)
-		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
+		_ = TerminateCluster(cluster, profile, cluster.InfraId, companyId, token, ctx)
+		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.InfraId)
 		confError_ := UpdateEKSCluster(cluster, ctx)
 		if confError_ != nil {
-			utils.SendLog(companyId, confError_.Error(), "error", cluster.ProjectId)
+			utils.SendLog(companyId, confError_.Error(), "error", cluster.InfraId)
 		}
 
 		cpErr := ApiError(confError, "Error occurred while deploying agent", 500)
-		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
+		err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.IKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("EKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: confError.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return cpErr
 	}
 	cluster.Status = models.ClusterCreated
@@ -506,58 +530,82 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 
 	if confError != nil {
 
-		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+		utils.SendLog(companyId, confError.Error(), "error", cluster.InfraId)
 		cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
-		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpError)
+		err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.IKS, ctx, cpError)
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: confError.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 		return cpErr
 	}
-	utils.SendLog(companyId, "Cluster Created Sccessfully "+cluster.Name, "info", cluster.ProjectId)
-	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
+	utils.SendLog(companyId, "Cluster Created Sccessfully "+cluster.Name, "info", cluster.InfraId)
+	notify := publisher.RecieveNotification(ctx.Data.InfraId, ctx, pubSub)
 	if notify {
 		ctx.SendLogs("EKSClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  true,
+			Message: "Cluster Created Sccessfully",
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 	} else {
 		ctx.SendLogs("EKSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.Status = models.ClusterCreationFailed
-		utils.SendLog(companyId, confError.Error(), "Notification not recieved from agent", cluster.ProjectId)
+		utils.SendLog(companyId, confError.Error(), "Notification not recieved from agent", cluster.InfraId)
 		confError_ := UpdateEKSCluster(cluster, ctx)
 		if confError_ != nil {
 			ctx.SendLogs("EKSDeployClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		}
-		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, types.CustomCPError{Description: confError_.Error(), Error: confError_.Error(), StatusCode: 512})
+		err := db.CreateError(cluster.InfraId, ctx.Data.Company, models.EKS, ctx, types.CustomCPError{Description: confError_.Error(), Error: confError_.Error(), StatusCode: 512})
 		if err != nil {
 			ctx.SendLogs("EKSDeployClusterModel:  Agent  - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  true,
+			Message: "Notification not recieved from agent",
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Create,
+		}, ctx)
 	}
 
 	return types.CustomCPError{}
 }
 
-func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, projectId, companyId string, ctx utils.Context) types.CustomCPError {
-	publisher := utils.Notifier{}
-	publisher.Init_notifier()
+func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, InfraId, companyId, token string, ctx utils.Context) types.CustomCPError {
+	/*	publisher := utils.Notifier{}
+		publisher.Init_notifier()*/
 
-	eksOps := GetEKS(projectId, credentials.Profile)
+	eksOps := GetEKS(InfraId, credentials.Profile)
 
 	cluster.Status = (models.Terminating)
-	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.InfraId)
 
 	err_ := UpdateEKSCluster(cluster, ctx)
 	if err_ != nil {
 
-		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)
 		cpErr := types.CustomCPError{Description: err_.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
-		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
+		err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.IKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err_.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return cpErr
 	}
 	eksOps.init()
@@ -565,47 +613,65 @@ func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, projectI
 	cpErr := eksOps.DeleteCluster(&cluster, ctx)
 	if cpErr != (types.CustomCPError{}) {
 
-		utils.SendLog(companyId, "Cluster termination failed: "+cpErr.Description+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(companyId, "Cluster termination failed: "+cpErr.Description+cluster.Name, "error", cluster.InfraId)
 
 		cluster.Status = models.ClusterTerminationFailed
 		err := UpdateEKSCluster(cluster, ctx)
 		if err != nil {
-			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
-			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.InfraId)
+			utils.SendLog(companyId, err.Error(), "error", cluster.InfraId)
 
 		}
-		err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
+		err = db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.IKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: cpErr.Error + "\n" + cpErr.Description,
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return cpErr
 	}
 
 	cluster.Status = models.ClusterTerminated
 	err := UpdateEKSCluster(cluster, ctx)
 	if err != nil {
-		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
-		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.InfraId)
+		utils.SendLog(companyId, err.Error(), "error", cluster.InfraId)
 
 		cpErr := ApiError(err, "Error occurred while updating cluster status in database", 500)
-		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
+		err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.IKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Terminate,
+		}, ctx)
 		return cpErr
 
 	}
-	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.InfraId)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "Cluster terminated successfully",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Terminate,
+	}, ctx)
 	return types.CustomCPError{}
 }
 
 func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
-	if cluster.ProjectId == "" {
+	if cluster.InfraId == "" {
 
-		return errors.New("project ID is empty")
+		return errors.New("infrastructure ID is empty")
 
 	} else if cluster.Version == nil {
 
@@ -641,9 +707,9 @@ func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
 
 	return nil
 }
-func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context, companyId string, token string) (EKSClusterStatus, types.CustomCPError) {
+func FetchStatus(credentials vault.AwsProfile, InfraId string, ctx utils.Context, companyId string, token string) (EKSClusterStatus, types.CustomCPError) {
 
-	cluster, err := GetEKSCluster(projectId, companyId, ctx)
+	cluster, err := GetEKSCluster(InfraId, companyId, ctx)
 	if err != nil {
 		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
 		return EKSClusterStatus{}, cpErr
@@ -660,7 +726,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		return EKSClusterStatus{}, cpErr
 	}
 	if cluster.Status != models.ClusterCreated {
-		customErr, err := db.GetError(projectId, companyId, models.IKS, ctx)
+		customErr, err := db.GetError(InfraId, companyId, models.IKS, ctx)
 		if err != nil {
 			cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
 			return EKSClusterStatus{}, cpErr
@@ -669,7 +735,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 			return EKSClusterStatus{}, customErr.Err
 		}
 	}
-	eks := GetEKS(cluster.ProjectId, credentials.Profile)
+	eks := GetEKS(cluster.InfraId, credentials.Profile)
 
 	eks.init()
 
@@ -680,20 +746,20 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return EKSClusterStatus{}, e
 	}
-	response.ProjectId = projectId
+	response.InfraId = InfraId
 
 	return response, types.CustomCPError{}
 }
 func ApplyAgent(credentials vault.AwsProfile, token string, ctx utils.Context, clusterName string) (confError error) {
 	companyId := ctx.Data.Company
-	projetcID := ctx.Data.ProjectId
-	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
+	infraID := ctx.Data.InfraId
+	data2, err := woodpecker.GetCertificate(infraID, token, ctx)
 	if err != nil {
 		ctx.SendLogs("EKSClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
-	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
+	filePath := "/tmp/" + companyId + "/" + infraID + "/"
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
@@ -701,7 +767,7 @@ func ApplyAgent(credentials vault.AwsProfile, token string, ctx utils.Context, c
 		return err
 	}
 
-	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e accessKey=" + credentials.Profile.AccessKey + " -e cluster=" + clusterName + " -e secretKey=" + credentials.Profile.SecretKey + " -e region=" + credentials.Profile.Region + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.EKSAuthContainerName
+	cmd = "sudo docker run --rm --name " + companyId + infraID + " -e accessKey=" + credentials.Profile.AccessKey + " -e cluster=" + clusterName + " -e secretKey=" + credentials.Profile.SecretKey + " -e region=" + credentials.Profile.Region + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.EKSAuthContainerName
 
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
@@ -710,8 +776,8 @@ func ApplyAgent(credentials vault.AwsProfile, token string, ctx utils.Context, c
 	}
 	return nil
 }
-func GetEKSClusters(projectId string, credentials vault.AwsProfile, ctx utils.Context) ([]*string, types.CustomCPError) {
-	eksOps := GetEKS(projectId, credentials.Profile)
+func GetEKSClusters(InfraId string, credentials vault.AwsProfile, ctx utils.Context) ([]*string, types.CustomCPError) {
+	eksOps := GetEKS(InfraId, credentials.Profile)
 	eksOps.init()
 	clusters, cpError := eksOps.getEKSCluster(ctx)
 	if cpError != (types.CustomCPError{}) {
@@ -721,21 +787,21 @@ func GetEKSClusters(projectId string, credentials vault.AwsProfile, ctx utils.Co
 }
 func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials, token string, ctx utils.Context) (confError types.CustomCPError) {
 
-	publisher := utils.Notifier{}
-	publisher.Init_notifier()
+	/*publisher := utils.Notifier{}
+	publisher.Init_notifier()*/
 
-	eks := GetEKS(cluster.ProjectId, credentials)
+	eks := GetEKS(cluster.InfraId, credentials)
 
 	eks.init()
-	utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 	difCluster, _, _, err1 := CompareClusters(ctx)
 	if err1 != nil {
 		ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err1.Error()+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, err1.Error()+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 		if !strings.Contains(err1.Error(), "Nothing to update") {
-			utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 			cluster.Status = models.ClusterUpdateFailed
 			confError := UpdateEKSCluster(cluster, ctx)
@@ -743,15 +809,27 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
 			err := ApiError(err1, "Error occured while apply cluster changes", 500)
-			err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, err)
+			err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.EKS, ctx, err)
 			if err_ != nil {
 				ctx.SendLogs("GKEUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err1.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Update,
+			}, ctx)
 			return err
 		}
 
-		publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: err1.Error(),
+			InfraId: cluster.InfraId,
+			Token:   token,
+			Action:  models.Update,
+		}, ctx)
 		return types.CustomCPError{}
 	}
 
@@ -764,7 +842,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 
 			err := AddNodepool(&cluster, ctx, eks, pools, previousPoolCount, token)
 			if err != (types.CustomCPError{}) {
-				utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+				utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 				cluster.Status = models.ClusterUpdateFailed
 				confError := UpdateEKSCluster(cluster, ctx)
@@ -772,11 +850,11 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 					ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
 				//err := ApiError(err, "Error occured while apply cluster changes", 500)
-				err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, err)
+				err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.EKS, ctx, err)
 				if err_ != nil {
 					ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
-				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+				publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
 				return err
 			}
 
@@ -832,7 +910,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 	if addincluster == true {
 		err2 := AddNodepool(&cluster, ctx, eks, addpools, token)
 		if err2 != (types.CustomCPError{}) {
-			utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 			cluster.Status = models.ClusterUpdateFailed
 			confError := UpdateEKSCluster(cluster, ctx)
@@ -840,11 +918,17 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
 			//err := ApiError(err, "Error occured while apply cluster changes", 500)
-			err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, err2)
+			err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.EKS, ctx, err2)
 			if err_ != nil {
 				ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err2.Error + "\n" + err2.Description,
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Update,
+			}, ctx)
 			return err2
 		}
 	}
@@ -883,14 +967,14 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 
 		if dif.Path[0] == "Logging" && !loggingChanges {
 			time.Sleep(time.Second * 120)
-			utils.SendLog(ctx.Data.Company, "Applying logging changes on  cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Applying logging changes on  cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 			err := eks.UpdateLogging(cluster.Name, cluster.Logging, ctx)
 
 			loggingChanges = true
 			if err != (types.CustomCPError{}) {
 
-				utils.SendLog(ctx.Data.Company, err.Description+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-				utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+				utils.SendLog(ctx.Data.Company, err.Description+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
+				utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 				cluster.Status = models.ClusterUpdateFailed
 				confError := UpdateEKSCluster(cluster, ctx)
@@ -898,24 +982,30 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 					ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
 				//err := ApiError(err, "Error occured while apply cluster changes", 500)
-				err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, err)
+				err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.EKS, ctx, err)
 				if err_ != nil {
 					ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
-				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+				utils.Publisher(utils.ResponseSchema{
+					Status:  false,
+					Message: err.Error + "\n" + err.Description,
+					InfraId: cluster.InfraId,
+					Token:   token,
+					Action:  models.Update,
+				}, ctx)
 				return err
 			}
-			utils.SendLog(ctx.Data.Company, "Logging changes applied successfully on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Logging changes applied successfully on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 		} else if dif.Path[0] == "ResourcesVpcConfig" {
 			time.Sleep(time.Second * 120)
-			utils.SendLog(ctx.Data.Company, "Applying network changes on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Applying network changes on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 			err := eks.UpdateNetworking(cluster.Name, cluster.ResourcesVpcConfig, ctx)
 			if err != (types.CustomCPError{}) {
 
-				utils.SendLog(ctx.Data.Company, err.Description+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-				utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+				utils.SendLog(ctx.Data.Company, err.Description+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
+				utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 				cluster.Status = models.ClusterUpdateFailed
 				confError := UpdateEKSCluster(cluster, ctx)
@@ -923,24 +1013,30 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 					ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
 				//	err := ApiError(err1, "Error occured while apply cluster changes", 500)
-				err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, err)
+				err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.EKS, ctx, err)
 				if err_ != nil {
 					ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
-				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+				utils.Publisher(utils.ResponseSchema{
+					Status:  false,
+					Message: err.Error + "\n" + err.Description,
+					InfraId: cluster.InfraId,
+					Token:   token,
+					Action:  models.Update,
+				}, ctx)
 				return err
 			}
-			utils.SendLog(ctx.Data.Company, "Network changes applied successfully on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Network changes applied successfully on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 		} else if dif.Path[0] == "Version" {
 			time.Sleep(time.Second * 120)
-			utils.SendLog(ctx.Data.Company, "Changing kubernetes version of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Changing kubernetes version of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 			err := eks.UpdateClusterVersion(cluster.Name, *cluster.Version, ctx)
 			if err != (types.CustomCPError{}) {
 
-				utils.SendLog(ctx.Data.Company, err.Description+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-				utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+				utils.SendLog(ctx.Data.Company, err.Description+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
+				utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 				cluster.Status = models.ClusterUpdateFailed
 				confError := UpdateEKSCluster(cluster, ctx)
@@ -948,25 +1044,31 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 					ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
 				//err := ApiError(err1, "Error occured while apply cluster changes", 500)
-				err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, err)
+				err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.EKS, ctx, err)
 				if err_ != nil {
 					ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
-				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+				utils.Publisher(utils.ResponseSchema{
+					Status:  false,
+					Message: err.Error + "\n" + err.Description,
+					InfraId: cluster.InfraId,
+					Token:   token,
+					Action:  models.Update,
+				}, ctx)
 				return err
 			}
-			utils.SendLog(ctx.Data.Company, "Kubernetes version updated of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Kubernetes version updated of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 		} else if len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && currentpoolIndex_ != poolIndex_ && dif.Path[2] == "ScalingConfig" && dif.Path[3] != "IsEnabled" && !scalingChange {
 			time.Sleep(time.Second * 120)
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
-			utils.SendLog(ctx.Data.Company, "Changing scaling config of nodepool "+cluster.NodePools[poolIndex].NodePoolName, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Changing scaling config of nodepool "+cluster.NodePools[poolIndex].NodePoolName, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 			err := eks.UpdateNodeConfig(cluster.Name, cluster.NodePools[poolIndex].NodePoolName, *cluster.NodePools[poolIndex].ScalingConfig, ctx)
 			if err != (types.CustomCPError{}) {
 
-				utils.SendLog(ctx.Data.Company, err.Description+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-				utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+				utils.SendLog(ctx.Data.Company, err.Description+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
+				utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 				cluster.Status = models.ClusterUpdateFailed
 				confError := UpdateEKSCluster(cluster, ctx)
@@ -974,28 +1076,34 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 					ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
 				//err := ApiError(err, "Error occured while apply cluster changes", 500)
-				err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, err)
+				err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.EKS, ctx, err)
 				if err_ != nil {
 					ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
-				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+				utils.Publisher(utils.ResponseSchema{
+					Status:  false,
+					Message: err.Error + "\n" + err.Description,
+					InfraId: cluster.InfraId,
+					Token:   token,
+					Action:  models.Update,
+				}, ctx)
 				return err
 			}
-			utils.SendLog(ctx.Data.Company, "Scaling config updated successfully", models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Scaling config updated successfully", models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 			scalingChange = true
 			currentpoolIndex_ = poolIndex_
 		}
 
 	}
 
-	utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 	err = DeletePreviousEKSCluster(ctx)
 	if err != nil {
 		beego.Info("***********")
 		beego.Info(err.Error())
 	}
-	/*cluster, err = GetEKSCluster(ctx.Data.ProjectId, ctx.Data.Company, ctx)
+	/*cluster, err = GetEKSCluster(ctx.Data.InfraId, ctx.Data.Company, ctx)
 	if err != nil {
 		beego.Info("***********")
 		beego.Info(err.Error())
@@ -1017,7 +1125,13 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 		ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+err_update.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
-	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "Cluster updated successfully",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Update,
+	}, ctx)
 
 	return types.CustomCPError{}
 
@@ -1039,7 +1153,7 @@ func AddPreviousEKSCluster(cluster EKSCluster, ctx utils.Context, patch bool) er
 	}
 
 	if patch == false {
-		oldCluster, err = GetEKSCluster(ctx.Data.ProjectId, ctx.Data.Company, ctx)
+		oldCluster, err = GetEKSCluster(ctx.Data.InfraId, ctx.Data.Company, ctx)
 		if err != nil {
 			ctx.SendLogs(
 				"GKEAddClusterModel:  Add previous cluster - "+err.Error(),
@@ -1098,7 +1212,7 @@ func GetPreviousEKSCluster(ctx utils.Context) (cluster EKSCluster, err error) {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoEKSPreviousClusterCollection)
-	err = c.Find(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company}).One(&cluster)
+	err = c.Find(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
 			"GKEGetClusterModel:  Get previous cluster- Got error while fetching from database: "+err.Error(),
@@ -1151,7 +1265,7 @@ func DeletePreviousEKSCluster(ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoEKSPreviousClusterCollection)
-	err = c.Remove(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company})
+	err = c.Remove(bson.M{"infra_id": ctx.Data.InfraId, "company_id": ctx.Data.Company})
 	if err != nil {
 		ctx.SendLogs(
 			"GKEDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
@@ -1164,7 +1278,7 @@ func DeletePreviousEKSCluster(ctx utils.Context) error {
 	return nil
 }
 func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
-	cluster, err := GetEKSCluster(ctx.Data.ProjectId, ctx.Data.Company, ctx)
+	cluster, err := GetEKSCluster(ctx.Data.InfraId, ctx.Data.Company, ctx)
 	if err != nil {
 
 		return diff.Changelog{}, 0, 0, errors.New("error in getting eks cluster")
@@ -1198,7 +1312,7 @@ func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*No
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n"+err.Error(), "error", cluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n"+err.Error(), "error", cluster.InfraId)
 		cpErr := ApiError(err, "unable to fetch network against this application", 500)
 		return cpErr
 	}
@@ -1209,7 +1323,7 @@ func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*No
 	)
 
 	for _, pool := range pools {
-		utils.SendLog(ctx.Data.Company, "Adding nodepool "+pool.NodePoolName, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, "Adding nodepool "+pool.NodePoolName, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 		err := eksOps.addNodePool(pool, cluster.Name, subnets, sgs, ctx)
 		if err != (types.CustomCPError{}) {
@@ -1225,15 +1339,15 @@ func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*No
 			}
 			return err
 		}
-		pool.PoolStatus=true
-		utils.SendLog(ctx.Data.Company, pool.NodePoolName+" nodepool added successfully", models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+		pool.PoolStatus = true
+		utils.SendLog(ctx.Data.Company, pool.NodePoolName+" nodepool added successfully", models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 	}
 
 	oldCluster, err1 := GetPreviousEKSCluster(ctx)
 	if err1 != nil {
 		ctx.SendLogs(err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err1.Error(), "error", cluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, err1.Error(), "error", cluster.InfraId)
 
 		return types.CustomCPError{
 			StatusCode:  int(models.CloudStatusCode),
@@ -1244,7 +1358,7 @@ func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*No
 
 	oldCluster.NodePools = cluster.NodePools
 	for in, mainPool := range pools {
-		mainPool.PoolStatus=true
+		mainPool.PoolStatus = true
 		cluster.NodePools[in].PoolStatus = true
 		oldCluster.NodePools = append(oldCluster.NodePools, mainPool)
 		for _, pool := range pools {
@@ -1265,7 +1379,7 @@ func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*No
 	err1 = AddPreviousEKSCluster(oldCluster, ctx, true)
 	if err1 != nil {
 		ctx.SendLogs(err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err1.Error(), "error", cluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, err1.Error(), "error", cluster.InfraId)
 
 		return types.CustomCPError{Error: "Error in adding nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)}
 	}
@@ -1273,13 +1387,13 @@ func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*No
 }
 func PrintError(confError error, name string, ctx utils.Context) {
 	if confError != nil {
-		utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+name, models.LOGGING_LEVEL_ERROR, ctx.Data.InfraId)
 		utils.SendLog(ctx.Data.Company, confError.Error(), models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
 	}
 }
 
 func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName string) types.CustomCPError {
-	utils.SendLog(ctx.Data.Company, "Deleting nodePool "+poolName, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	utils.SendLog(ctx.Data.Company, "Deleting nodePool "+poolName, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 	err := eksOps.deleteNodePool(cluster.Name, poolName)
 	if err != nil {
@@ -1288,7 +1402,7 @@ func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName 
 		updationFailedError(cluster, ctx, err_)
 		return err_
 	}
-	utils.SendLog(ctx.Data.Company, " NodePool "+poolName+"deleted successfully", models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	utils.SendLog(ctx.Data.Company, " NodePool "+poolName+"deleted successfully", models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 	oldCluster, err1 := GetPreviousEKSCluster(ctx)
 	if err1 != nil {
@@ -1310,7 +1424,7 @@ func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName 
 						models.Backend_Logging,
 					)
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+pool.NodePoolName, "error", cluster.ProjectId)
+					utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+pool.NodePoolName, "error", cluster.InfraId)
 					cpErr := ApiError(err, "NodePool Deletion Failed", 512)
 					return cpErr
 				}
@@ -1332,7 +1446,7 @@ func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName 
 						models.Backend_Logging,
 					)
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+pool.NodePoolName, "error", cluster.ProjectId)
+					utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+pool.NodePoolName, "error", cluster.InfraId)
 					cpErr := ApiError(err, "NodePool Deletion Failed", 512)
 					return cpErr
 				}
@@ -1357,7 +1471,7 @@ func updationFailedError(cluster EKSCluster, ctx utils.Context, err types.Custom
 		PrintError(errr, cluster.Name, ctx)
 		ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := types.CustomCPError{StatusCode: 500, Error: "Error in deploying EKS Cluster", Description: errr.Error()}
-		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, cpErr)
+		err := db.CreateError(cluster.InfraId, ctx.Data.Company, models.EKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("EKSRunningClusterModel: Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -1371,16 +1485,16 @@ func updationFailedError(cluster EKSCluster, ctx utils.Context, err types.Custom
 		ctx.SendLogs("EKSRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
-	utils.SendLog(ctx.Data.Company, "Error in running cluster update : "+err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
-	utils.SendLog(ctx.Data.Company, err.Error, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
-	err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, err)
+	utils.SendLog(ctx.Data.Company, "Error in running cluster update : "+err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.InfraId)
+	utils.SendLog(ctx.Data.Company, err.Error, models.LOGGING_LEVEL_ERROR, ctx.Data.InfraId)
+	err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.EKS, ctx, err)
 	if err_ != nil {
 		ctx.SendLogs("EKSRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
-	utils.SendLog(ctx.Data.Company, "Deployed cluster update failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+	utils.SendLog(ctx.Data.Company, "Deployed cluster update failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.InfraId)
 	utils.SendLog(ctx.Data.Company, err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
 
-	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+	publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
 	return err
 }

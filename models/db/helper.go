@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func DeleteError(projectId, companyId string, ctx utils.Context) error {
+func DeleteError(infraId, companyId string, ctx utils.Context) error {
 	session, err := GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs(
@@ -22,7 +22,7 @@ func DeleteError(projectId, companyId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoClusterErrorCollection)
-	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
+	err = c.Remove(bson.M{"infra_id": infraId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(
 			"AKSDeleteClusterModel:  Delete - Got error while deleting from the database: "+err.Error(),
@@ -58,15 +58,15 @@ func AddError(ctx utils.Context, errDef types.ClusterError) error {
 	}
 	return nil
 }
-func CreateError(projectId, companyId string, cloud models.Cloud, ctx utils.Context, errDef types.CustomCPError) error {
+func CreateError(infraId, companyId string, cloud models.Cloud, ctx utils.Context, errDef types.CustomCPError) error {
 
 	var customErr types.ClusterError
-	customErr.ProjectId = projectId
+	customErr.InfraId = infraId
 	customErr.Cloud = cloud
 	customErr.CompanyId = companyId
 	customErr.Err = errDef
 
-	obj, err := GetError(projectId, companyId, cloud, ctx)
+	obj, err := GetError(infraId, companyId, cloud, ctx)
 	if err != nil && strings.Contains(err.Error(), "not found") {
 		err = AddError(ctx, customErr)
 		if err != nil {
@@ -79,7 +79,7 @@ func CreateError(projectId, companyId string, cloud models.Cloud, ctx utils.Cont
 			return err
 		}
 	} else if err == nil && obj != (types.ClusterError{}) {
-		err = DeleteError(projectId, companyId, ctx)
+		err = DeleteError(infraId, companyId, ctx)
 		if err != nil {
 			ctx.SendLogs(
 				"Update - Got error deleting from db "+err.Error(),
@@ -110,7 +110,7 @@ func CreateError(projectId, companyId string, cloud models.Cloud, ctx utils.Cont
 	}
 	return nil
 }
-func GetError(projectId, companyId string, cloud models.Cloud, ctx utils.Context) (err types.ClusterError, err1 error) {
+func GetError(infraId, companyId string, cloud models.Cloud, ctx utils.Context) (err types.ClusterError, err1 error) {
 
 	session, err1 := GetMongoSession(ctx)
 	if err1 != nil {
@@ -121,7 +121,7 @@ func GetError(projectId, companyId string, cloud models.Cloud, ctx utils.Context
 	defer session.Close()
 	mc := GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoClusterErrorCollection)
-	err1 = c.Find(bson.M{"project_id": projectId, "company_id": companyId, "cloud": cloud}).One(&err)
+	err1 = c.Find(bson.M{"infra_id": infraId, "company_id": companyId, "cloud": cloud}).One(&err)
 	if err1 != nil {
 		if err1 != nil && strings.Contains(strings.ToLower(err1.Error()), "not found") {
 			return err, nil

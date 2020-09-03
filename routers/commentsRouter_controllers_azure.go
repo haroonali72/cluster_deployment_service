@@ -28,7 +28,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
 		beego.ControllerComments{
 			Method:           "Get",
-			Router:           `/:projectId/`,
+			Router:           `/:infraId/`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -37,7 +37,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
 		beego.ControllerComments{
 			Method:           "Delete",
-			Router:           `/:projectId/:forceDelete`,
+			Router:           `/:infraId/:forceDelete`,
 			AllowHTTPMethods: []string{"delete"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -55,7 +55,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
 		beego.ControllerComments{
 			Method:           "ApplyAgent",
-			Router:           `/applyagent/:projectId`,
+			Router:           `/applyagent/:infraId`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -118,7 +118,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
 		beego.ControllerComments{
 			Method:           "PostSSHKey",
-			Router:           `/sshkey/:keyname/:projectId`,
+			Router:           `/sshkey/:keyname/:infraId`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -136,7 +136,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
 		beego.ControllerComments{
 			Method:           "StartCluster",
-			Router:           `/start/:projectId`,
+			Router:           `/start/:infraId`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -145,7 +145,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
 		beego.ControllerComments{
 			Method:           "GetStatus",
-			Router:           `/status/:projectId/`,
+			Router:           `/status/:infraId/`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -154,7 +154,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
 		beego.ControllerComments{
 			Method:           "TerminateCluster",
-			Router:           `/terminate/:projectId/`,
+			Router:           `/terminate/:infraId/`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams:     param.Make(),
 			Filters:          nil,

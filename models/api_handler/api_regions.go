@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"strings"
 )
+
 var AzureZoneNotSupportedRegions = []byte(
 	`[
 			{"region":"East Asia","location":"eastasia"},
@@ -36,7 +37,7 @@ var AzureZoneNotSupportedRegions = []byte(
 
 ]`)
 
-var AzureZone =[]byte(
+var AzureZone = []byte(
 	`[
 	 "1",
 	 "2",

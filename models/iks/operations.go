@@ -242,17 +242,17 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 	   Getting Network
 	*/
 	var ibmNetwork types.IBMNetwork
-	url := getNetworkHost("ibm", cluster.ProjectId)
+	url := getNetworkHost("ibm", cluster.InfraId)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(companyId, "unable to fetch network against this application.\n"+err.Error(), "error", cluster.ProjectId)
+		utils.SendLog(companyId, "unable to fetch network against this application.\n"+err.Error(), "error", cluster.InfraId)
 		cpErr := ApiError(err, "unable to fetch network against this application", 500)
 		return cluster, cpErr
 	}
 	if network == nil {
 		ctx.SendLogs("network not found of this application", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(companyId, "unable to fetch network against this application.\n", "error", cluster.ProjectId)
+		utils.SendLog(companyId, "unable to fetch network against this application.\n", "error", cluster.InfraId)
 		cpErr := ApiError(errors.New("network not found of this application"), "network not found of this application", 500)
 		return cluster, cpErr
 	}
@@ -260,7 +260,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(companyId, "unable to fetch network against this application.\n"+err.Error(), "error", cluster.ProjectId)
+		utils.SendLog(companyId, "unable to fetch network against this application.\n"+err.Error(), "error", cluster.InfraId)
 		cpErr := ApiError(err, "unable to fetch network against this application", 500)
 		return cluster, cpErr
 	}
@@ -268,19 +268,19 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 	vpcID := cloud.GetVPC(cluster.VPCId, ibmNetwork)
 	if vpcID == "" {
 		ctx.SendLogs("vpc not found", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(companyId, "vpc not found", "error", cluster.ProjectId)
+		utils.SendLog(companyId, "vpc not found", "error", cluster.InfraId)
 		cpErr := ApiError(errors.New("vpc not found"), "error while creating iks cluster", 500)
 		return cluster, cpErr
 	}
 
-	utils.SendLog(companyId, "Creating Worker Pool : "+cluster.NodePools[0].Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Creating Worker Pool : "+cluster.NodePools[0].Name, "info", cluster.InfraId)
 
 	clusterId, cpErr := cloud.createCluster(vpcID, cluster, ibmNetwork, ctx)
 
 	if cpErr != (types.CustomCPError{}) {
 
-		utils.SendLog(companyId, cpErr.Error, "error", cluster.ProjectId)
-		utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
+		utils.SendLog(companyId, cpErr.Error, "error", cluster.InfraId)
+		utils.SendLog(companyId, cpErr.Description, "error", cluster.InfraId)
 
 		return cluster, cpErr
 
@@ -291,8 +291,8 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		response, cpErr := cloud.fetchClusterStatus(&cluster, ctx, companyId)
 		if cpErr != (types.CustomCPError{}) {
 
-			utils.SendLog(companyId, cpErr.Error, "error", cluster.ProjectId)
-			utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
+			utils.SendLog(companyId, cpErr.Error, "error", cluster.InfraId)
+			utils.SendLog(companyId, cpErr.Description, "error", cluster.InfraId)
 
 		}
 		beego.Info(response.State)
@@ -302,7 +302,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 			time.Sleep(60 * time.Second)
 		}
 	}
-	utils.SendLog(companyId, "Worker Pool Created Successfully : "+cluster.NodePools[0].Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Worker Pool Created Successfully : "+cluster.NodePools[0].Name, "info", cluster.InfraId)
 
 	for index, pool := range cluster.NodePools {
 		if index == 0 {
@@ -310,15 +310,15 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		}
 		beego.Info("IBMOperations creating worker pools")
 
-		utils.SendLog(companyId, "Creating Worker Pools : "+cluster.Name, "info", cluster.ProjectId)
+		utils.SendLog(companyId, "Creating Worker Pools : "+cluster.Name, "info", cluster.InfraId)
 
 		wId, err := cloud.createWorkerPool(cluster.ResourceGroup, clusterId, vpcID, pool, ibmNetwork, ctx)
 		if err != (types.CustomCPError{}) {
 
-			utils.SendLog(companyId, cpErr.Error, "error", cluster.ProjectId)
-			utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
+			utils.SendLog(companyId, cpErr.Error, "error", cluster.InfraId)
+			utils.SendLog(companyId, cpErr.Description, "error", cluster.InfraId)
 		}
-		utils.SendLog(companyId, "Worker Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
+		utils.SendLog(companyId, "Worker Pool Created Successfully : "+cluster.Name, "info", cluster.InfraId)
 		cluster.NodePools[index].PoolId = wId
 		cluster.NodePools[index].PoolStatus = true
 
@@ -327,20 +327,20 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 	kubeCluster, cperr := cloud.fetchStatus(&cluster, ctx, companyId)
 	if cperr != (types.CustomCPError{}) {
 
-		utils.SendLog(companyId, cperr.Error, "error", cluster.ProjectId)
-		utils.SendLog(companyId, cperr.Description, "error", cluster.ProjectId)
+		utils.SendLog(companyId, cperr.Error, "error", cluster.InfraId)
+		utils.SendLog(companyId, cperr.Description, "error", cluster.InfraId)
 		return cluster, cperr
 
 	} else {
-		/*utils.SendLog(companyId, "Cluster id "+kubeCluster.ID, "info", cluster.ProjectId)
-		utils.SendLog(companyId, strconv.Itoa(len(kubeCluster.WorkerPools)), "info", cluster.ProjectId)*/
+		/*utils.SendLog(companyId, "Cluster id "+kubeCluster.ID, "info", cluster.InfraId)
+		utils.SendLog(companyId, strconv.Itoa(len(kubeCluster.WorkerPools)), "info", cluster.InfraId)*/
 		cluster.ClusterId = kubeCluster.ID
 		for _, pools := range kubeCluster.WorkerPools {
-			/*utils.SendLog(companyId, pools.Name, "info", cluster.ProjectId)
-			utils.SendLog(companyId, strconv.Itoa(len(cluster.NodePools)), "info", cluster.ProjectId)*/
+			/*utils.SendLog(companyId, pools.Name, "info", cluster.InfraId)
+			utils.SendLog(companyId, strconv.Itoa(len(cluster.NodePools)), "info", cluster.InfraId)*/
 			for in, existingPools := range cluster.NodePools {
-				/*utils.SendLog(companyId, pools.ID+"   - "+pools.Name, "info", cluster.ProjectId)
-				utils.SendLog(companyId, existingPools.PoolId+"   - "+existingPools.Name, "info", cluster.ProjectId)*/
+				/*utils.SendLog(companyId, pools.ID+"   - "+pools.Name, "info", cluster.InfraId)
+				utils.SendLog(companyId, existingPools.PoolId+"   - "+existingPools.Name, "info", cluster.InfraId)*/
 
 				if pools.Name == existingPools.Name {
 					cluster.NodePools[in].PoolId = pools.ID
@@ -520,13 +520,13 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 		cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 512)
 		return "", cpErr
 	}
-	utils.SendLog(ctx.Data.Company, "Assigning zone "+pool.AvailabilityZone+" to nodepool "+pool.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	utils.SendLog(ctx.Data.Company, "Assigning zone "+pool.AvailabilityZone+" to nodepool "+pool.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 	cpErr := cloud.AddZonesToPools(rg, pool.Name, subnetId, pool.AvailabilityZone, clusterID, ctx)
 	if cpErr != (types.CustomCPError{}) {
 		return "", cpErr
 	}
-	utils.SendLog(ctx.Data.Company, "Zone assigned successfully to nodepool "+pool.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	utils.SendLog(ctx.Data.Company, "Zone assigned successfully to nodepool "+pool.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 	return wId.ID, types.CustomCPError{}
 }
@@ -689,18 +689,18 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) type
 	beego.Info(string(body))
 
 	for {
-		//	utils.SendLog(ctx.Data.Company, "fetching cluster status...", "error", cluster.ProjectId)
+		//	utils.SendLog(ctx.Data.Company, "fetching cluster status...", "error", cluster.InfraId)
 		_, err := cloud.fetchClusterStatus(cluster, ctx, "")
 
 		if err != (types.CustomCPError{}) {
-			/*utils.SendLog(ctx.Data.Company, err.Error, "error", cluster.ProjectId)
-			utils.SendLog(ctx.Data.Company, err.Description, "error", cluster.ProjectId)
-			utils.SendLog(ctx.Data.Company, "error occured. breaking the loop", "error", cluster.ProjectId)*/
+			/*utils.SendLog(ctx.Data.Company, err.Error, "error", cluster.InfraId)
+			utils.SendLog(ctx.Data.Company, err.Description, "error", cluster.InfraId)
+			utils.SendLog(ctx.Data.Company, "error occured. breaking the loop", "error", cluster.InfraId)*/
 			break
 		} //else {
-		//	utils.SendLog(ctx.Data.Company, res.State, "error", cluster.ProjectId)
+		//	utils.SendLog(ctx.Data.Company, res.State, "error", cluster.InfraId)
 		//}
-		//	utils.SendLog(ctx.Data.Company, "waiting...before trying again", "error", cluster.ProjectId)
+		//	utils.SendLog(ctx.Data.Company, "waiting...before trying again", "error", cluster.InfraId)
 		time.Sleep(time.Second * 100)
 		/*if err == (types.CustomCPError{}) && response.State == "deleting" {
 			break
@@ -919,17 +919,17 @@ func (cloud *IBM) fetchNodes(cluster *Cluster_Def, poolId string, ctx utils.Cont
 func (cloud *IBM) getNetwork(cluster Cluster_Def, token string, ctx utils.Context) (types.IBMNetwork, string, types.CustomCPError) {
 	var ibmNetwork types.IBMNetwork
 
-	url := getNetworkHost("ibm", cluster.ProjectId)
+	url := getNetworkHost("ibm", cluster.InfraId)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n"+err.Error(), "error", cluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n"+err.Error(), "error", cluster.InfraId)
 		cpErr := ApiError(err, "unable to fetch network against this application", 500)
 		return types.IBMNetwork{}, "", cpErr
 	}
 	if network == nil {
 		ctx.SendLogs("network not found of this application", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n", "error", cluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n", "error", cluster.InfraId)
 		cpErr := ApiError(errors.New("network not found of this application"), "network not found of this application", 500)
 		return types.IBMNetwork{}, "", cpErr
 	}
@@ -937,14 +937,14 @@ func (cloud *IBM) getNetwork(cluster Cluster_Def, token string, ctx utils.Contex
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n"+err.Error(), "error", cluster.ProjectId)
+		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n"+err.Error(), "error", cluster.InfraId)
 		cpErr := ApiError(err, "unable to fetch network against this application", 500)
 		return types.IBMNetwork{}, "", cpErr
 	}
 	vpcID := cloud.GetVPC(cluster.VPCId, ibmNetwork)
 	if vpcID == "" {
 		ctx.SendLogs("vpc not found", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.ProjectId, "vpc not found", "error", cluster.ProjectId)
+		utils.SendLog(ctx.Data.InfraId, "vpc not found", "error", cluster.InfraId)
 		cpErr := ApiError(errors.New("vpc not found"), "error while creating iks cluster", 500)
 		return types.IBMNetwork{}, "", cpErr
 	}

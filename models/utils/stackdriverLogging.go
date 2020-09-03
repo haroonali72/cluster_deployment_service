@@ -14,7 +14,7 @@ type SDData struct {
 	Request      HTTPRequest `json:"http_request"`
 	Message      interface{} `json:"message"`
 	MessageType  string      `json:"message_type"`
-	ProjectId    string      `json:"project_id"`
+	InfraId      string      `json:"infra_id"`
 	ServiceName  string      `json:"service_name"`
 	Severity     string      `json:"severity"`
 	UserId       string      `json:"user_id"`
@@ -98,7 +98,7 @@ func (c *Context) Log(msg, message_type string, logType models.Logger) (int, err
 
 }
 
-func (c *Context) InitializeLogger(requestURL, method, path string, projectId string, companyId string, userId string) {
+func (c *Context) InitializeLogger(requestURL, method, path string, infraId string, companyId string, userId string) {
 
 	c.Data.ResourceName = "Cluster"
 	c.Data.ServiceName = "antelope"
@@ -106,7 +106,7 @@ func (c *Context) InitializeLogger(requestURL, method, path string, projectId st
 	c.Data.Request.Method = method
 	c.Data.Request.Path = path
 	c.Data.Request.RequestId = uuid.New().String()
-	c.Data.ProjectId = projectId
+	c.Data.InfraId = infraId
 	c.Data.Company = companyId
 	c.Data.UserId = userId
 

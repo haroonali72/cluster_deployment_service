@@ -21,7 +21,7 @@ type AgentConnection struct {
 	connection  *grpc.ClientConn
 	agentCtx    context.Context
 	agentClient agent_api.AgentServerClient
-	projectId   string
+	infraId     string
 	companyId   string
 	Mux         sync.Mutex
 }
@@ -39,7 +39,7 @@ func RetryAgentConn(agent *AgentConnection, context2 utils.Context) error {
 			count++
 		} else {
 			agent.connection = conn.connection
-			agent.InitializeAgentClient(agent.projectId, agent.companyId)
+			agent.InitializeAgentClient(agent.infraId, agent.companyId)
 			flag = false
 		}
 
@@ -68,14 +68,14 @@ func GetGrpcAgentConnection(context2 utils.Context) (*AgentConnection, error) {
 
 	return &AgentConnection{connection: conn}, nil
 }
-func (agent *AgentConnection) InitializeAgentClient(projectId, companyId string) error {
-	if projectId == "" || companyId == "" {
-		return errors.New("projectId or companyId must not be empty")
+func (agent *AgentConnection) InitializeAgentClient(infraId, companyId string) error {
+	if infraId == "" || companyId == "" {
+		return errors.New("infraId or companyId must not be empty")
 	}
 	md := metadata.Pairs(
-		"name", *GetAgentID(&projectId, &companyId),
+		"name", *GetAgentID(&infraId, &companyId),
 	)
-	agent.projectId = projectId
+	agent.infraId = infraId
 	agent.companyId = companyId
 	ctxWithTimeOut, _ := context.WithTimeout(context.Background(), 100*time.Second)
 	agent.agentCtx = metadata.NewOutgoingContext(ctxWithTimeOut, md)
@@ -114,7 +114,7 @@ func (agent *AgentConnection) ExecCommand(node Node, private_key string, ctx uti
 	}
 	return nil
 }
-func GetAgentID(projectId, companyId *string) *string {
-	base := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s+%s", *projectId, *companyId)))
+func GetAgentID(infraId, companyId *string) *string {
+	base := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s+%s", *infraId, *companyId)))
 	return &base
 }

@@ -125,14 +125,14 @@ func (cloud *AZURE) init() types.CustomCPError {
 	cloud.Location.Authorizer = cloud.Authorizer
 	return types.CustomCPError{}
 }
-func getNetworkHost(cloudType, projectId string) string {
+func getNetworkHost(cloudType, InfraId string) string {
 	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
 
 	if strings.Contains(host, "{cloud}") {
 		host = strings.Replace(host, "{cloud}", cloudType, -1)
 	}
-	if strings.Contains(host, "{projectId}") {
-		host = strings.Replace(host, "{projectId}", projectId, -1)
+	if strings.Contains(host, "{infraId}") {
+		host = strings.Replace(host, "{infraId}", InfraId, -1)
 	}
 
 	return host
@@ -148,7 +148,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 	}
 
 	var azureNetwork types.AzureNetwork
-	url := getNetworkHost("azure", cluster.ProjectId)
+	url := getNetworkHost("azure", cluster.InfraId)
 	network, err1 := api_handler.GetAPIStatus(token, url, ctx)
 	if err1 != nil {
 		beego.Error(err1.Error())
@@ -163,23 +163,23 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 
 	for i, pool := range cluster.NodePools {
 		ctx.SendLogs("AZUREOperations creating nodes", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		result, private_key, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId, i, ctx, companyId, token)
+		result, private_key, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.InfraId, i, ctx, companyId, token)
 		if err != (types.CustomCPError{}) {
 			ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return cluster, err
 		}
 		beego.Info(private_key)
 		//if pool.EnableVolume {
-		//	err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), false)
+		//	err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.InfraId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), false)
 		//	if err != (types.CustomCPError{}) {
-		//		utils.SendLog(companyId, "Error in volume mounting : ", "info", cluster.ProjectId)
+		//		utils.SendLog(companyId, "Error in volume mounting : ", "info", cluster.InfraId)
 		//		return cluster, err
 		//	}
 		//}
 		//if pool.PoolRole == "master" {
-		//	err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), true)
+		//	err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.InfraId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), true)
 		//	if err != (types.CustomCPError{}) {
-		//		utils.SendLog(companyId, "Error in volume mounting on master pool: ", "info", cluster.ProjectId)
+		//		utils.SendLog(companyId, "Error in volume mounting on master pool: ", "info", cluster.InfraId)
 		//		return cluster, err
 		//	}
 		//}
@@ -189,7 +189,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 	return cluster, types.CustomCPError{}
 }
 
-func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup string, projectId string, vmId *string, vmPrincipalId *string) types.CustomCPError {
+func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup string, InfraId string, vmId *string, vmPrincipalId *string) types.CustomCPError {
 	RolesID := []string{models.VM_CONTRIBUTOR_GUID, models.NETWORK_CONTRIBUTOR_GUID, models.STORAGE_CONTRIBUTOR_GUID, models.AVERE_CONTRIBUTER_GUID}
 	BasePath := "/subscriptions/" + cloud.Subscription + "/providers/Microsoft.Authorization/roleDefinitions/"
 	scope := "/subscriptions/" + cloud.Subscription + "/resourceGroups/" + resourceGroup
@@ -197,13 +197,13 @@ func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup 
 	RoleAssignmentParam.RoleAssignmentProperties = &authorization.RoleAssignmentProperties{
 		PrincipalID: vmPrincipalId,
 	}
-	utils.SendLog(companyId, "Attaching access roles to "+*vmId, "info", projectId)
+	utils.SendLog(companyId, "Attaching access roles to "+*vmId, "info", InfraId)
 	for _, id := range RolesID {
 		RoleAssignmentParam.RoleAssignmentProperties.RoleDefinitionID = to.StringPtr(BasePath + id)
 		bytes := make([]byte, 16)
 		_, err := rand.Read(bytes)
 		if err != nil {
-			utils.SendLog(companyId, "Error creating UUID for role: "+err.Error(), "error", projectId)
+			utils.SendLog(companyId, "Error creating UUID for role: "+err.Error(), "error", InfraId)
 			return ApiError(err, "Error in cluster creation", int(models.CloudStatusCode))
 		}
 		uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
@@ -211,59 +211,59 @@ func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup 
 
 		result, err := cloud.RoleAssignment.Create(context.Background(), scope, uuid, RoleAssignmentParam)
 		if err != nil && !strings.Contains(err.Error(), "RoleAssignmentExists") {
-			utils.SendLog(companyId, err.Error(), "error", projectId)
+			utils.SendLog(companyId, err.Error(), "error", InfraId)
 			return ApiError(err, "Error in cluster creation", int(models.CloudStatusCode))
 		} else {
 			x, _ := json.Marshal(result)
-			utils.SendLog(companyId, "Role: "+string(x), "info", projectId)
+			utils.SendLog(companyId, "Role: "+string(x), "info", InfraId)
 		}
 	}
 	return types.CustomCPError{}
 }
-func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwork, resourceGroup string, projectId string, poolIndex int, ctx utils.Context, companyId string, token string) ([]*VM, string, types.CustomCPError) {
+func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwork, resourceGroup string, InfraId string, poolIndex int, ctx utils.Context, companyId string, token string) ([]*VM, string, types.CustomCPError) {
 
 	var cpVms []*VM
 	subnetId := cloud.GetSubnets(pool, networkData)
 	sgIds := cloud.GetSecurityGroups(pool, networkData)
-	zones := cloud.GetZones(pool,networkData)
+	zones := cloud.GetZones(pool, networkData)
 	vpcName := networkData.Definition[0].Vnet.Name
-	if len(zones) == 0{
+	if len(zones) == 0 {
 		zones = []string{}
-		zones =append(zones,"")
+		zones = append(zones, "")
 	}
 	if pool.PoolRole == "master" {
 		var publicIPaddress network.PublicIPAddress
 		var err types.CustomCPError
 		if pool.EnablePublicIP {
 			IPname := "pip-" + pool.Name
-			utils.SendLog(companyId, "Creating Public IP : "+projectId, "info", projectId)
-			publicIPaddress, err = cloud.createPublicIp(pool, resourceGroup, IPname, ctx,zones[0])
+			utils.SendLog(companyId, "Creating Public IP : "+InfraId, "info", InfraId)
+			publicIPaddress, err = cloud.createPublicIp(pool, resourceGroup, IPname, ctx, zones[0])
 			if err != (types.CustomCPError{}) {
 				return nil, "", err
 			}
-			utils.SendLog(companyId, "Public IP created successfully : "+IPname, "info", projectId)
-			cloud.Resources["Pip-"+projectId] = IPname
+			utils.SendLog(companyId, "Public IP created successfully : "+IPname, "info", InfraId)
+			cloud.Resources["Pip-"+InfraId] = IPname
 		}
 		/*
 			making network interface
 		*/
 		nicName := "NIC-" + pool.Name
-		utils.SendLog(companyId, "Creating NIC : "+nicName, "info", projectId)
+		utils.SendLog(companyId, "Creating NIC : "+nicName, "info", InfraId)
 		nicParameters, err1 := cloud.createNIC(pool, resourceGroup, publicIPaddress, subnetId, sgIds, nicName, ctx)
 		if err1 != (types.CustomCPError{}) {
 			return nil, "", err1
 		}
-		utils.SendLog(companyId, "NIC created successfully : "+nicName, "info", projectId)
-		cloud.Resources["Nic-"+projectId] = nicName
+		utils.SendLog(companyId, "NIC created successfully : "+nicName, "info", InfraId)
+		cloud.Resources["Nic-"+InfraId] = nicName
 
-		utils.SendLog(companyId, "Creating node  : "+pool.Name, "info", projectId)
-		vm, private_key, _, err1 := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx, token, projectId, vpcName,zones)
+		utils.SendLog(companyId, "Creating node  : "+pool.Name, "info", InfraId)
+		vm, private_key, _, err1 := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx, token, InfraId, vpcName, zones)
 		if err1 != (types.CustomCPError{}) {
 			return nil, "", err1
 		}
-		utils.SendLog(companyId, "Node created successfully : "+pool.Name, "info", projectId)
-		cloud.Resources["Disk-"+projectId] = pool.Name
-		cloud.Resources["NodeName-"+projectId] = pool.Name
+		utils.SendLog(companyId, "Node created successfully : "+pool.Name, "info", InfraId)
+		cloud.Resources["Disk-"+InfraId] = pool.Name
+		cloud.Resources["NodeName-"+InfraId] = pool.Name
 
 		var vmObj VM
 		vmObj.Name = vm.Name
@@ -276,14 +276,14 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		vmObj.ComputerName = vm.OsProfile.ComputerName
 		vmObj.IdentityPrincipalId = vm.Identity.PrincipalID
 		cpVms = append(cpVms, &vmObj)
-		err1 = cloud.AddRoles(ctx, companyId, resourceGroup, projectId, vm.Name, vm.Identity.PrincipalID)
+		err1 = cloud.AddRoles(ctx, companyId, resourceGroup, InfraId, vm.Name, vm.Identity.PrincipalID)
 		if err1 != (types.CustomCPError{}) {
 			return nil, "", err1
 		}
 		return cpVms, private_key, types.CustomCPError{}
 
 	} else {
-		vms, err, private_key := cloud.createVMSS(resourceGroup, projectId, pool, poolIndex, subnetId, sgIds, ctx, token, vpcName,zones)
+		vms, err, private_key := cloud.createVMSS(resourceGroup, InfraId, pool, poolIndex, subnetId, sgIds, ctx, token, vpcName, zones)
 		if err != (types.CustomCPError{}) {
 			return nil, "", err
 		}
@@ -326,7 +326,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			return nil, "", ApiError(err1, "Error in cluster creation", int(models.CloudStatusCode))
 		}
 
-		err = cloud.AddRoles(ctx, companyId, resourceGroup, projectId, vmScaleSet.Name, vmScaleSet.Identity.PrincipalID)
+		err = cloud.AddRoles(ctx, companyId, resourceGroup, InfraId, vmScaleSet.Name, vmScaleSet.Identity.PrincipalID)
 		if err != (types.CustomCPError{}) {
 			return nil, "", err
 		}
@@ -536,12 +536,16 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 		}
 	}
 
+	utils.SendLog(companyId, "Terminating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.InfraId)
+
 	for _, pool := range cluster.NodePools {
 
-		utils.SendLog(companyId, "Terminating node pool: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
+		utils.SendLog(companyId, "Terminating node pool: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.InfraId)
 		if pool.PoolRole == "master" {
+
+			utils.SendLog(companyId, "Terminating node pool: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.InfraId)
 			if pool != nil && pool.Nodes != nil && pool.Nodes[0].Name != nil {
-				err := cloud.TerminateMasterNode(*pool.Nodes[0].Name, cluster.ProjectId, cluster.ResourceGroup, ctx, companyId)
+				err := cloud.TerminateMasterNode(*pool.Nodes[0].Name, cluster.InfraId, cluster.ResourceGroup, ctx, companyId)
 				if err != (types.CustomCPError{}) {
 					terminate = false
 					break
@@ -551,13 +555,13 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 			}
 			nicName := "NIC-" + pool.Name
 
-			err := cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
+			err := cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.InfraId, ctx, companyId)
 			if err != (types.CustomCPError{}) {
 				terminate = false
 			}
 
 			IPname := "pip-" + pool.Name
-			err = cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
+			err = cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.InfraId, ctx, companyId)
 			if err != (types.CustomCPError{}) {
 				terminate = false
 			}
@@ -590,7 +594,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 			}
 
 		} else {
-			err := cloud.TerminatePool(pool.Name, cluster.ResourceGroup, cluster.ProjectId, ctx)
+			err := cloud.TerminatePool(pool.Name, cluster.ResourceGroup, cluster.InfraId, ctx)
 			if err != (types.CustomCPError{}) {
 				terminate = false
 				break
@@ -605,7 +609,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 			}
 
 		}
-		utils.SendLog(companyId, "Node Pool terminated successfully: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
+		utils.SendLog(companyId, "Node Pool terminated successfully: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.InfraId)
 	}
 	if terminate == false {
 		return ApiError(errors.New("Termination failed"), "Error in termination", int(models.CloudStatusCode))
@@ -614,7 +618,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 	return types.CustomCPError{}
 }
 
-func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId string, ctx utils.Context) types.CustomCPError {
+func (cloud *AZURE) TerminatePool(name string, resourceGroup string, InfraId string, ctx utils.Context) types.CustomCPError {
 
 	ctx.SendLogs("AZUREOperations: terminating node pools", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	future, err := cloud.VMSSCLient.Delete(cloud.context, resourceGroup, name)
@@ -635,12 +639,12 @@ func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId s
 	ctx.SendLogs("Node pool terminated successfully: "+name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	return types.CustomCPError{}
 }
-func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, ctx utils.Context, companyId string) types.CustomCPError {
+func (cloud *AZURE) TerminateMasterNode(name, InfraId, resourceGroup string, ctx utils.Context, companyId string) types.CustomCPError {
 
 	beego.Info("AZUREOperations: terminating nodes")
 
 	ctx.SendLogs("Terminating node: "+name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	utils.SendLog(companyId, "Terminating node: "+name, "info", projectId)
+	utils.SendLog(companyId, "Terminating node: "+name, "info", InfraId)
 
 	vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
 	vmClient.Authorizer = cloud.Authorizer
@@ -649,12 +653,12 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 		return ApiError(err, "Error in master node termination", int(models.CloudStatusCode))
 	} else if err != nil && strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		utils.SendLog(companyId, err.Error(), "error", projectId)
+		utils.SendLog(companyId, err.Error(), "error", InfraId)
 		return types.CustomCPError{}
 	} else {
 		err = future.WaitForCompletionRef(cloud.context, vmClient.Client)
 		if err != nil {
-			utils.SendLog(companyId, err.Error(), "error", projectId)
+			utils.SendLog(companyId, err.Error(), "error", InfraId)
 			return ApiError(err, "Error in master node termination", int(models.CloudStatusCode))
 		}
 		ctx.SendLogs("Deleted Node"+name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -663,9 +667,9 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 	return types.CustomCPError{}
 }
 
-func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname string, ctx utils.Context,zone string) (network.PublicIPAddress, types.CustomCPError) {
+func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname string, ctx utils.Context, zone string) (network.PublicIPAddress, types.CustomCPError) {
 	var pipParameters network.PublicIPAddress
-	if len(zone) == 0{
+	if len(zone) == 0 {
 		pipParameters = network.PublicIPAddress{
 			Location: &cloud.Region,
 			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
@@ -674,7 +678,7 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 				},
 			},
 		}
-	}else {
+	} else {
 		pipParameters = network.PublicIPAddress{
 			Location: &cloud.Region,
 			Sku:      &network.PublicIPAddressSku{Name: "standard"},
@@ -707,9 +711,9 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 	return publicIPaddress, types.CustomCPError{}
 }
 
-func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId string, ctx utils.Context, companyId string) types.CustomCPError {
+func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, InfraId string, ctx utils.Context, companyId string) types.CustomCPError {
 
-	utils.SendLog(companyId, "Deleting Public IP: "+IPname, "info", projectId)
+	utils.SendLog(companyId, "Deleting Public IP: "+IPname, "info", InfraId)
 
 	address, err := cloud.AddressClient.Delete(cloud.context, resourceGroup, IPname)
 	if err != nil && !strings.Contains(err.Error(), "not found") {
@@ -726,7 +730,7 @@ func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId strin
 		}
 	}
 
-	utils.SendLog(companyId, "Public IP deleted successfully: "+IPname, models.LOGGING_LEVEL_INFO, projectId)
+	utils.SendLog(companyId, "Public IP deleted successfully: "+IPname, models.LOGGING_LEVEL_INFO, InfraId)
 	return types.CustomCPError{}
 }
 func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddress network.PublicIPAddress, subnetId string, sgIds []*string, nicName string, ctx utils.Context) (network.Interface, types.CustomCPError) {
@@ -991,7 +995,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 func getWoodpecker() string {
 	return beego.AppConfig.String("woodpecker_url") + models.WoodpeckerEnpoint
 }
-func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token, projectId, vpcName string,zones []string) (compute.VirtualMachine, string, string, types.CustomCPError) {
+func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token, InfraId, vpcName string, zones []string) (compute.VirtualMachine, string, string, types.CustomCPError) {
 
 	var zone []string
 	if zones != nil {
@@ -1095,7 +1099,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 				},
 			},
 		}
-	}else{
+	} else {
 		vm = compute.VirtualMachine{
 			Name:     to.StringPtr(pool.Name),
 			Location: to.StringPtr(cloud.Region),
@@ -1147,7 +1151,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		cloud.Resources["ext-"+pool.Name] = "ext-" + pool.Name
 		fileName = append(fileName, "azure-volume-mount.sh")
 	}
-	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+InfraId, fileName, pool.PoolRole, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return compute.VirtualMachine{}, "", "", ApiError(err, "Error in creating VM", int(models.CloudStatusCode))
@@ -1528,8 +1532,8 @@ func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName strin
 func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context, companyId string) types.CustomCPError {
 	for _, pool := range cluster.NodePools {
 		if pool.PoolRole == "master" {
-			if cloud.Resources["NodeName-"+cluster.ProjectId] != nil {
-				name := cloud.Resources["NodeName-"+cluster.ProjectId]
+			if cloud.Resources["NodeName-"+cluster.InfraId] != nil {
+				name := cloud.Resources["NodeName-"+cluster.InfraId]
 				nodeName := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -1542,14 +1546,14 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context, companyId st
 					return ApiError(e, "Error in cluster cleanup", int(models.CloudStatusCode))
 				}
 
-				err := cloud.TerminateMasterNode(nodeName, cluster.ProjectId, cluster.ResourceGroup, ctx, companyId)
+				err := cloud.TerminateMasterNode(nodeName, cluster.InfraId, cluster.ResourceGroup, ctx, companyId)
 				if err != (types.CustomCPError{}) {
 					beego.Info(e.Error())
 					return err
 				}
 			}
-			if cloud.Resources["Nic-"+cluster.ProjectId] != nil {
-				name := cloud.Resources["Nic-"+cluster.ProjectId]
+			if cloud.Resources["Nic-"+cluster.InfraId] != nil {
+				name := cloud.Resources["Nic-"+cluster.InfraId]
 				nicName := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -1561,14 +1565,14 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context, companyId st
 					beego.Info(e.Error())
 					return ApiError(e, "Error in cluster cleanup", int(models.CloudStatusCode))
 				}
-				err := cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
+				err := cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.InfraId, ctx, companyId)
 				if err != (types.CustomCPError{}) {
 					beego.Info(err.Error)
 					return err
 				}
 			}
-			if cloud.Resources["Pip-"+cluster.ProjectId] != nil {
-				name := cloud.Resources["Pip-"+cluster.ProjectId]
+			if cloud.Resources["Pip-"+cluster.InfraId] != nil {
+				name := cloud.Resources["Pip-"+cluster.InfraId]
 				IPname := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -1578,7 +1582,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context, companyId st
 				if e != nil {
 					return ApiError(e, "Error in cluster cleanup", int(models.CloudStatusCode))
 				}
-				err := cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
+				err := cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.InfraId, ctx, companyId)
 				if err != (types.CustomCPError{}) {
 					return err
 				}
@@ -1599,8 +1603,8 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context, companyId st
 					return err
 				}
 			}
-			if cloud.Resources["Disk-"+cluster.ProjectId] != nil {
-				name := cloud.Resources["Disk-"+cluster.ProjectId]
+			if cloud.Resources["Disk-"+cluster.InfraId] != nil {
+				name := cloud.Resources["Disk-"+cluster.InfraId]
 				diskName := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -1641,7 +1645,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context, companyId st
 					return ApiError(e, "Error in cluster cleanup", int(models.CloudStatusCode))
 				}
 				beego.Info(vmssName)
-				err := cloud.TerminatePool(vmssName, cluster.ResourceGroup, cluster.ProjectId, ctx)
+				err := cloud.TerminatePool(vmssName, cluster.ResourceGroup, cluster.InfraId, ctx)
 				if err != (types.CustomCPError{}) {
 					return err
 				}
@@ -1668,7 +1672,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context, companyId st
 
 	return types.CustomCPError{}
 }
-func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, poolName string, ctx utils.Context, poleRole string, masterVolume bool) types.CustomCPError {
+func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, InfraId string, user string, resourceGroup string, poolName string, ctx utils.Context, poleRole string, masterVolume bool) types.CustomCPError {
 
 	for _, vm := range vms {
 		err := fileWrite(privateKey, KeyName)
@@ -1901,7 +1905,7 @@ func deleteFile(keyName string, ctx utils.Context) types.CustomCPError {
 	}
 	return types.CustomCPError{}
 }
-func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string, ctx utils.Context, token, vpcName string,zones []string) (compute.VirtualMachineScaleSetVMListResultPage, types.CustomCPError, string) {
+func (cloud *AZURE) createVMSS(resourceGroup string, InfraId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string, ctx utils.Context, token, vpcName string, zones []string) (compute.VirtualMachineScaleSetVMListResultPage, types.CustomCPError, string) {
 
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
@@ -1940,11 +1944,11 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	}
 	storage := []compute.VirtualMachineScaleSetDataDisk{disk}
 	var params compute.VirtualMachineScaleSet
-	if zones[0] !="" {
+	if zones[0] != "" {
 		params = compute.VirtualMachineScaleSet{
 			Name:     to.StringPtr(pool.Name),
 			Location: to.StringPtr(cloud.Region),
-			Zones: to.StringSlicePtr(zones),
+			Zones:    to.StringSlicePtr(zones),
 			Identity: &compute.VirtualMachineScaleSetIdentity{
 				Type: compute.ResourceIdentityTypeSystemAssigned,
 			},
@@ -1996,7 +2000,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 				},
 			},
 		}
-	}else {
+	} else {
 		params = compute.VirtualMachineScaleSet{
 			Name:     to.StringPtr(pool.Name),
 			Location: to.StringPtr(cloud.Region),
@@ -2069,7 +2073,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 		fileName = append(fileName, "azure-volume-slave-mount.sh")
 	}
 
-	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+InfraId, fileName, pool.PoolRole, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return compute.VirtualMachineScaleSetVMListResultPage{}, ApiError(err, "Error in VMSS creation", int(models.CloudStatusCode)), ""

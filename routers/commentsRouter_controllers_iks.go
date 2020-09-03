@@ -28,7 +28,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "Get",
-			Router:           `/:projectId/`,
+			Router:           `/:infraId/`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -37,7 +37,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "Delete",
-			Router:           `/:projectId/:forceDelete`,
+			Router:           `/:infraId/:forceDelete`,
 			AllowHTTPMethods: []string{"delete"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -55,7 +55,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "ApplyAgent",
-			Router:           `/applyagent/:projectId`,
+			Router:           `/applyagent/:infraId`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -100,7 +100,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "StartCluster",
-			Router:           `/start/:projectId`,
+			Router:           `/start/:infraId`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -109,7 +109,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "GetStatus",
-			Router:           `/status/:projectId/`,
+			Router:           `/status/:infraId/`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -118,7 +118,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "TerminateCluster",
-			Router:           `/terminate/:projectId/`,
+			Router:           `/terminate/:infraId/`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -127,7 +127,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "PatchRunningCluster",
-			Router:           `/update/:projectId`,
+			Router:           `/update/:infraId`,
 			AllowHTTPMethods: []string{"put"},
 			MethodParams:     param.Make(),
 			Filters:          nil,

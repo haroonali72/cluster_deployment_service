@@ -50,7 +50,7 @@ func GenerateClusterFromResponse(v gke.Cluster) GKECluster {
 	}
 }
 
-func GenerateClusterCreateRequest(project, region, zone string, c GKECluster) *gke.CreateClusterRequest {
+func GenerateClusterCreateRequest(infrastructure, region, zone string, c GKECluster) *gke.CreateClusterRequest {
 	return &gke.CreateClusterRequest{
 		Cluster: &gke.Cluster{
 			ClusterIpv4Cidr:                c.ClusterIpv4Cidr,
@@ -79,7 +79,7 @@ func GenerateClusterCreateRequest(project, region, zone string, c GKECluster) *g
 			PrivateClusterConfig:           GeneratePrivateClusterConfigFromRequest(c.PrivateClusterConfig),
 			ResourceUsageExportConfig:      GenerateResourceUsageExportConfigFromRequest(c.ResourceUsageExportConfig),
 		},
-		Parent: "projects/" + project + "/locations/" + region + "-" + zone,
+		Parent: "projects/" + infrastructure + "/locations/" + region + "-" + zone,
 	}
 }
 
@@ -663,7 +663,7 @@ func GenerateNodePoolManagementFromRequest(project, region, zone string, nodepoo
 	return &request
 }
 
-func GenerateNodepoolCreateRequest(project, region, zone, clusterName string, pool []*NodePool) *gke.CreateNodePoolRequest {
+func GenerateNodepoolCreateRequest(infrastructure, region, zone, clusterName string, pool []*NodePool) *gke.CreateNodePoolRequest {
 	//	if pool.InitialNodeCount == 0 {
 	//		return &gke.CreateNodePoolRequest{}
 	//	}
@@ -671,19 +671,19 @@ func GenerateNodepoolCreateRequest(project, region, zone, clusterName string, po
 	for _, pool := range nPool {
 		return &gke.CreateNodePoolRequest{
 			NodePool: pool,
-			Parent:   "projects/" + project + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
+			Parent:   "projects/" + infrastructure + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
 		}
 	}
 	return &gke.CreateNodePoolRequest{}
 }
 
-func SetNetworkPolicyFromRequest(project, region, zone, clusterName string, policy *NetworkPolicy) *gke.SetNetworkPolicyRequest {
+func SetNetworkPolicyFromRequest(infrastructure, region, zone, clusterName string, policy *NetworkPolicy) *gke.SetNetworkPolicyRequest {
 	if policy == nil {
 		return nil
 	}
 
 	return &gke.SetNetworkPolicyRequest{
-		Name: "projects/" + project + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
+		Name: "projects/" + infrastructure + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
 		NetworkPolicy: &gke.NetworkPolicy{
 			Enabled:  policy.Enabled,
 			Provider: policy.Provider,
@@ -691,7 +691,7 @@ func SetNetworkPolicyFromRequest(project, region, zone, clusterName string, poli
 	}
 }
 
-func SetMaintenancePolicyFromRequest(project, region, zone, clusterName string, policy *MaintenancePolicy) *gke.SetMaintenancePolicyRequest {
+func SetMaintenancePolicyFromRequest(infrastructure, region, zone, clusterName string, policy *MaintenancePolicy) *gke.SetMaintenancePolicyRequest {
 	if policy == nil {
 		return nil
 	}
@@ -706,19 +706,19 @@ func SetMaintenancePolicyFromRequest(project, region, zone, clusterName string, 
 				},
 			},
 		},
-		Name: "projects/" + project + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
+		Name: "projects/" + infrastructure + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
 	}
 
 }
 
-func SetLegacyAbacFromRequest(project, region, zone, clusterName string, legacy *LegacyAbac) *gke.SetLegacyAbacRequest {
+func SetLegacyAbacFromRequest(infrastructure, region, zone, clusterName string, legacy *LegacyAbac) *gke.SetLegacyAbacRequest {
 	if legacy == nil {
 		return nil
 	}
 
 	return &gke.SetLegacyAbacRequest{
 		Enabled: legacy.Enabled,
-		Name:    "projects/" + project + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
+		Name:    "projects/" + infrastructure + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
 	}
 
 }
