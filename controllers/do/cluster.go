@@ -1162,13 +1162,13 @@ func (c *DOClusterController) GetRegions() {
 // @Param keyname path string true "keyname"
 // @Param X-Profile-Id header string true "profileId"
 // @Param X-Auth-Token header string true "Token"
-// @Param region path string true "region"
+// @Param region	path string	true "cloud region"
 // @Success 200 {"msg": "key deleted successfully"}
 // @Failure 409 {"error": "key is in used by some projects"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /sshkey/:keyname [delete]
+// @router /sshkey/:keyname/:region [delete]
 func (c *DOClusterController) DeleteSSHKey() {
 
 	ctx := new(utils.Context)
@@ -1182,7 +1182,7 @@ func (c *DOClusterController) DeleteSSHKey() {
 		return
 	}
 
-	region := c.Ctx.Input.Header("region")
+	region := c.GetString(":region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
