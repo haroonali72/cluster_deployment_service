@@ -2332,7 +2332,7 @@
                 }
             }
         },
-        "/cluster/do/sshkey/{keyname}": {
+        "/cluster/do/sshkey/{keyname}/{region}": {
             "delete": {
                 "tags": [
                     "cluster/do"
@@ -2364,7 +2364,7 @@
                     {
                         "in": "path",
                         "name": "region",
-                        "description": "region",
+                        "description": "cloud region",
                         "required": true,
                         "type": "string"
                     }
@@ -10890,7 +10890,7 @@
             "title": "string",
             "type": "object"
         },
-        "103951.string": {
+        "103958.string": {
             "title": "string",
             "type": "object"
         },
@@ -10902,19 +10902,19 @@
             "title": "string",
             "type": "object"
         },
-        "14391.0xc0019950b0.false": {
+        "14391.0xc0019f9560.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc001967140.false": {
+        "482.0xc0019c75f0.false": {
             "title": "false",
             "type": "object"
         },
-        "618.0xc000e7a750.false": {
+        "618.0xc000edaa80.false": {
             "title": "false",
             "type": "object"
         },
-        "721.0xc001802bd0.false": {
+        "721.0xc00186b080.false": {
             "title": "false",
             "type": "object"
         },
@@ -10922,15 +10922,15 @@
             "title": "string",
             "type": "object"
         },
-        "86074.string": {
+        "86310.string": {
             "title": "string",
             "type": "object"
         },
-        "89503.0xc0019223c0.false": {
+        "89504.0xc001988870.false": {
             "title": "false",
             "type": "object"
         },
-        "964.0xc001202e40.false": {
+        "964.0xc001263170.false": {
             "title": "false",
             "type": "object"
         },
@@ -11074,7 +11074,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/86074.string"
+                    "$ref": "#/definitions/86310.string"
                 },
                 "type": {
                     "type": "string"
@@ -11313,7 +11313,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc000e7a750.false"
+                    "$ref": "#/definitions/618.0xc000edaa80.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11940,7 +11940,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc001202e40.false"
+                    "$ref": "#/definitions/964.0xc001263170.false"
                 },
                 "name": {
                     "type": "string"
@@ -12778,7 +12778,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/103951.string"
+                    "$ref": "#/definitions/103958.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -14621,7 +14621,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/89503.0xc0019223c0.false"
+                    "$ref": "#/definitions/89504.0xc001988870.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14995,7 +14995,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14391.0xc0019950b0.false"
+                    "$ref": "#/definitions/14391.0xc0019f9560.false"
                 },
                 "name": {
                     "type": "string"
