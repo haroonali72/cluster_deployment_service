@@ -99,7 +99,7 @@ func AWSClusterStartHelper(task WorkSchema, infraData Infrastructure) {
 
 	if cluster.Status == models.ClusterCreated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster is already in deployed state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -283,7 +283,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if cluster.Status == models.ClusterTerminated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -439,7 +439,7 @@ func AzureClusterStartHelper(task WorkSchema, infraData Infrastructure) {
 
 	if cluster.Status == models.ClusterCreated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster is already in deployed state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -622,7 +622,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if cluster.Status == models.ClusterTerminated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -777,7 +777,7 @@ func GCPClusterStartHelper(task WorkSchema, infraData Infrastructure) {
 
 	if cluster.Status == models.ClusterCreated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster is already in deployed state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -952,7 +952,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if cluster.Status == models.ClusterTerminated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status: true,
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -1111,8 +1111,8 @@ func DOClusterStartHelper(task WorkSchema, infraData Infrastructure) {
 
 	if cluster.Status == models.ClusterCreated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
-			Message: "Cluster is already in deployed state",
+			Status:  true,
+			Message: "Cluster is in deployed state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
 			Action:  models.Create,
@@ -1295,7 +1295,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if cluster.Status == models.ClusterTerminated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -1450,8 +1450,8 @@ func AKSClusterStartHelpler(task WorkSchema, infraData Infrastructure) {
 
 	if cluster.Status == models.ClusterCreated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
-			Message: "Cluster is already in deployed state",
+			Status:  true,
+			Message: "Cluster is in deployed state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
 			Action:  models.Create,
@@ -1633,7 +1633,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if cluster.Status == models.ClusterTerminated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -1787,7 +1787,7 @@ func EKSClusterStartHelpler(task WorkSchema, infraData Infrastructure) {
 
 	if cluster.Status == models.ClusterCreated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster is already in deployed state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -1970,7 +1970,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if cluster.Status == models.ClusterTerminated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -2124,7 +2124,7 @@ func DOKSClusterStartHelpler(task WorkSchema, infraData Infrastructure) {
 
 	if cluster.CloudplexStatus == models.ClusterCreated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster is already in deployed state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -2307,7 +2307,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if cluster.CloudplexStatus == models.ClusterTerminated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -2461,7 +2461,7 @@ func GKEClusterStartHelpler(task WorkSchema, infraData Infrastructure) {
 
 	if cluster.CloudplexStatus == models.ClusterCreated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster is already in deployed state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -2652,7 +2652,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if cluster.CloudplexStatus == models.ClusterTerminated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -2817,7 +2817,7 @@ func IKSClusterStartHelpler(task WorkSchema, infraData Infrastructure) {
 
 	if cluster.Status == models.ClusterCreated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster is already in deployed state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -2999,7 +2999,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if cluster.Status == models.ClusterTerminated {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
