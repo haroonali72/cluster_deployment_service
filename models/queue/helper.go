@@ -190,7 +190,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Token is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -200,7 +200,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Infrastructure id is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -211,7 +211,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -227,7 +227,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -238,7 +238,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "User is not allowed to perform this action",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -255,7 +255,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -267,7 +267,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate. Cluster is in deploying state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -277,7 +277,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster is already in terminating state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -287,7 +287,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -298,7 +298,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -308,7 +308,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -320,7 +320,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -332,7 +332,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -346,7 +346,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -529,7 +529,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Token is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -539,7 +539,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Infrastructure id is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -550,7 +550,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -566,7 +566,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -577,7 +577,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "User is not allowed to perform this action",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -594,7 +594,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -606,7 +606,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate. Cluster is in deploying state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -616,7 +616,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster is already in terminating state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -626,7 +626,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -637,7 +637,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -647,7 +647,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -659,7 +659,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -671,7 +671,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -685,7 +685,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -859,7 +859,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Token is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -869,7 +869,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Infrastructure id is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -880,7 +880,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -896,7 +896,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -907,7 +907,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "User is not allowed to perform this action",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -924,7 +924,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -936,7 +936,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate. Cluster is in deploying state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -946,7 +946,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster is already in terminating state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -956,7 +956,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -967,7 +967,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -977,7 +977,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -989,7 +989,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -998,7 +998,6 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 	isValid, credentials := gcp.IsValidGcpCredentials(infraData.infrastructureData.ProfileId, region, task.Token, zone, *ctx)
 	if !isValid {
 		return
-		return
 	}
 	if err != nil {
 		utils.Publisher(utils.ResponseSchema{
@@ -1006,7 +1005,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1019,7 +1018,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1202,7 +1201,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Token is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -1212,7 +1211,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Infrastructure id is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -1223,7 +1222,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1239,7 +1238,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1250,7 +1249,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "User is not allowed to perform this action",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1267,7 +1266,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1279,7 +1278,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate. Cluster is in deploying state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1289,7 +1288,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster is already in terminating state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1299,7 +1298,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1310,7 +1309,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1320,7 +1319,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1332,7 +1331,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1345,7 +1344,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1359,7 +1358,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1541,7 +1540,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Token is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -1551,7 +1550,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Infrastructure id is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -1562,7 +1561,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1578,7 +1577,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1589,7 +1588,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "User is not allowed to perform this action",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1605,7 +1604,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1617,7 +1616,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate. Cluster is in deploying state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1627,7 +1626,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster is already in terminating state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1637,7 +1636,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1648,7 +1647,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1658,7 +1657,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1670,7 +1669,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1682,7 +1681,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1696,7 +1695,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1878,7 +1877,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Token is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -1888,7 +1887,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Infrastructure id is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -1899,7 +1898,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1915,7 +1914,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1926,7 +1925,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "User is not allowed to perform this action",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1942,7 +1941,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1954,7 +1953,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate. Cluster is in deploying state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1964,7 +1963,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster is already in terminating state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1974,7 +1973,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1985,7 +1984,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -1995,7 +1994,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2007,7 +2006,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2019,7 +2018,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2033,7 +2032,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2215,7 +2214,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Token is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -2225,7 +2224,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Infrastructure id is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -2236,7 +2235,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2252,7 +2251,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2263,7 +2262,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "User is not allowed to perform this action",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2279,7 +2278,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2291,7 +2290,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate. Cluster is in deploying state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2301,7 +2300,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster is already in terminating state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2311,7 +2310,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2322,7 +2321,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2332,7 +2331,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2344,7 +2343,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2356,7 +2355,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2370,7 +2369,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2560,7 +2559,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Token is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -2570,7 +2569,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Infrastructure id is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -2581,7 +2580,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2597,7 +2596,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2608,7 +2607,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "User is not allowed to perform this action",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2624,7 +2623,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2636,7 +2635,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate. Cluster is in deploying state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2646,7 +2645,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster is already in terminating state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2656,7 +2655,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2667,7 +2666,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2677,7 +2676,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2689,7 +2688,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2701,7 +2700,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Invalid Credentials",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2712,7 +2711,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2726,7 +2725,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2907,7 +2906,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Token is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -2917,7 +2916,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Infrastructure id is missing",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -2928,7 +2927,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2944,7 +2943,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2955,7 +2954,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "User is not allowed to perform this action",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2971,7 +2970,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2983,7 +2982,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate. Cluster is in deploying state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -2993,7 +2992,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster is already in terminating state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -3003,7 +3002,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "cluster is already in terminated state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -3014,7 +3013,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -3024,7 +3023,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -3036,7 +3035,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -3048,7 +3047,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action: models.Terminate,
 		}, utils.Context{})
 		return
 	}
@@ -3059,7 +3058,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -3073,7 +3072,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 			Message: err.Error(),
 			InfraId: task.InfraId,
 			Token:   task.Token,
-			Action:  models.Create,
+			Action:  models.Terminate,
 		}, utils.Context{})
 
 		return
@@ -3082,6 +3081,7 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 	ctx.SendLogs("IKSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go iks.TerminateCluster(cluster, ibmProfile, *ctx, userInfo.CompanyId, task.Token)
 }
+
 func UpdateEKSRunningCluster(task WorkSchema, infraData Infrastructure) {
 
 	if task.Token == "" {
