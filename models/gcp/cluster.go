@@ -175,7 +175,7 @@ type GcpCredentials struct {
 
 type AccountData struct {
 	Type          string `json:"type" valid:"required" description:"Type of the account[readonly]"`
-	InfraId       string `json:"infra_id" valid:"required" description:"Infrastructure Id of the account [readonly]"`
+	InfraId       string `json:"project_id" valid:"required" description:"Infrastructure Id of the account [readonly]"`
 	PrivateKeyId  string `json:"private_key_id" valid:"required" description:"Private key Id of the account [readonly]"`
 	PrivateKey    string `json:"private_key" valid:"required" description:"Private key of the account [readonly]"`
 	ClientEmail   string `json:"client_email" valid:"required" description:"Client email of the account [readonly]"`
