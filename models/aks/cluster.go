@@ -541,8 +541,8 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, cpErr)
-		if err != nil {
+		err1 := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, cpErr)
+		if err1 != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		utils.Publisher(utils.ResponseSchema{
