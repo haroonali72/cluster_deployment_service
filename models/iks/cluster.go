@@ -996,21 +996,21 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 		utils.SendLog(ctx.Data.Company, err1.Error()+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 		if !strings.Contains(err1.Error(), "Nothing to update") {
-			utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
+			utils.SendLog(ctx.Data.Company, "Nothing to update"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
-			cluster.Status = models.ClusterUpdateFailed
+			cluster.Status = models.ClusterCreated
 			confError := UpdateCluster(cluster, false, ctx)
 			if confError != nil {
 				ctx.SendLogs("IKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			err := ApiError(err1, "Error occured while apply cluster changes", 500)
+			err := ApiError(err1, "Nothing to update", 512)
 			err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.IKS, ctx, err)
 			if err_ != nil {
-				ctx.SendLogs("IKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				ctx.SendLogs("IKSUpdateRunningClusterModel:  Update - "+"Nothing to update", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
 			utils.Publisher(utils.ResponseSchema{
-				Status:  false,
-				Message: err.Error + "\n" + err.Description,
+				Status:  true,
+				Message: "Nothing to update",
 				InfraId: cluster.InfraId,
 				Token:   token,
 				Action:  models.Update,
