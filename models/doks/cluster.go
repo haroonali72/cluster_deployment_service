@@ -747,8 +747,8 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 				ctx.SendLogs("DOKSUpdateRunningClusterModel: "+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
 			utils.Publisher(utils.ResponseSchema{
-				Status:  false,
-				Message: err2.Error(),
+				Status:  true,
+				Message: "Nothing to update",
 				InfraId: cluster.InfraId,
 				Token:   token,
 				Action:  models.Update,
