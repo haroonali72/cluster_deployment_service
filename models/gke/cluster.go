@@ -847,8 +847,8 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 				ctx.SendLogs("GKERunningClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
 			utils.Publisher(utils.ResponseSchema{
-				Status:  false,
-				Message: err1.Error(),
+				Status:  true,
+				Message: "Nothing to update",
 				InfraId: cluster.InfraId,
 				Token:   token,
 				Action:  models.Update,
