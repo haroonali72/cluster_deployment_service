@@ -886,7 +886,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 	previousCluster, err := GetPreviousEKSCluster(ctx)
 	if err != nil {
 		err_ := types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
-		return updationFailedError(cluster, ctx, err_)
+		return updationFailedError(cluster, ctx, err_,token)
 	}
 	previousPoolCount := len(previousCluster.NodePools)
 
@@ -940,7 +940,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			}
 		}
 		if existInNew == false {
-			DeleteNodepool(cluster, ctx, eks, prePool.NodePoolName)
+			DeleteNodepool(cluster, ctx, eks, prePool.NodePoolName,token)
 		}
 
 	}
@@ -1392,14 +1392,14 @@ func PrintError(confError error, name string, ctx utils.Context) {
 	}
 }
 
-func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName string) types.CustomCPError {
+func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName string,token string) types.CustomCPError {
 	utils.SendLog(ctx.Data.Company, "Deleting nodePool "+poolName, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 	err := eksOps.deleteNodePool(cluster.Name, poolName)
 	if err != nil {
 		err_ := types.CustomCPError{Error: "Error in deleting nodepool in running cluster", Description: err.Error(), StatusCode: int(models.CloudStatusCode)}
 
-		updationFailedError(cluster, ctx, err_)
+		updationFailedError(cluster, ctx, err_,token)
 		return err_
 	}
 	utils.SendLog(ctx.Data.Company, " NodePool "+poolName+"deleted successfully", models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
@@ -1410,7 +1410,7 @@ func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName 
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in deleting nodepool in running cluster",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	for _, pool := range oldCluster.NodePools {
@@ -1434,7 +1434,7 @@ func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName 
 						StatusCode:  int(models.CloudStatusCode),
 						Error:       "Error in deleting nodepool in running cluster",
 						Description: err.Error(),
-					})
+					},token)
 				}
 			}
 			if pool.RemoteAccess != nil && pool.RemoteAccess.EnableRemoteAccess && pool.RemoteAccess.Ec2SshKey != nil && *pool.RemoteAccess.Ec2SshKey != "" {
@@ -1458,12 +1458,12 @@ func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName 
 	err1 = AddPreviousEKSCluster(oldCluster, ctx, true)
 	if err1 != nil {
 		return updationFailedError(cluster, ctx,
-			types.CustomCPError{Error: "Error in deleting nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+			types.CustomCPError{Error: "Error in deleting nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 	return types.CustomCPError{}
 }
 
-func updationFailedError(cluster EKSCluster, ctx utils.Context, err types.CustomCPError) types.CustomCPError {
+func updationFailedError(cluster EKSCluster, ctx utils.Context, err types.CustomCPError,token string) types.CustomCPError {
 	publisher := utils.Notifier{}
 
 	errr := publisher.Init_notifier()
@@ -1495,6 +1495,14 @@ func updationFailedError(cluster EKSCluster, ctx utils.Context, err types.Custom
 	utils.SendLog(ctx.Data.Company, "Deployed cluster update failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.InfraId)
 	utils.SendLog(ctx.Data.Company, err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
 
-	publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  false,
+		Message: "Cluster update failed",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Update,
+	}, ctx)
+
+
 	return err
 }

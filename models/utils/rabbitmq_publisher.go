@@ -66,5 +66,5 @@ func Publisher(response ResponseSchema, ctx Context) {
 		ctx.SendLogs("Error in fetching rabbitmq url "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return
 	}
-	ctx.SendLogs(" Message Sent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs(" Message Sent."+response.Message, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 }

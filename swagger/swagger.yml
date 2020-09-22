@@ -7295,40 +7295,40 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  502.0xc04396aba0.false:
+  485.0xc001a75680.false:
     title: "false"
     type: object
-  644.0xc042e59c80.false:
+  621.0xc000f922a0.false:
     title: "false"
     type: object
-  721.0xc0431e3140.false:
+  724.0xc001930150.false:
     title: "false"
     type: object
-  750.0xc043807710.false:
+  964.0xc0012fbbf0.false:
     title: "false"
     type: object
-  2282.string:
+  7435.string:
     title: string
     type: object
-  4946.string:
+  10099.string:
     title: string
     type: object
-  5704.string:
+  10857.string:
     title: string
     type: object
-  12046.string:
+  11901.string:
     title: string
     type: object
-  14700.0xc0439a4b10.false:
+  14339.0xc001aaf5f0.false:
     title: "false"
     type: object
-  91581.string:
+  87958.string:
     title: string
     type: object
-  93796.0xc0439420f0.false:
+  90982.0xc001a38900.false:
     title: "false"
     type: object
-  107771.string:
+  106023.string:
     title: string
     type: object
   X-Profile-Id:
@@ -7439,7 +7439,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/91581.string'
+        $ref: '#/definitions/87958.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -7613,7 +7613,7 @@ definitions:
         description: Id of the infrastructure [required]
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc042e59c80.false'
+        $ref: '#/definitions/621.0xc000f922a0.false'
       name:
         description: Name of the infrastructure [required]
         type: string
@@ -8054,7 +8054,7 @@ definitions:
       infra_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/721.0xc0431e3140.false'
+        $ref: '#/definitions/964.0xc0012fbbf0.false'
       name:
         type: string
       network_name:
@@ -8632,7 +8632,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/107771.string'
+        $ref: '#/definitions/106023.string'
       template_id:
         type: string
       version:
@@ -8795,14 +8795,14 @@ definitions:
       client_x509_cert_url:
         description: Client Cert Url of the account [readonly]
         type: string
-      infra_id:
-        description: Infrastructure Id of the account [readonly]
-        type: string
       private_key:
         description: Private key of the account [readonly]
         type: string
       private_key_id:
         description: Private key Id of the account [readonly]
+        type: string
+      project_id:
+        description: Infrastructure Id of the account [readonly]
         type: string
       token_uri:
         description: Token Uri of the account [readonly]
@@ -9919,7 +9919,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/93796.0xc0439420f0.false'
+        $ref: '#/definitions/90982.0xc001a38900.false'
       kube_version:
         type: string
       name:
@@ -10195,7 +10195,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14700.0xc0439a4b10.false'
+        $ref: '#/definitions/14339.0xc001aaf5f0.false'
       name:
         type: string
       node_pools:

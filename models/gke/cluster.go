@@ -915,7 +915,7 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 		}
 	}
 	if addincluster == true {
-		err = AddNodepool(cluster, ctx, gkeOps, addpools)
+		err = AddNodepool(cluster, ctx, gkeOps, addpools,token)
 		if err != (types.CustomCPError{}) {
 			return err
 		}
@@ -928,7 +928,7 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 			}
 		}
 		if existInNew == false {
-			DeleteNodepool(cluster, ctx, gkeOps, prePool.Name)
+			DeleteNodepool(cluster, ctx, gkeOps, prePool.Name,token)
 		}
 
 	}
@@ -948,66 +948,66 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 		}
 		if dif.Type == "update" {
 			if dif.Path[0] == "MasterAuthorizedNetworksConfig" {
-				err := UpdateMasterAuthorizedNetworksConfig(cluster, ctx, gkeOps)
+				err := UpdateMasterAuthorizedNetworksConfig(cluster, ctx, gkeOps,token )
 				if err != (types.CustomCPError{}) {
 					return err
 				}
 			} else if dif.Path[0] == "NetworkPolicy" {
-				err := UpdateNetworkPolicy(cluster, ctx, gkeOps)
+				err := UpdateNetworkPolicy(cluster, ctx, gkeOps,token)
 				if err != (types.CustomCPError{}) {
 					return err
 				}
 			} else if dif.Path[0] == "AddonsConfig" {
-				err := UpdateHttpLoadBalancing(cluster, ctx, gkeOps)
+				err := UpdateHttpLoadBalancing(cluster, ctx, gkeOps,token)
 				if err != (types.CustomCPError{}) {
 					return err
 				}
 			} else if dif.Path[0] == "InitialClusterVersion" {
-				err := UpdateVersion(cluster, ctx, gkeOps)
+				err := UpdateVersion(cluster, ctx, gkeOps,token)
 				if err != (types.CustomCPError{}) {
 					return err
 				}
 			} else if dif.Path[0] == "LoggingService" || dif.Path[0] == "MonitoringService" {
-				err := UpdateMonitoringAndLoggingService(cluster, ctx, gkeOps)
+				err := UpdateMonitoringAndLoggingService(cluster, ctx, gkeOps,token)
 				if err != (types.CustomCPError{}) {
 					return err
 				}
 			} else if dif.Path[0] == "LegacyAbac" {
-				err := UpdateLegacyAbac(cluster, ctx, gkeOps)
+				err := UpdateLegacyAbac(cluster, ctx, gkeOps,token)
 				if err != (types.CustomCPError{}) {
 					return err
 				}
 			} else if dif.Path[0] == "MaintenancePolicy" {
-				err := UpdateMaintenancePolicy(cluster, ctx, gkeOps)
+				err := UpdateMaintenancePolicy(cluster, ctx, gkeOps,token)
 				if err != (types.CustomCPError{}) {
 					return err
 				}
 			} else if dif.Path[0] == "ResourceUsageExportConfig" {
-				err := UpdateResourceUsageExportConfig(cluster, ctx, gkeOps)
+				err := UpdateResourceUsageExportConfig(cluster, ctx, gkeOps,token)
 				if err != (types.CustomCPError{}) {
 					return err
 				}
 			} else if len(dif.Path) >= 4 && dif.Path[0] == "NodePools" && dif.Path[2] == "Config" && dif.Path[3] == "ImageType" {
 				poolIndex, _ := strconv.Atoi(dif.Path[1])
-				err := UpdateNodeImage(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+				err := UpdateNodeImage(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex,token)
 				if err != (types.CustomCPError{}) {
 					return err
 				}
 			} else if len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "InitialNodeCount" {
 				poolIndex, _ := strconv.Atoi(dif.Path[1])
-				err := UpdateNodeCount(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+				err := UpdateNodeCount(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex,token)
 				if err != (types.CustomCPError{}) {
 					return err
 				}
 			} else if len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "Management" {
 				poolIndex, _ := strconv.Atoi(dif.Path[1])
-				err := UpdateNodePoolManagement(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+				err := UpdateNodePoolManagement(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex,token)
 				if err != (types.CustomCPError{}) {
 					return err
 				}
 			} else if len(dif.Path) > 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "Autoscaling" {
 				poolIndex, _ := strconv.Atoi(dif.Path[1])
-				err := UpdateNodePoolScaling(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+				err := UpdateNodePoolScaling(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex,token)
 				if err != (types.CustomCPError{}) {
 					return err
 				}
@@ -1425,17 +1425,17 @@ func fillStatusInfo(cluster GKECluster) (status KubeClusterStatus) {
 	return status
 }
 
-func UpdateVersion(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.CustomCPError {
+func UpdateVersion(cluster GKECluster, ctx utils.Context, gkeOps GKE,token string) types.CustomCPError {
 
 	err := gkeOps.UpdateMasterVersion(cluster, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 	for _, node := range cluster.NodePools {
 		err := gkeOps.UpdateNodePoolVersion(cluster.Name, node.Name, cluster.InitialClusterVersion, ctx)
 		if err != (types.CustomCPError{}) {
-			updationFailedError(cluster, ctx, err)
+			updationFailedError(cluster, ctx, err,token)
 			return err
 		}
 	}
@@ -1446,7 +1446,7 @@ func UpdateVersion(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.Cust
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in updating running cluster version",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	if cluster.InitialClusterVersion != "" {
@@ -1455,7 +1455,7 @@ func UpdateVersion(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.Cust
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in updating running cluster version", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in updating running cluster version", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 	return types.CustomCPError{}
 }
@@ -1483,16 +1483,16 @@ func CompareClusters(ctx utils.Context) (diff.Changelog, error) {
 	return difCluster, nil
 }
 
-func UpdateMasterAuthorizedNetworksConfig(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.CustomCPError {
+func UpdateMasterAuthorizedNetworksConfig(cluster GKECluster, ctx utils.Context, gkeOps GKE,token string) types.CustomCPError {
 	err := gkeOps.UpdateMasterAuthorizedNetworksConfig(cluster, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 
 	oldCluster, err1 := GetPreviousGKECluster(ctx)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, err)
+		return updationFailedError(cluster, ctx, err,token)
 	}
 
 	if cluster.MasterAuthorizedNetworksConfig != nil {
@@ -1503,16 +1503,16 @@ func UpdateMasterAuthorizedNetworksConfig(cluster GKECluster, ctx utils.Context,
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in updating running cluster master authorized networks config", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in updating running cluster master authorized networks config", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 	return types.CustomCPError{}
 }
 
-func UpdateMonitoringAndLoggingService(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.CustomCPError {
+func UpdateMonitoringAndLoggingService(cluster GKECluster, ctx utils.Context, gkeOps GKE,token string) types.CustomCPError {
 
 	err := gkeOps.UpdateMonitoringAndLoggingService(cluster, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 
@@ -1522,7 +1522,7 @@ func UpdateMonitoringAndLoggingService(cluster GKECluster, ctx utils.Context, gk
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in running cluster monitoring and logging update",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	if cluster.MonitoringService != "" {
@@ -1535,16 +1535,16 @@ func UpdateMonitoringAndLoggingService(cluster GKECluster, ctx utils.Context, gk
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster monitoring and logging update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster monitoring and logging update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 	return types.CustomCPError{}
 }
 
-func UpdateLegacyAbac(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.CustomCPError {
+func UpdateLegacyAbac(cluster GKECluster, ctx utils.Context, gkeOps GKE,token string) types.CustomCPError {
 
 	err := gkeOps.UpdateLegacyAbac(cluster, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 
@@ -1554,7 +1554,7 @@ func UpdateLegacyAbac(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.C
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in running cluster legacyAbac update",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	if cluster.LegacyAbac != nil {
@@ -1565,17 +1565,17 @@ func UpdateLegacyAbac(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.C
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster legacyAbac update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster legacyAbac update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 
 	return types.CustomCPError{}
 }
 
-func UpdateMaintenancePolicy(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.CustomCPError {
+func UpdateMaintenancePolicy(cluster GKECluster, ctx utils.Context, gkeOps GKE,token string) types.CustomCPError {
 
 	err := gkeOps.UpdateMaintenancePolicy(cluster, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 
@@ -1585,7 +1585,7 @@ func UpdateMaintenancePolicy(cluster GKECluster, ctx utils.Context, gkeOps GKE) 
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in running cluster maintenance policy update",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	if cluster.MaintenancePolicy != nil {
@@ -1596,12 +1596,12 @@ func UpdateMaintenancePolicy(cluster GKECluster, ctx utils.Context, gkeOps GKE) 
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster maintenance policy update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster maintenance policy update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 	return types.CustomCPError{}
 }
 
-func UpdateResourceUsageExportConfig(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.CustomCPError {
+func UpdateResourceUsageExportConfig(cluster GKECluster, ctx utils.Context, gkeOps GKE,token string) types.CustomCPError {
 	if cluster.ResourceUsageExportConfig == nil {
 		cluster.ResourceUsageExportConfig.BigqueryDestination = nil
 		cluster.ResourceUsageExportConfig.ConsumptionMeteringConfig = &ConsumptionMeteringConfig{}
@@ -1610,7 +1610,7 @@ func UpdateResourceUsageExportConfig(cluster GKECluster, ctx utils.Context, gkeO
 	}
 	err := gkeOps.UpdateResourceUsageExportConfig(cluster, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 
@@ -1620,7 +1620,7 @@ func UpdateResourceUsageExportConfig(cluster GKECluster, ctx utils.Context, gkeO
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in running cluster resource usage export config update",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	if cluster.MaintenancePolicy != nil {
@@ -1631,16 +1631,16 @@ func UpdateResourceUsageExportConfig(cluster GKECluster, ctx utils.Context, gkeO
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster resource usage export config update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster resource usage export config update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 	return types.CustomCPError{}
 }
 
-func UpdateNetworkPolicy(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.CustomCPError {
+func UpdateNetworkPolicy(cluster GKECluster, ctx utils.Context, gkeOps GKE,token string) types.CustomCPError {
 
 	err := gkeOps.UpdateNetworkPolicy(cluster, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 
@@ -1650,7 +1650,7 @@ func UpdateNetworkPolicy(cluster GKECluster, ctx utils.Context, gkeOps GKE) type
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in running cluster network policy update",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	if cluster.NetworkPolicy != nil {
@@ -1661,16 +1661,16 @@ func UpdateNetworkPolicy(cluster GKECluster, ctx utils.Context, gkeOps GKE) type
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster network policy update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster network policy update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 	return types.CustomCPError{}
 }
 
-func UpdateHttpLoadBalancing(cluster GKECluster, ctx utils.Context, gkeOps GKE) types.CustomCPError {
+func UpdateHttpLoadBalancing(cluster GKECluster, ctx utils.Context, gkeOps GKE,token string ) types.CustomCPError {
 
 	err := gkeOps.UpdateHttpLoadBalancing(cluster, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 
@@ -1680,7 +1680,7 @@ func UpdateHttpLoadBalancing(cluster GKECluster, ctx utils.Context, gkeOps GKE) 
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in running cluster http load balancing update",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	if cluster.AddonsConfig != nil {
@@ -1691,16 +1691,16 @@ func UpdateHttpLoadBalancing(cluster GKECluster, ctx utils.Context, gkeOps GKE) 
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster http load balancing update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster http load balancing update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 	return types.CustomCPError{}
 }
 
-func UpdateNodeCount(cluster GKECluster, ctx utils.Context, gkeOps GKE, pool *NodePool, poolIndex int) types.CustomCPError {
+func UpdateNodeCount(cluster GKECluster, ctx utils.Context, gkeOps GKE, pool *NodePool, poolIndex int,token string) types.CustomCPError {
 
 	err := gkeOps.UpdateNodePoolCount(cluster.Name, *pool, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 
@@ -1710,7 +1710,7 @@ func UpdateNodeCount(cluster GKECluster, ctx utils.Context, gkeOps GKE, pool *No
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in running cluster nodepool node count update",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	if cluster.NodePools[poolIndex].InitialNodeCount != 0 {
@@ -1719,16 +1719,16 @@ func UpdateNodeCount(cluster GKECluster, ctx utils.Context, gkeOps GKE, pool *No
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster nodepool node count update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster nodepool node count update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 	return types.CustomCPError{}
 }
 
-func UpdateNodeImage(cluster GKECluster, ctx utils.Context, gkeOps GKE, pool *NodePool, poolIndex int) types.CustomCPError {
+func UpdateNodeImage(cluster GKECluster, ctx utils.Context, gkeOps GKE, pool *NodePool, poolIndex int,token string) types.CustomCPError {
 
 	err := gkeOps.UpdateNodePoolImageType(cluster.Name, *pool, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 
@@ -1738,7 +1738,7 @@ func UpdateNodeImage(cluster GKECluster, ctx utils.Context, gkeOps GKE, pool *No
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in running cluster nodepool node image update",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	if cluster.NodePools[poolIndex].Config.ImageType != "" {
@@ -1747,17 +1747,17 @@ func UpdateNodeImage(cluster GKECluster, ctx utils.Context, gkeOps GKE, pool *No
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster nodepool node image update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster nodepool node image update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 
 	return types.CustomCPError{}
 }
 
-func UpdateNodePoolManagement(cluster GKECluster, ctx utils.Context, gkeOps GKE, pool *NodePool, poolIndex int) types.CustomCPError {
+func UpdateNodePoolManagement(cluster GKECluster, ctx utils.Context, gkeOps GKE, pool *NodePool, poolIndex int,token string) types.CustomCPError {
 
 	err := gkeOps.UpdateNodepoolManagement(cluster.Name, *pool, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 
@@ -1767,7 +1767,7 @@ func UpdateNodePoolManagement(cluster GKECluster, ctx utils.Context, gkeOps GKE,
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in running cluster nodepool management update",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	if oldCluster.NodePools[poolIndex].Management != nil {
@@ -1778,16 +1778,16 @@ func UpdateNodePoolManagement(cluster GKECluster, ctx utils.Context, gkeOps GKE,
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster nodepool management update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster nodepool management update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 	return types.CustomCPError{}
 }
 
-func UpdateNodePoolScaling(cluster GKECluster, ctx utils.Context, gkeOps GKE, pool *NodePool, poolIndex int) types.CustomCPError {
+func UpdateNodePoolScaling(cluster GKECluster, ctx utils.Context, gkeOps GKE, pool *NodePool, poolIndex int,token string) types.CustomCPError {
 
 	err := gkeOps.UpdateNodepoolScaling(cluster.Name, *pool, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 
@@ -1797,7 +1797,7 @@ func UpdateNodePoolScaling(cluster GKECluster, ctx utils.Context, gkeOps GKE, po
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in running cluster nodepool scaling update",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	if cluster.NodePools[poolIndex].Config.ImageType != "" {
@@ -1806,17 +1806,17 @@ func UpdateNodePoolScaling(cluster GKECluster, ctx utils.Context, gkeOps GKE, po
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster nodepool scaling update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in running cluster nodepool scaling update", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 
 	return types.CustomCPError{}
 }
 
-func AddNodepool(cluster GKECluster, ctx utils.Context, gkeOps GKE, pools []*NodePool) types.CustomCPError {
+func AddNodepool(cluster GKECluster, ctx utils.Context, gkeOps GKE, pools []*NodePool,token string) types.CustomCPError {
 
 	err := gkeOps.AddNodePool(cluster.Name, pools, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 
@@ -1826,7 +1826,7 @@ func AddNodepool(cluster GKECluster, ctx utils.Context, gkeOps GKE, pools []*Nod
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in adding nodepool in running cluster",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	for _, pool := range pools {
@@ -1836,16 +1836,16 @@ func AddNodepool(cluster GKECluster, ctx utils.Context, gkeOps GKE, pools []*Nod
 
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in adding nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in adding nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 	return types.CustomCPError{}
 }
 
-func DeleteNodepool(cluster GKECluster, ctx utils.Context, gkeOps GKE, poolName string) types.CustomCPError {
+func DeleteNodepool(cluster GKECluster, ctx utils.Context, gkeOps GKE, poolName ,token string) types.CustomCPError {
 
 	err := gkeOps.DeleteNodePool(cluster.Name, poolName, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err)
+		updationFailedError(cluster, ctx, err,token)
 		return err
 	}
 
@@ -1855,7 +1855,7 @@ func DeleteNodepool(cluster GKECluster, ctx utils.Context, gkeOps GKE, poolName 
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in deleting nodepool in running cluster",
 			Description: err1.Error(),
-		})
+		},token)
 	}
 
 	for _, pool := range oldCluster.NodePools {
@@ -1865,12 +1865,12 @@ func DeleteNodepool(cluster GKECluster, ctx utils.Context, gkeOps GKE, poolName 
 	}
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in deleting nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in deleting nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
 	}
 	return types.CustomCPError{}
 }
 
-func updationFailedError(cluster GKECluster, ctx utils.Context, err types.CustomCPError) types.CustomCPError {
+func updationFailedError(cluster GKECluster, ctx utils.Context, err types.CustomCPError,token string) types.CustomCPError {
 	publisher := utils.Notifier{}
 
 	errr := publisher.Init_notifier()
@@ -1902,6 +1902,13 @@ func updationFailedError(cluster GKECluster, ctx utils.Context, err types.Custom
 	utils.SendLog(ctx.Data.Company, "Deployed cluster update failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.InfraId)
 	utils.SendLog(ctx.Data.Company, err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
 
-	publisher.Notify(ctx.Data.InfraId, "Redeploy Status Available", ctx)
+	utils.Publisher(utils.ResponseSchema{
+		Status:  false,
+		Message: "Cluster update failed",
+		InfraId: cluster.InfraId,
+		Token:   token,
+		Action:  models.Update,
+	}, ctx)
+
 	return err
 }

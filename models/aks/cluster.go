@@ -529,7 +529,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	}
 	err := aksOps.CreateCluster(cluster, token, ctx)
 	if err != nil {
-		cpErr := ApiError(err, "", 502)
+		cpErr := ApiError(err, "Cluster creation failed", 512)
 
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.InfraId)
 		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.InfraId)
@@ -541,13 +541,13 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, cpErr)
-		if err != nil {
+		err1 := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, cpErr)
+		if err1 != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		utils.Publisher(utils.ResponseSchema{
 			Status:  false,
-			Message: err.Error(),
+			Message: "Cluster creation failed",
 			InfraId: cluster.InfraId,
 			Token:   token,
 			Action:  models.Create,
