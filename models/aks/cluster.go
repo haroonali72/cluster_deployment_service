@@ -696,7 +696,7 @@ func TerminateCluster(credentials vault.AzureProfile, infraId, companyId, token 
 	aksOps, _ := GetAKS(credentials.Profile)
 
 	_, _, _, err1 := CompareClusters(cluster.InfraId, companyId, ctx)
-	if err1 != nil ||  !strings.Contains(err1.Error(),"Nothing to update") || !strings.Contains(err1.Error(),"not found") {
+	if err1 != nil &&  !(strings.Contains(err1.Error(),"Nothing to update")) {
 		oldCluster , err_ := GetPreviousAKSCluster(infraId,companyId,ctx)
 		if err_ != nil {
 			cpErr := ApiError(err_, "Error while updating cluster in database", 500)

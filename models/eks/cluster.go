@@ -588,7 +588,7 @@ func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, InfraId,
 	eksOps := GetEKS(InfraId, credentials.Profile)
 
 	_, _, _, err1 := CompareClusters(ctx)
-	if err1 != nil || !strings.Contains(err1.Error(),"Nothing to update") || !strings.Contains(err1.Error(),"not found"){
+	if err1 != nil &&  !(strings.Contains(err_.Error(),"Nothing to update")){
 		oldCluster,err := GetPreviousEKSCluster(ctx)
 		if err != nil {
 			utils.SendLog(ctx.Data.Company, err.Error(), "error", cluster.InfraId)

@@ -1077,7 +1077,7 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 	utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 	difCluster, _, _, err1 := CompareClusters(ctx)
-	if err1 != nil || !strings.Contains(err1.Error(),"Nothing to update") || !strings.Contains(err1.Error(),"not found"){
+	if err1 != nil &&  !(strings.Contains(err1.Error(),"Nothing to update")){
 		ctx.SendLogs("IKSUpdateRunningClusterModel:  Update - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(ctx.Data.Company, err1.Error()+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
