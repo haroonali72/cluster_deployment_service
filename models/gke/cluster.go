@@ -1188,7 +1188,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, token string, ctx utils.Co
 	}
 
 	_, err_ := CompareClusters(ctx)
-	if err_ != nil {
+	if err_ != nil  || !strings.Contains(err_.Error(),"Nothing to update") || !strings.Contains(err_.Error(),"not found"){
 		oldCluster,err_ := GetPreviousGKECluster(ctx)
 		if err_ != nil {
 

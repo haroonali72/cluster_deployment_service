@@ -212,16 +212,19 @@ func PrintError(confError error, name, infraId string, ctx utils.Context, compan
 	}
 }
 func CheckCluster(infraId, companyId string, ctx utils.Context) error {
+
 	cluster, err := GetCluster(infraId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
+
 	agent, err := GetGrpcAgentConnection(ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
+
 	err = agent.InitializeAgentClient(infraId, companyId)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

@@ -112,8 +112,18 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
+	if infra.infrastructureData.Cloud == models.OP && infra.infrastructureData.ManagedCluster == "" {
 
-	if infra.infrastructureData.Cloud == models.AWS && infra.infrastructureData.ManagedCluster == "" {
+		if task.Action == models.Create {
+
+			go OPClusterStartHelper(task, infra)
+
+		} else if task.Action == models.Terminate {
+
+			go OPClusterTerminateHelper(task, infra)
+
+		}
+	}else if infra.infrastructureData.Cloud == models.AWS && infra.infrastructureData.ManagedCluster == "" {
 
 		if task.Action == models.Create {
 
