@@ -1021,7 +1021,7 @@ func TerminateCluster(credentials vault.DOCredentials, token string, ctx utils.C
 	}
 
 	_, err2 := CompareClusters(ctx)
-	if err2 != nil  || !strings.Contains(err2.Error(),"Nothing to update") || !strings.Contains(err2.Error(),"not found"){
+	if err2 != nil  &&  !(strings.Contains(err2.Error(),"Nothing to update")){
 		oldCluster ,err := GetPreviousDOKSCluster(ctx)
 		if err != nil {
 			utils.SendLog(ctx.Data.Company, err.Error(), "error", cluster.InfraId)
@@ -1402,7 +1402,7 @@ func CompareClusters(ctx utils.Context) (diff.Changelog, error) {
 
 	oldCluster, err := GetPreviousDOKSCluster(ctx)
 	if err != nil && strings.Contains(err.Error(), "not found") {
-		return diff.Changelog{}, errors.New("not found")
+		return diff.Changelog{}, errors.New("Nothing to update")
 	}
 
 	previousPoolCount := len(oldCluster.NodePools)
