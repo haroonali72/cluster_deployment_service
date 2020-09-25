@@ -1009,7 +1009,6 @@ func TerminateCluster(credentials vault.DOCredentials, token string, ctx utils.C
 		}
 		return customError
 	}
-
 	cluster, err := GetKubernetesCluster(ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel : Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -1020,6 +1019,45 @@ func TerminateCluster(credentials vault.DOCredentials, token string, ctx utils.C
 		}
 		return customError
 	}
+
+	_, err2 := CompareClusters(ctx)
+	if err2 != nil{
+		oldCluster ,err := GetPreviousDOKSCluster(ctx)
+		if err != nil {
+			utils.SendLog(ctx.Data.Company, err.Error(), "error", cluster.InfraId)
+			cpErr := types.CustomCPError{Description: err.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
+			err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.DOKS, ctx, cpErr)
+			if err != nil {
+				ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Terminate,
+			}, ctx)
+			return cpErr
+		}
+		err_ := UpdateKubernetesCluster(oldCluster, ctx)
+		if err_ != nil {
+			utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)
+			cpErr := types.CustomCPError{Description: err_.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
+			err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.DOKS, ctx, cpErr)
+			if err != nil {
+				ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err_.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Terminate,
+			}, ctx)
+			return cpErr
+		}
+	}
+
 
 	if cluster.CloudplexStatus == "" || cluster.CloudplexStatus == "new" {
 		text := "DOKSClusterModel : Terminate - Cannot terminate a new cluster"

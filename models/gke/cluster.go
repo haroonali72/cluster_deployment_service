@@ -1187,9 +1187,52 @@ func TerminateCluster(credentials gcp.GcpCredentials, token string, ctx utils.Co
 		return err1
 	}
 
+	_, err_ := CompareClusters(ctx)
+	if err_ != nil {
+		oldCluster,err_ := GetPreviousGKECluster(ctx)
+		if err_ != nil {
+
+			utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)
+			cpErr := types.CustomCPError{Description: err_.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
+			err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.GKE, ctx, cpErr)
+			if err != nil {
+				ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err_.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Terminate,
+			}, ctx)
+			return cpErr
+		}
+
+		err_ = UpdateGKECluster(oldCluster, ctx)
+		if err_ != nil {
+
+			utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)
+			cpErr := types.CustomCPError{Description: err_.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
+			err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.GKE, ctx, cpErr)
+			if err != nil {
+				ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err_.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Terminate,
+			}, ctx)
+			return cpErr
+		}
+	}
+
 	_, _ = utils.SendLog(ctx.Data.Company, "Terminating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 	cluster.CloudplexStatus = models.Terminating
-	err_ := UpdateGKECluster(cluster, ctx)
+	err_ = UpdateGKECluster(cluster, ctx)
 	if err_ != nil {
 
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)

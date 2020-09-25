@@ -587,6 +587,45 @@ func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, InfraId,
 
 	eksOps := GetEKS(InfraId, credentials.Profile)
 
+	_, _, _, err1 := CompareClusters(ctx)
+	if err1 != nil {
+		oldCluster,err := GetPreviousEKSCluster(ctx)
+		if err != nil {
+			utils.SendLog(ctx.Data.Company, err.Error(), "error", cluster.InfraId)
+			cpErr := types.CustomCPError{Description: err.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
+			err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.EKS, ctx, cpErr)
+			if err != nil {
+				ctx.SendLogs("EKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Terminate,
+			}, ctx)
+			return cpErr
+		}
+		err_ := UpdateEKSCluster(oldCluster, ctx)
+		if err_ != nil {
+			utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)
+			cpErr := types.CustomCPError{Description: err_.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
+			err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.IKS, ctx, cpErr)
+			if err != nil {
+				ctx.SendLogs("EKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err_.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Terminate,
+			}, ctx)
+			return cpErr
+		}
+
+	}
+
 	cluster.Status = (models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.InfraId)
 
@@ -608,6 +647,7 @@ func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, InfraId,
 		}, ctx)
 		return cpErr
 	}
+
 	eksOps.init()
 
 	cpErr := eksOps.DeleteCluster(&cluster, ctx)
