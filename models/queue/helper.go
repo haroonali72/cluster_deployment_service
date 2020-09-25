@@ -294,7 +294,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 
 	} else if cluster.Status == models.ClusterCreationFailed {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -304,7 +304,7 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -633,8 +633,8 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 
 	} else if cluster.Status == models.ClusterCreationFailed {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
-			Message: "Cluster state is invalid for termination",
+			Status:  true,
+			Message: "Cluster is not in created state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
 			Action:  models.Terminate,
@@ -643,7 +643,7 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -963,7 +963,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 
 	} else if cluster.Status == models.ClusterCreationFailed {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -973,7 +973,7 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -1305,7 +1305,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 
 	} else if cluster.Status == models.ClusterCreationFailed {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -1315,7 +1315,7 @@ func DOClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -1643,7 +1643,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 
 	} else if cluster.Status == models.ClusterCreationFailed {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -1653,7 +1653,7 @@ func AKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -1980,7 +1980,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 
 	} else if cluster.Status == models.ClusterCreationFailed {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -1990,7 +1990,7 @@ func EKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status: true,
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -2317,7 +2317,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 
 	} else if cluster.CloudplexStatus == models.ClusterCreationFailed {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -2327,7 +2327,7 @@ func DOKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if strings.ToLower(string(cluster.CloudplexStatus)) == strings.ToLower(string(models.New)) {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -2662,7 +2662,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 
 	} else if cluster.CloudplexStatus == models.ClusterCreationFailed {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Cluster state is invalid for termination",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -2672,7 +2672,7 @@ func GKEClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if strings.ToLower(string(cluster.CloudplexStatus)) == strings.ToLower(string(models.New)) {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
+			Status:  true,
 			Message: "Can't Terminate an undeployed  cluster",
 			InfraId: task.InfraId,
 			Token:   task.Token,
@@ -3009,8 +3009,8 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 
 	} else if cluster.Status == models.ClusterCreationFailed {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
-			Message: "Cluster state is invalid for termination",
+			Status:  true,
+			Message: "Cluster is not in created state",
 			InfraId: task.InfraId,
 			Token:   task.Token,
 			Action:  models.Terminate,
@@ -3019,8 +3019,8 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 		return
 	} else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
 		utils.Publisher(utils.ResponseSchema{
-			Status:  false,
-			Message: "Can't Terminate an undeployed  cluster",
+			Status:  true,
+			Message: "Cluster is undeployed",
 			InfraId: task.InfraId,
 			Token:   task.Token,
 			Action:  models.Terminate,
