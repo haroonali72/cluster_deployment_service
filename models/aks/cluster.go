@@ -694,6 +694,46 @@ func TerminateCluster(credentials vault.AzureProfile, infraId, companyId, token 
 	}
 
 	aksOps, _ := GetAKS(credentials.Profile)
+
+	_, _, _, err1 := CompareClusters(cluster.InfraId, companyId, ctx)
+	if err1 != nil {
+		oldCluster , err_ := GetPreviousAKSCluster(infraId,companyId,ctx)
+		if err_ != nil {
+			cpErr := ApiError(err_, "Error while updating cluster in database", 500)
+			utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)
+			err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, cpErr)
+			if err != nil {
+				ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err_.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Terminate,
+			}, ctx)
+			return cpErr
+		}
+
+		err_ = UpdateAKSCluster(oldCluster, ctx)
+		if err_ != nil {
+			cpErr := ApiError(err_, "Error while updating cluster in database", 500)
+			utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)
+			err := db.CreateError(cluster.InfraId, companyId, models.AKS, ctx, cpErr)
+			if err != nil {
+				ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: err_.Error(),
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Terminate,
+			}, ctx)
+			return cpErr
+		}
+	}
+
 	_, _ = utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.InfraId)
 
 	cluster.Status = (models.Terminating)

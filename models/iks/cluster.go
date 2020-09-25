@@ -510,6 +510,52 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 
 	iks := GetIBM(profile.Profile)
 
+	_, _, _, err1 := CompareClusters(ctx)
+	if err1 != nil {
+		oldCluster, err_ :=  GetPreviousIKSCluster(ctx)
+		if err_ != nil {
+			utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)
+			cpErr := types.CustomCPError{Description: err_.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
+			err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.IKS, ctx, cpErr)
+			if err != nil {
+				ctx.SendLogs("IKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: "Cluster termination failed",
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Terminate,
+			}, ctx)
+
+			return cpErr
+
+		}
+
+		err_ = UpdateCluster(oldCluster, false, ctx)
+		if err_ != nil {
+
+			utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)
+			cpErr := types.CustomCPError{Description: err_.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
+			err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.IKS, ctx, cpErr)
+			if err != nil {
+				ctx.SendLogs("IKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+
+			utils.Publisher(utils.ResponseSchema{
+				Status:  false,
+				Message: "Cluster termination failed",
+				InfraId: cluster.InfraId,
+				Token:   token,
+				Action:  models.Terminate,
+			}, ctx)
+
+			return cpErr
+
+		}
+	}
+
 	cluster.Status = (models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.InfraId)
 
