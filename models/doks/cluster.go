@@ -1402,7 +1402,7 @@ func CompareClusters(ctx utils.Context) (diff.Changelog, error) {
 
 	oldCluster, err := GetPreviousDOKSCluster(ctx)
 	if err != nil && strings.Contains(err.Error(), "not found") {
-		return diff.Changelog{}, errors.New("Nothing to update")
+		return diff.Changelog{}, errors.New("not found")
 	}
 
 	previousPoolCount := len(oldCluster.NodePools)
