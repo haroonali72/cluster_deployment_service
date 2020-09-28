@@ -336,10 +336,6 @@ func (c *AWSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	if savedCluster.Status == (models.ClusterCreated) {
-		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
-		c.ServeJSON()
-	}
 
 	validate := validator.New()
 	err = validate.Struct(cluster)
