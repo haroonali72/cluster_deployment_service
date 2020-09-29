@@ -326,10 +326,6 @@ func (c *AzureClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	if savedCluster.Status == (models.ClusterCreated) {
-		c.Data["json"] = map[string]string{"msg": "No changes are applicable"}
-		c.ServeJSON()
-	}
 
 	validate := validator.New()
 	err = validate.Struct(cluster)

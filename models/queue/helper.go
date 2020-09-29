@@ -3082,6 +3082,74 @@ func IKSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 	go iks.TerminateCluster(cluster, ibmProfile, *ctx, userInfo.CompanyId, task.Token)
 }
 
+func OPClusterStartHelper(task WorkSchema, infraData Infrastructure) {
+
+	if task.Token == "" {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+		return
+	}
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  true,
+			Message: "No changes made",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Create,
+		}, utils.Context{})
+
+		return
+	}
+
+func OPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
+
+	if task.Token == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Terminate,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure id is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Terminate,
+		}, utils.Context{})
+		return
+	}
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "No changes made",
+		InfraId: task.InfraId,
+		Token:   task.Token,
+		Action:  models.Terminate,
+	}, utils.Context{})
+	return
+}
+
 func UpdateEKSRunningCluster(task WorkSchema, infraData Infrastructure) {
 
 	if task.Token == "" {

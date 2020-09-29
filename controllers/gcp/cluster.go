@@ -333,10 +333,6 @@ func (c *GcpClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	if savedCluster.Status == (models.ClusterCreated) {
-		c.Data["json"] = map[string]string{"msg": "No changes are applicable"}
-		c.ServeJSON()
-	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.InfraId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -421,9 +417,11 @@ func (c *GcpClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs(" GCP cluster "+cluster.Name+" of Infrastructure Id: "+cluster.InfraId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 	c.ServeJSON()
+
 }
 
 // @Title Delete

@@ -403,16 +403,13 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	if oldCluster.Status == models.Deploying && update {
 		ctx.SendLogs("Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster is in creating state")
-	}
-	if oldCluster.Status == models.Terminating && update {
+	}else if oldCluster.Status == models.Terminating && update {
 		ctx.SendLogs("Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster is in terminating state")
-	}
-	if oldCluster.Status == models.ClusterTerminationFailed && update {
+	}else if oldCluster.Status == models.ClusterTerminationFailed && update {
 		ctx.SendLogs("Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster is in termination failed state")
-	}
-	if oldCluster.Status == models.ClusterCreated && update {
+	}else if oldCluster.Status == models.ClusterCreated && update {
 		if !checkScalingChanges(&oldCluster, &cluster) {
 			ctx.SendLogs("No changes are applicable", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return errors.New("No changes are applicable")
