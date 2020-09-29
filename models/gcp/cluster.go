@@ -518,10 +518,10 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 
 		err1 := gcp.cleanup(cluster, ctx, token)
 		if err1 != (types.CustomCPError{}) {
-			return err
+			utils.SendLog(companyId, err1.Error, "error", cluster.InfraId)
+		} else {
+			utils.SendLog(companyId, "Cluster resources cleaned", "error", cluster.InfraId)
 		}
-
-		utils.SendLog(companyId, "Cluster resources cleaned", "error", cluster.InfraId)
 
 		cluster.Status = models.ClusterCreationFailed
 		confError = UpdateCluster(cluster, false, ctx)
