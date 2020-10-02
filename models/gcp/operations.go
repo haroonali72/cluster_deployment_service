@@ -560,7 +560,10 @@ func (cloud *GCP) fetchNodeInfo(nodeName, zone string, ctx utils.Context) (Node,
 
 	reqCtx := context.Background()
 	createdNode, err := cloud.Client.Instances.Get(cloud.InfraId, zone, nodeName).Context(reqCtx).Do()
-	if err != nil {
+	if err != nil && strings.Contains(err.Error(),"not found"){
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return Node{}, ApiErrors(errors.New(err.Error()), "Error in fetching node info/Node not found")
+	}else if err != nil{
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Node{}, ApiErrors(errors.New(err.Error()), "Error in fetching node info")
 	}
@@ -770,7 +773,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, zone string, ctx utils.Context
 		managedGroup, err := cloud.Client.InstanceGroupManagers.Get(cloud.InfraId, zone, pool.Name).Context(reqCtx).Do()
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return ApiErrors(err, "Erro in fechting pool status")
+			return ApiErrors(err, "Error in fechting pool status")
 		}
 		pool.PoolId = managedGroup.InstanceGroup
 		createdNodes, err := cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.InfraId, zone, pool.Name).Context(reqCtx).Do()
@@ -785,7 +788,9 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, zone string, ctx utils.Context
 			nodeName := splits[len(splits)-1]
 
 			newNode, err := cloud.fetchNodeInfo(nodeName, zone, ctx)
-			if err != (types.CustomCPError{}) {
+			if err != (types.CustomCPError{}) && strings.Contains(err.Error,"not found"){
+				continue
+			}else if err != (types.CustomCPError{}){
 				ctx.SendLogs(err.Error + err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return err
 			}
