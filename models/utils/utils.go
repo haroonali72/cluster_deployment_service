@@ -43,20 +43,7 @@ func CreatePutRequest(request_data []byte, url string) (*http.Request, error) {
 	//req.Header.Set("Content-Type", "application/json")
 	return req, nil
 }
-func CreatePatchRequest(request_data []byte, url string) (*http.Request, error) {
 
-	//beego.Info("requesting ", url)
-
-	req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(request_data))
-
-	if err != nil {
-		beego.Error("%s", err)
-		return nil, err
-	}
-
-	//req.Header.Set("Content-Type", "application/json")
-	return req, nil
-}
 func CreatePostRequest(request_data []byte, url string) (*http.Request, error) {
 
 	//beego.Info("requesting ", url)
