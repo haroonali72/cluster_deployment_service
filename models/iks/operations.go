@@ -1126,7 +1126,8 @@ func (cloud *IBM) updateNodePoolVersion(rg, clusterID string, nodePool []*NodePo
 			return cpErr
 
 		}
-		ctx.SendLogs("updated verson of node"+worker.PoolId, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		ctx.SendLogs("Verson of node updated "+worker.PoolId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	}
 	return types.CustomCPError{}
@@ -1161,14 +1162,14 @@ func (cloud *IBM) fetchWorkers(clusterId, rg string, ctx utils.Context)  ([]Kube
 		return []KubeWorkerNodes{}, cpErr
 	}
 
-	beego.Info(res.Status)
+
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error in fetching cluster", 500)
 		return []KubeWorkerNodes{}, cpErr
 	}
-	beego.Info(string(body))
+
 
 	if res.StatusCode != 200 {
 		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
