@@ -3,6 +3,7 @@ package main
 import (
 	"antelope/models/aks"
 	"antelope/models/db"
+	"antelope/models/queue"
 	"antelope/models/utils"
 	_ "antelope/routers"
 	"github.com/astaxie/beego"
@@ -44,7 +45,7 @@ func main() {
 	// TODO enable basic authentication if required
 	//authPlugin := auth.NewBasicAuthenticator(SecretAuth, "Authorization Required")
 	//beego.InsertFilter("*", beego.BeforeRouter, authPlugin)
-//	go queue.Subscriber()
+	go queue.Subscriber()
 	beego.Run()
 
 }
