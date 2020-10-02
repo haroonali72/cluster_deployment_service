@@ -356,6 +356,42 @@ func AWSClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 	go aws.TerminateCluster(cluster, awsProfile, *ctx, userInfo.CompanyId, task.Token)
 
 }
+func AWSClusterUpdateHelper(task WorkSchema, infraData Infrastructure) {
+
+	if task.Token == "" {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Update,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Update,
+		}, utils.Context{})
+		return
+	}
+
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "No changes made",
+		InfraId: task.InfraId,
+		Token:   task.Token,
+		Action:  models.Update,
+	}, utils.Context{})
+
+	return
+}
+
 func AzureClusterStartHelper(task WorkSchema, infraData Infrastructure) {
 
 	if task.Token == "" {
@@ -694,6 +730,42 @@ func AzureClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 	ctx.SendLogs("AWSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId, task.Token)
 }
+func AzureClusterUpdateHelper(task WorkSchema, infraData Infrastructure) {
+
+	if task.Token == "" {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Update,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Update,
+		}, utils.Context{})
+		return
+	}
+
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "No changes made",
+		InfraId: task.InfraId,
+		Token:   task.Token,
+		Action:  models.Update,
+	}, utils.Context{})
+
+	return
+}
+
 func GCPClusterStartHelper(task WorkSchema, infraData Infrastructure) {
 
 	if task.Token == "" {
@@ -1027,6 +1099,42 @@ func GCPClusterTerminateHelper(task WorkSchema, infraData Infrastructure) {
 	ctx.SendLogs("GCPClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go gcp.TerminateCluster(cluster, credentials, task.Token, userInfo.CompanyId, *ctx)
 }
+func GCPClusterUpdateHelper(task WorkSchema, infraData Infrastructure) {
+
+	if task.Token == "" {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Token is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Update,
+		}, utils.Context{})
+		return
+	}
+	if task.InfraId == "" {
+
+		utils.Publisher(utils.ResponseSchema{
+			Status:  false,
+			Message: "Infrastructure is missing",
+			InfraId: task.InfraId,
+			Token:   task.Token,
+			Action:  models.Update,
+		}, utils.Context{})
+		return
+	}
+
+	utils.Publisher(utils.ResponseSchema{
+		Status:  true,
+		Message: "No changes made",
+		InfraId: task.InfraId,
+		Token:   task.Token,
+		Action:  models.Update,
+	}, utils.Context{})
+
+	return
+}
+
 func DOClusterStartHelper(task WorkSchema, infraData Infrastructure) {
 
 	if task.Token == "" {
