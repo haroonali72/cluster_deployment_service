@@ -87,6 +87,9 @@ type KubeClusterResponse struct {
 type WorkerPoolResponse struct {
 	ID string `json:"workerPoolID"`
 }
+type WorkerNodeResponse struct{
+	ID string `json:"workerID"`
+}
 type KubeClusterStatus struct {
 	ID                string                 `json:"id"`
 	Name              string                 `json:"name"`
@@ -99,6 +102,9 @@ type KubeClusterStatus struct {
 	EtcdPort          string                 `json:"etcdPort"`
 	Crn               string                 `json:"crn"`
 	Status            models.Type            `json:"status"`
+}
+type KubeWorkerNodes struct{
+	PoolId  string `json:"id"`
 }
 type KubeClusterStatus1 struct {
 	ID                string                  `json:"id,omitempty"`
@@ -116,11 +122,17 @@ type UpdateMasterInput struct {
 	Force   bool   `json:"force"`
 	Version string `json:"version"`
 }
+type UpdateNodepoolInput struct {
+	Cluster string `json:"cluster"`
+	WorkerID string `json:"workerID"`
+	Update   bool   `json:"update"`
+}
 type ResizeNodePoolInput struct {
 	Cluster  string `json:"cluster"`
 	Size     int    `json:"size"`
 	PoolName string `json:"workerpool"`
 }
+
 type KubeWorkerPoolStatus struct {
 	ID          string                  `json:"id"`
 	Name        string                  `json:"poolName"`
@@ -1057,6 +1069,124 @@ func (cloud *IBM) updateMasterVersion(rg, clusterID, version string, ctx utils.C
 
 	return types.CustomCPError{}
 }
+func (cloud *IBM) updateNodePoolVersion(rg, clusterID string, nodePool []*NodePool,  ctx utils.Context) types.CustomCPError {
+
+	workers,err_ := cloud.fetchWorkers(clusterID,rg,ctx)
+	if err_ != (types.CustomCPError{}) {
+		ctx.SendLogs(err_.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(errors.New(err_.Error), "error occurred while updating worker kubernetes version", 512)
+		return cpErr
+	}
+
+	for _, worker := range workers {
+		workerpool := UpdateNodepoolInput{
+			Cluster:  clusterID,
+			WorkerID: worker.PoolId,
+			Update:   true,
+		}
+
+		bytes, err := json.Marshal(workerpool)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			cpErr := ApiError(err, "error occurred while updating worker kubernetes version", 512)
+			return cpErr
+		}
+
+		req, _ := utils.CreatePostRequest(bytes, models.IBM_WORKERPOOL_UPDATE_VERSION)
+		req.Close = true
+		m := make(map[string]string)
+
+		m["Content-Type"] = "application/json"
+		m["Accept"] = "application/json"
+		m["Authorization"] = cloud.IAMToken
+		m["X-Auth-Refresh-Token"] = cloud.RefreshToken
+		m["X-Auth-Resource-Group"] = rg //rg id
+		utils.SetHeaders(req, m)
+
+		client := utils.InitReq()
+		res, err := client.SendRequest(req)
+
+		defer res.Body.Close()
+
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			cpErr := ApiError(err, "error occurred while update kubernetes version", 512)
+			return cpErr
+		}
+
+		if res.StatusCode != 204 {
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				cpErr := ApiError(err, "error occurred while update kubernetes version", 512)
+				return cpErr
+			}
+			ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			cpErr := ApiError(errors.New(string(body)), "error occurred while update kubernetes version", 512)
+			return cpErr
+
+		}
+
+		ctx.SendLogs("Verson of node updated "+worker.PoolId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	}
+	return types.CustomCPError{}
+}
+func (cloud *IBM) fetchWorkers(clusterId, rg string, ctx utils.Context)  ([]KubeWorkerNodes,types.CustomCPError) {
+
+	req, err := utils.CreateGetRequest(models.IBM_GetWorkers + clusterId)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while getting status of cluster", 500)
+		return []KubeWorkerNodes{}, cpErr
+
+	}
+
+	req.Close = true
+	m := make(map[string]string)
+
+	m["Content-Type"] = "application/json"
+	m["Accept"] = "application/json"
+	m["Authorization"] = cloud.IAMToken
+	m["X-Auth-Resource-Group"] = rg
+	utils.SetHeaders(req, m)
+
+	client := utils.InitReq()
+	res, err := client.SendRequest(req)
+
+	defer res.Body.Close()
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while getting status of cluster", 500)
+		return []KubeWorkerNodes{}, cpErr
+	}
+
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error in fetching cluster", 500)
+		return []KubeWorkerNodes{}, cpErr
+	}
+
+
+	if res.StatusCode != 200 {
+		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(errors.New(res.Status), "error in fetching cluster", 512)
+		return []KubeWorkerNodes{}, cpErr
+	}
+
+	var response []KubeWorkerNodes
+	err = json.Unmarshal([]byte(body), &response)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while parsing ibm cluster status", 500)
+		return []KubeWorkerNodes{}, cpErr
+	}
+	return response, types.CustomCPError{}
+}
+
 func (cloud *IBM) updatePoolSize(rg, clusterID, workerPoolName string, size int, ctx utils.Context) types.CustomCPError {
 
 	workerpool := ResizeNodePoolInput{

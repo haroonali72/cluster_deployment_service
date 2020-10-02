@@ -19,6 +19,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-02-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
+	"io/ioutil"
+	"strconv"
 
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-10-01/storage"
 	"github.com/Azure/go-autorest/autorest"
@@ -2070,6 +2072,22 @@ func (cloud *AZURE) createVMSS(resourceGroup string, InfraId string, pool *NodeP
 	var fileName []string
 	if pool.EnableVolume {
 		params.VirtualMachineProfile.StorageProfile.DataDisks = &storage
+		//replacing VOLUME word with exact value that is given by user
+		size := strconv.Itoa(int(pool.Volume.Size))
+		read, err := ioutil.ReadFile("/app/scripts/azure-volume-slave-mount.sh")
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return compute.VirtualMachineScaleSetVMListResultPage{}, ApiError(err, "Error in VMSS creation", int(models.CloudStatusCode)), ""
+		}
+		newContents := strings.Replace(string(read), "VOLUME", size, -1)
+		fmt.Println(newContents)
+		err = ioutil.WriteFile("/app/scripts/azure-volume-slave-mount.sh", []byte(newContents), 0)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return compute.VirtualMachineScaleSetVMListResultPage{}, ApiError(err, "Error in VMSS creation", int(models.CloudStatusCode)), ""
+		}
+		////////////////////////////////////////////////////////////////
+
 		fileName = append(fileName, "azure-volume-slave-mount.sh")
 	}
 

@@ -106,11 +106,13 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 	data, err := api_handler.GetAPIStatus(task.Token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return
 	}
 	var infra Infrastructure
 	err = json.Unmarshal(data.([]byte), &infra.infrastructureData)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return
 	}
 	if infra.infrastructureData.Cloud == models.OP && infra.infrastructureData.ManagedCluster == "" {
 
