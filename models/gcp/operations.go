@@ -560,9 +560,9 @@ func (cloud *GCP) fetchNodeInfo(nodeName, zone string, ctx utils.Context) (Node,
 
 	reqCtx := context.Background()
 	createdNode, err := cloud.Client.Instances.Get(cloud.InfraId, zone, nodeName).Context(reqCtx).Do()
-	if err != nil && strings.Contains(err.Error(),"not found"){
-		ctx.SendLogs(err.Error()+"/Quota limit reached", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Node{}, ApiErrors(errors.New(err.Error()+"/Quota limit reached"), "Error in fetching node info/Quota limit reached")
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return Node{}, ApiErrors(errors.New(err.Error()), "Error in fetching node info")
 	}
 
 	newNode := Node{
