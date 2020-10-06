@@ -8,7 +8,7 @@
   else
      for var in "${arr[@]}"
      do
-        MOUNT_VAL=$(lsblk | awk ' $1 == "'$var'" {print $7}')
+        MOUNT_VAL=$(df -h | awk '/'$var'/ {print $1}')
         if [ -z "$MOUNT_VAL"]
         then
             DRIVE=$var
