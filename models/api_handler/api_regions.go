@@ -138,17 +138,33 @@ loopDomTest:
 			if TxtContent == "<" {
 				break
 			}
-			if len(TxtContent) > 0 && TxtContent != "Region" && TxtContent != "Zones" && TxtContent != "Location" {
+			if len(TxtContent) > 0 && TxtContent != "Region" && TxtContent != "Zones" && TxtContent != "Location" && TxtContent != "Machine types"  && TxtContent != "CPUs" && TxtContent != "Resources"  && TxtContent != "GPUs" && !strings.Contains(TxtContent,"E2") && !strings.Contains(TxtContent,"Broadwell") && !strings.Contains(TxtContent,"Skylake"){
 				regions = append(regions, TxtContent)
 			}
 		}
 	}
-	//	for _,reg := region {
-	for i := 0; i < len(regions); i = i + 3 {
-		region.Location = regions[i]
-		region.Name = regions[i+2]
-		reg = append(reg, region)
-	}
+	exist :=false
+	for i := 0; i <= len(regions); i = i +2 {
 
+		if i+1 >= len(regions)  {
+			break
+		}
+		temp := regions[i+1]
+
+		for _,re := range reg {
+			if  temp== re.Name  || (strings.Contains(temp, "-a") || strings.Contains(temp, "-b") || strings.Contains(temp, "-c") ){
+				exist =true
+			}
+		}
+		if exist ==false {
+			check := regions[i]
+			region.Location = check[:len(check)-2]
+			region.Name = regions[i+1]
+			reg = append(reg, region)
+
+		}else{
+			exist =false
+		}
+	}
 	return reg, nil
 }
