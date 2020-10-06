@@ -1270,6 +1270,31 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 				}, ctx)
 				return err
 			}
+			err = iks.updateNodePoolVersion(cluster.ResourceGroup, cluster.ClusterId, cluster.NodePools, ctx)
+			if err != (types.CustomCPError{}) {
+
+				utils.SendLog(ctx.Data.Company, err.Description+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
+				utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
+
+				cluster.Status = models.ClusterUpdateFailed
+				confError := UpdateCluster(cluster, false, ctx)
+				if confError != nil {
+					ctx.SendLogs("IKSUpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				}
+				//err := ApiError(err1, "Error occured while apply cluster changes", 500)
+				err_ := db.CreateError(cluster.InfraId, ctx.Data.Company, models.IKS, ctx, err)
+				if err_ != nil {
+					ctx.SendLogs("IKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				}
+				utils.Publisher(utils.ResponseSchema{
+					Status:  false,
+					Message: err.Error + "\n" + err.Description,
+					InfraId: cluster.InfraId,
+					Token:   token,
+					Action:  models.Update,
+				}, ctx)
+				return err
+			}
 			utils.SendLog(ctx.Data.Company, "Kubernetes version updated of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 		} else if len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && currentpoolIndex_ != poolIndex_ && dif.Path[2] == "NodeCount" {

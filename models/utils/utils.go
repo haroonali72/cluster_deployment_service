@@ -43,6 +43,7 @@ func CreatePutRequest(request_data []byte, url string) (*http.Request, error) {
 	//req.Header.Set("Content-Type", "application/json")
 	return req, nil
 }
+
 func CreatePostRequest(request_data []byte, url string) (*http.Request, error) {
 
 	//beego.Info("requesting ", url)

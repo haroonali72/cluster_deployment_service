@@ -560,9 +560,12 @@ func (cloud *GCP) fetchNodeInfo(nodeName, zone string, ctx utils.Context) (Node,
 
 	reqCtx := context.Background()
 	createdNode, err := cloud.Client.Instances.Get(cloud.InfraId, zone, nodeName).Context(reqCtx).Do()
-	if err != nil {
+	if err != nil && strings.Contains(err.Error(),"not found"){
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Node{}, ApiErrors(err, "Erro in fetching node info")
+		return Node{}, ApiErrors(errors.New(err.Error()), "Error in fetching node info/Node not found")
+	}else if err != nil{
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return Node{}, ApiErrors(errors.New(err.Error()), "Error in fetching node info")
 	}
 
 	newNode := Node{
@@ -737,7 +740,7 @@ func (cloud *GCP) fetchClusterStatus(cluster *Cluster_Def, token string, ctx uti
 	for _, pool := range cluster.NodePools {
 		availabilityZone := getSubnetZone(pool.PoolSubnet, gcpNetwork.Definition[0].Subnets)
 		//zone:=strings.Split(availabilityZone , "-")
-		err := cloud.fetchPoolStatus(pool, availabilityZone, ctx)
+		err := cloud.fetchPoolStatus(*cluster,pool, availabilityZone, ctx)
 		if err != (types.CustomCPError{}) {
 			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
@@ -747,7 +750,7 @@ func (cloud *GCP) fetchClusterStatus(cluster *Cluster_Def, token string, ctx uti
 	return types.CustomCPError{}
 }
 
-func (cloud *GCP) fetchPoolStatus(pool *NodePool, zone string, ctx utils.Context) types.CustomCPError {
+func (cloud *GCP) fetchPoolStatus(cluster Cluster_Def, pool *NodePool, zone string, ctx utils.Context) types.CustomCPError {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
@@ -770,7 +773,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, zone string, ctx utils.Context
 		managedGroup, err := cloud.Client.InstanceGroupManagers.Get(cloud.InfraId, zone, pool.Name).Context(reqCtx).Do()
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return ApiErrors(err, "Erro in fechting pool status")
+			return ApiErrors(err, "Error in fechting pool status")
 		}
 		pool.PoolId = managedGroup.InstanceGroup
 		createdNodes, err := cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.InfraId, zone, pool.Name).Context(reqCtx).Do()
@@ -785,8 +788,12 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, zone string, ctx utils.Context
 			nodeName := splits[len(splits)-1]
 
 			newNode, err := cloud.fetchNodeInfo(nodeName, zone, ctx)
-			if err != (types.CustomCPError{}) {
-				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			if err != (types.CustomCPError{}) && strings.Contains(err.Error,"not found"){
+				utils.SendLog(cluster.CompanyId, err.Error, "info", cluster.InfraId)
+				utils.SendLog(cluster.CompanyId, "Quota limit reached", "info", cluster.InfraId)
+				continue
+			}else if err != (types.CustomCPError{}){
+				ctx.SendLogs(err.Error + err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return err
 			}
 

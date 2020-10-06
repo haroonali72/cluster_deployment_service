@@ -542,6 +542,8 @@ const (
 	IBM_Update_Version               = "https://containers.cloud.ibm.com/global/v2/updateMaster"
 	IBM_Update_PoolSize              = "https://containers.cloud.ibm.com/global/v2/resizeWorkerPool"
 	IBM_Version                      = "?version=2020-01-28&generation=1"
+	IBM_WORKERPOOL_UPDATE_VERSION    = "https://containers.cloud.ibm.com/global/v2/vpc/replaceWorker"
+	IBM_GetWorkers                   = "https://containers.cloud.ibm.com/global//v2/vpc/getWorkers?cluster="
 )
 const (
 	RbacEndpoint = "/security/api/rbac/"

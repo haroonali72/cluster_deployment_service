@@ -106,11 +106,13 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 	data, err := api_handler.GetAPIStatus(task.Token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return
 	}
 	var infra Infrastructure
 	err = json.Unmarshal(data.([]byte), &infra.infrastructureData)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return
 	}
 	if infra.infrastructureData.Cloud == models.OP && infra.infrastructureData.ManagedCluster == "" {
 
@@ -133,6 +135,10 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 
 			go AWSClusterTerminateHelper(task, infra)
 
+		}else if task.Action == models.Update {
+
+			go AWSClusterUpdateHelper(task, infra)
+
 		}
 	} else if infra.infrastructureData.Cloud == models.Azure && infra.infrastructureData.ManagedCluster == "" {
 
@@ -143,6 +149,11 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 		} else if task.Action == models.Terminate {
 
 			go AzureClusterTerminateHelper(task, infra)
+
+		}else if task.Action == models.Update {
+
+			go AzureClusterUpdateHelper(task, infra)
+
 		}
 	} else if infra.infrastructureData.Cloud == models.GCP && infra.infrastructureData.ManagedCluster == "" {
 
@@ -153,6 +164,10 @@ func ProcessWork(task WorkSchema, ctx utils.Context) {
 		} else if task.Action == models.Terminate {
 
 			go GCPClusterTerminateHelper(task, infra)
+		}else if task.Action == models.Update {
+
+			go GCPClusterUpdateHelper(task, infra)
+
 		}
 	} else if infra.infrastructureData.Cloud == models.DO && infra.infrastructureData.ManagedCluster == "" {
 
