@@ -348,13 +348,13 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		profile := vault.IBMProfile{Profile: credentials}
 		_ = TerminateCluster(cluster, profile, ctx, companyId, token)
 		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.InfraId)
-		confError = UpdateCluster(cluster, false, ctx)
-		if confError != nil {
+		err := UpdateCluster(cluster, false, ctx)
+		if err != nil {
 			utils.SendLog(companyId, confError.Error(), "error", cluster.InfraId)
 		}
 
 		cpErr := ApiError(confError, "Error occurred while deploying agent", 500)
-		err := db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.IKS, ctx, cpErr)
+		err = db.CreateError(ctx.Data.InfraId, ctx.Data.Company, models.IKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -511,8 +511,8 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 	iks := GetIBM(profile.Profile)
 
 	_, _, _, err1 := CompareClusters(ctx)
-	if err1 != nil  &&  !(strings.Contains(err1.Error(),"Nothing to update")){
-		oldCluster, err_ :=  GetPreviousIKSCluster(ctx)
+	if err1 != nil && !(strings.Contains(err1.Error(), "Nothing to update")) {
+		oldCluster, err_ := GetPreviousIKSCluster(ctx)
 		if err_ != nil {
 			utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)
 			cpErr := types.CustomCPError{Description: err_.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
@@ -575,7 +575,6 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 			Token:   token,
 			Action:  models.Terminate,
 		}, ctx)
-
 
 		return cpErr
 	}
@@ -666,7 +665,6 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		Token:   token,
 		Action:  models.Terminate,
 	}, ctx)
-
 
 	return types.CustomCPError{}
 }
@@ -1077,7 +1075,7 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 	utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 	difCluster, _, _, err1 := CompareClusters(ctx)
-	if err1 != nil &&  !(strings.Contains(err1.Error(),"Nothing to update")){
+	if err1 != nil && !(strings.Contains(err1.Error(), "Nothing to update")) {
 		ctx.SendLogs("IKSUpdateRunningClusterModel:  Update - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(ctx.Data.Company, err1.Error()+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
@@ -1165,7 +1163,7 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 	previousCluster, err := GetPreviousIKSCluster(ctx)
 	if err != nil {
 		err_ := types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
-		return updationFailedError(cluster, ctx, err_,token)
+		return updationFailedError(cluster, ctx, err_, token)
 	}
 	previousPoolCount := len(previousCluster.NodePools)
 
@@ -1219,7 +1217,7 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 			}
 		}
 		if existInNew == false {
-			DeleteNodepool(cluster, ctx, iks, prePool.Name, prePool.PoolId,token)
+			DeleteNodepool(cluster, ctx, iks, prePool.Name, prePool.PoolId, token)
 		}
 
 	}
@@ -1397,7 +1395,7 @@ func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
 	}
 	return difCluster, previousPoolCount, newPoolCount, nil
 }
-func updationFailedError(cluster Cluster_Def, ctx utils.Context, err types.CustomCPError,token string) types.CustomCPError {
+func updationFailedError(cluster Cluster_Def, ctx utils.Context, err types.CustomCPError, token string) types.CustomCPError {
 	publisher := utils.Notifier{}
 
 	errr := publisher.Init_notifier()
@@ -1436,7 +1434,6 @@ func updationFailedError(cluster Cluster_Def, ctx utils.Context, err types.Custo
 		Token:   token,
 		Action:  models.Terminate,
 	}, ctx)
-
 
 	return err
 }
@@ -1500,12 +1497,12 @@ func AddNodepool(cluster *Cluster_Def, ctx utils.Context, iksOps IBM, pools []*N
 	return types.CustomCPError{}
 }
 
-func DeleteNodepool(cluster Cluster_Def, ctx utils.Context, iksOps IBM, poolName, poolId ,token string) types.CustomCPError {
+func DeleteNodepool(cluster Cluster_Def, ctx utils.Context, iksOps IBM, poolName, poolId, token string) types.CustomCPError {
 	utils.SendLog(ctx.Data.Company, "Deleting nodePool "+poolId, models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
 
 	err := iksOps.removeWorkerPool(cluster.ResourceGroup, cluster.ClusterId, poolId, ctx)
 	if err != (types.CustomCPError{}) {
-		updationFailedError(cluster, ctx, err,token)
+		updationFailedError(cluster, ctx, err, token)
 		return err
 	}
 	utils.SendLog(ctx.Data.Company, " NodePool "+poolId+"deleted successfully", models.LOGGING_LEVEL_INFO, ctx.Data.InfraId)
@@ -1516,7 +1513,7 @@ func DeleteNodepool(cluster Cluster_Def, ctx utils.Context, iksOps IBM, poolName
 			StatusCode:  int(models.CloudStatusCode),
 			Error:       "Error in deleting nodepool in running cluster",
 			Description: err1.Error(),
-		},token)
+		}, token)
 	}
 
 	for _, pool := range oldCluster.NodePools {
@@ -1527,7 +1524,7 @@ func DeleteNodepool(cluster Cluster_Def, ctx utils.Context, iksOps IBM, poolName
 	err1 = AddPreviousIKSCluster(oldCluster, ctx, true)
 	if err1 != nil {
 		return updationFailedError(cluster, ctx,
-			types.CustomCPError{Error: "Error in deleting nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)},token)
+			types.CustomCPError{Error: "Error in deleting nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)}, token)
 	}
 	return types.CustomCPError{}
 }
