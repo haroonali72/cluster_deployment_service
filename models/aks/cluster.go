@@ -696,8 +696,8 @@ func TerminateCluster(credentials vault.AzureProfile, infraId, companyId, token 
 	aksOps, _ := GetAKS(credentials.Profile)
 
 	_, _, _, err1 := CompareClusters(cluster.InfraId, companyId, ctx)
-	if err1 != nil &&  !(strings.Contains(err1.Error(),"Nothing to update")) {
-		oldCluster , err_ := GetPreviousAKSCluster(infraId,companyId,ctx)
+	if err1 != nil && !(strings.Contains(err1.Error(), "Nothing to update")) {
+		oldCluster, err_ := GetPreviousAKSCluster(infraId, companyId, ctx)
 		if err_ != nil {
 			cpErr := ApiError(err_, "Error while updating cluster in database", 500)
 			utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.InfraId)
@@ -1201,7 +1201,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		for poolIndex, nodePool := range cluster.AgentPoolProfiles {
 			isPoolUpdated[poolIndex] = false
 			for _, diff := range difCluster {
-				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" {
+				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" || diff.Path[0] == "UpdateStatus" {
 					continue
 				}
 				if diff.Type == "create" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[2] == "Name" && *diff.To.(*string) == *nodePool.Name {
@@ -1243,7 +1243,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		}
 		for _, nodePool := range previousCluster.AgentPoolProfiles {
 			for _, diff := range difCluster {
-				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" {
+				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" || diff.Path[0] == "UpdateStatus" {
 					continue
 				}
 				if diff.Type == "delete" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[2] == "Name" && *diff.From.(*string) == *nodePool.Name {
@@ -1266,7 +1266,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		for poolIndex, nodePool := range cluster.AgentPoolProfiles {
 			isPoolUpdated[poolIndex] = false
 			for _, diff := range difCluster {
-				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" {
+				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" || diff.Path[0] == "UpdateStatus" {
 					continue
 				}
 				if (diff.Type == "update" || diff.Type == "delete" || diff.Type == "create") && diff.Path[0] == "AgentPoolProfiles" && diff.Path[1] == strconv.Itoa(poolIndex) && !isPoolUpdated[poolIndex] {
@@ -1289,7 +1289,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		for poolIndex, nodePool := range cluster.AgentPoolProfiles {
 			isPoolUpdated[poolIndex] = false
 			for _, diff := range difCluster {
-				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" {
+				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" || diff.Path[0] == "UpdateStatus" {
 					continue
 				}
 
@@ -1326,7 +1326,22 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 					isPoolUpdated[poolIndex] = true
 				}
 
-				if (diff.Type == "update" || diff.Type == "create" || diff.Type == "delete") && diff.Path[0] == "AgentPoolProfiles" && diff.Path[1] == strconv.Itoa(poolIndex) && !isPoolUpdated[poolIndex] {
+				if diff.Type == "delete" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[2] == "Name" && !isPoolUpdated[poolIndex] {
+					poolName := *diff.From.(*string)
+					err := aksOps.DeleteAgentPool(ctx, cluster.ResourceGoup, cluster.Name, ManagedClusterAgentPoolProfile{Name: &poolName})
+					if err != nil {
+						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						updationFailedError(cluster, ctx, types.CustomCPError{
+							StatusCode:  int(models.CloudStatusCode),
+							Error:       "AKS cluster updation failed",
+							Description: err.Error(),
+						})
+						return
+					}
+					isPoolUpdated[poolIndex] = true
+				}
+
+				if (diff.Type == "update" || diff.Type == "create") && diff.Path[0] == "AgentPoolProfiles" && diff.Path[1] == strconv.Itoa(poolIndex) && !isPoolUpdated[poolIndex] {
 					err := aksOps.CreatOrUpdateAgentPool(ctx, token, cluster.ResourceGoup, cluster.Name, nodePool)
 					if err != nil {
 						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -1345,7 +1360,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 
 	isClusterUpdated = false
 	for _, diff := range difCluster {
-		if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" {
+		if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" || diff.Path[0] == "ClusterUpdated" || diff.Path[0] == "UpdateStatus" {
 			continue
 		} else if (diff.Type == "update" || diff.Type == "create" || diff.Type == "delete") && diff.Path[0] != "AgentPoolProfiles" && !isClusterUpdated {
 			err := aksOps.CreateCluster(cluster, token, ctx)
