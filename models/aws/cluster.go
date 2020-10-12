@@ -449,7 +449,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 			return types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in updating cluster status in database"}
 		}
 		utils.Publisher(utils.ResponseSchema{
-			Status:  true,
+			Status:  false,
 			Message: "Notification not recieved from agent",
 			InfraId: cluster.InfraId,
 			Token:   token,
